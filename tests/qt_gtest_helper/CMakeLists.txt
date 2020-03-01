@@ -1,0 +1,10 @@
+project(qt_gtest_helper)
+include(prjqt)
+include(prjlib)
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    gtest
+    gmock
+    PRIVATE
+    Qt5::Widgets
+)
