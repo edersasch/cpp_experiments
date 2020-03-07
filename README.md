@@ -1,6 +1,6 @@
 # C++ Experiments
 
-Concepts, solved problems and toy examples, available under [MIT license](LICENSE)
+Concepts, solved problems and examples, available under [MIT license](LICENSE)
 
 * File System Helpers
   * [fs_filter_qt](#fs_filter_qt): Searchable tree view of a directory

@@ -1,24 +1,10 @@
 #ifndef SRC_FS_FILTER_QT_FS_FILTER
 #define SRC_FS_FILTER_QT_FS_FILTER
 
-#include <QSortFilterProxyModel>
 #include <QWidget>
 #include <QFileSystemModel>
 #include <QLineEdit>
 #include <QTreeView>
-
-class FS_Sort_Filter_Proxy_Model
-        : public QSortFilterProxyModel
-{
-    Q_OBJECT
-
-public:
-    FS_Sort_Filter_Proxy_Model(QObject* parent = nullptr);
-    virtual ~FS_Sort_Filter_Proxy_Model() = default;
-
-protected:
-    virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const;
-};
 
 class FS_Filter
         : public QWidget
@@ -41,7 +27,6 @@ private:
     bool expand_hide(QModelIndex index);
 
     QFileSystemModel fs_model;
-    FS_Sort_Filter_Proxy_Model fs_filter_model;
     QLineEdit search_text_edit;
     QTreeView fs_view;
 

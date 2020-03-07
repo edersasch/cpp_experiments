@@ -11,8 +11,7 @@ FS_Filter_Test::FS_Filter_Test()
     fsf.set_auto_expand(true);
     fsf.set_focus();
     fsf_view.setSelectionMode(QAbstractItemView::ExtendedSelection);
-    fsf_proxy = qobject_cast<FS_Sort_Filter_Proxy_Model*>(fsf_view.model());
-    fsf_model = qobject_cast<QFileSystemModel*>(fsf_proxy->sourceModel());
+    fsf_model = qobject_cast<QFileSystemModel*>(fsf_view.model());
     EXPECT_TRUE(fsf.get_search_text().isEmpty());
 }
 
@@ -39,11 +38,10 @@ void FS_Filter_Test::compare_selection(const QSet<QString>& expected) const
     fsf_view.selectAll();
     auto sel = fsf_view.selectionModel()->selectedRows();
     for (auto i : sel) {
-        selection.insert(fsf_model->filePath(fsf_proxy->mapToSource(i)));
+        selection.insert(fsf_model->filePath(i));
     }
     EXPECT_EQ(selection, expected);
 }
-
 
 TEST_F(FS_Filter_Test, auto_expand)
 {

@@ -5,20 +5,6 @@
 #include <QDesktopServices>
 #include <QUrl>
 
-FS_Sort_Filter_Proxy_Model::FS_Sort_Filter_Proxy_Model(QObject* parent)
-    : QSortFilterProxyModel(parent)
-{
-}
-
-bool FS_Sort_Filter_Proxy_Model::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
-{
-    auto sm = qobject_cast<QFileSystemModel*>(sourceModel());
-    if (source_parent == sm->index(sm->rootPath())) {
-        return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
-    }
-    return true;
-}
-
 FS_Filter::FS_Filter(const QString& root_path, QWidget* parent)
     : QWidget(parent)
 {
@@ -28,9 +14,8 @@ FS_Filter::FS_Filter(const QString& root_path, QWidget* parent)
     search_text_edit.setClearButtonEnabled(true);
     auto idx = fs_model.setRootPath(root_path);
     fs_model.setNameFilterDisables(false);
-    fs_filter_model.setSourceModel(&fs_model);
-    fs_view.setModel(&fs_filter_model);
-    fs_view.setRootIndex(fs_filter_model.mapFromSource(idx));
+    fs_view.setModel(&fs_model);
+    fs_view.setRootIndex(idx);
     fs_view.setDragEnabled(true);
     fs_view.setExpandsOnDoubleClick(false);
     fs_view.setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -45,14 +30,14 @@ FS_Filter::FS_Filter(const QString& root_path, QWidget* parent)
         }
         fs_model.setNameFilters({"*" + text + "*"});
     });
-    connect(&fs_filter_model, &FS_Sort_Filter_Proxy_Model::layoutChanged, this, &FS_Filter::check);
+    connect(&fs_model, &QFileSystemModel::layoutChanged, this, &FS_Filter::check);
     connect(&fs_model, &QFileSystemModel::directoryLoaded, this, [this](const QString& dir) {
         if (wait_for_dirs.remove(QPersistentModelIndex(fs_model.index(dir)))) {
             check();
         }
     });
     connect(&fs_view, &QTreeView::doubleClicked, this, [this](const QModelIndex& index) {
-        auto url = QUrl::fromLocalFile(fs_model.filePath(fs_filter_model.mapToSource(index)));
+        auto url = QUrl::fromLocalFile(fs_model.filePath(index));
         QDesktopServices::openUrl(url);
     });
 }
@@ -95,7 +80,7 @@ bool FS_Filter::expand_hide(QModelIndex index)
                     // an empty text is always found, so nothing gets hidden
                     can_hide &= !fs_model.fileName(cidx).contains(search_text_edit.text(), Qt::CaseInsensitive);
                 }
-                fs_view.setRowHidden(i, fs_filter_model.mapFromSource(index), can_hide && hide_empty_dirs);
+                fs_view.setRowHidden(i, index, can_hide && hide_empty_dirs);
                 is_empty &= can_hide;
             } else {
                 is_empty = false;
@@ -105,7 +90,7 @@ bool FS_Filter::expand_hide(QModelIndex index)
         wait_for_dirs.insert(QPersistentModelIndex(index));
     }
     if (!is_empty && auto_expand) {
-        fs_view.expand(fs_filter_model.mapFromSource(index));
+        fs_view.expand(index);
     }
     return is_empty;
 }
