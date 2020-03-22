@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Vis_1000.qml</file>
+    </qresource>
+</RCC>
