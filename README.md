@@ -2,6 +2,9 @@
 
 Concepts, solved problems and examples, available under [MIT license](LICENSE)
 
+* Elementary Math
+  * [elementary_math_qml](#elementary_math_qml): Visualizations for math operations in elementary school
+  * [emvis1000_qml](#emvis1000_qml): Highlight solutions to plus / minus / multiply questions in the number range up to 1000
 * File System Helpers
   * [fs_filter_qt](#fs_filter_qt): Searchable tree view of a directory
   * [fs_history_qt](#fs_history_qt): Maintains a string list of existing files or directories in the order of last access
@@ -33,6 +36,22 @@ The top level structure follows [the pitchfork layout](https://api.csswg.org/bik
 
 
 ## `src/`
+
+
+### elementary_math_qml
+
+The directory contains a QML file and its C++ bindings to highlight solutions
+to plus / minus / multiply questions in the number range up to 1000
+
+Enable build with cmake option `EXPERIMENTS_ELEMENTARY_MATH_QML`.
+
+
+### emvis1000_qml
+
+The application uses functions from `elementary_math_qml` to highlight
+solutions to plus / minus / multiply questions in the number range up to 1000.
+
+Enabled if `EXPERIMENTS_ELEMENTARY_MATH_QML` is on.
 
 
 ### fs_filter_qt
@@ -75,12 +94,12 @@ Enable build with cmake option `EXPERIMENTS_FS_HISTORY_QT`.
 
 ### fs_history_search
 
-This is an application that combines `fs_filter_qt` and `fs_history_qt`. You
-have an initially empty combobox. To the right of it is a button to start a
-directory selection. Once a valid directory is selected, its content is shown
-below in a tree view that expands automatically, so please use only on not so
-huge directories. Between the combobox and the tree view is a line edit where
-you can filter the visible entries of the tree. If a directory gets emptied by
+Application that combines `fs_filter_qt` and `fs_history_qt`. You have an
+initially empty combobox. To the right of it is a button to start a directory
+selection. Once a valid directory is selected, its content is shown below in a
+tree view that expands automatically, so please use only on not so huge
+directories. Between the combobox and the tree view is a line edit where you
+can filter the visible entries of the tree. If a directory gets emptied by
 filtering, it is hidden from view if its name does not contain the filter
 string.
 

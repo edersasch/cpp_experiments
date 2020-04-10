@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.10.0)
 project(experiments VERSION 0.1.0)
 
 option(EXPERIMENTS_BUILD_TESTS "Build unit tests" ON)
-OPTION(EXPERIMENTS_FS_FILTER_QT "Filesystem Filter" ON)
-OPTION(EXPERIMENTS_FS_HISTORY_QT "Filesystem History" ON)
-OPTION(EXPERIMENTS_ELEMENTARY_MATH_QML "Elementary Math" ON)
+option(EXPERIMENTS_FS_FILTER_QT "Filesystem Filter" ON)
+option(EXPERIMENTS_FS_HISTORY_QT "Filesystem History" ON)
+option(EXPERIMENTS_ELEMENTARY_MATH_QML "Elementary Math" ON)
 option(EXPERIMENTS_COVERAGE_REPORT "Compile with coverage instrumentation" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
