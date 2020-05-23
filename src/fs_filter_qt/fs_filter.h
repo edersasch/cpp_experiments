@@ -13,7 +13,7 @@ class FS_Filter
 
 public:
     FS_Filter(const QString& root_path, QWidget* parent = nullptr);
-    virtual ~FS_Filter() = default;
+    virtual ~FS_Filter() override = default;
 
     void set_auto_expand(bool do_auto_expand);
     void set_hide_empty_dirs(bool do_hide);
@@ -33,7 +33,7 @@ private:
     /**
       Prevent left over empty dirs
 
-      If fs_model.canFetchMore(index) is true , but directory is empty, no fs_model.layoutChanged() is
+      If fs_model.canFetchMore(index) is true, but directory is empty, no fs_model.layoutChanged() is
       emitted after expand() and an empty dir could stay in view.
       */
     QSet<QPersistentModelIndex> wait_for_dirs {};

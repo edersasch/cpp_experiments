@@ -3,11 +3,13 @@
 #include <QFileInfo>
 #include <QTimer>
 
-FS_History::FS_History(Operation_Mode mode, const QString& fallback, int history_size, const QStringList& initial_elements, QObject* parent)
+#include <utility>
+
+FS_History::FS_History(Operation_Mode mode, QString fallback, int history_size, const QStringList& initial_elements, QObject* parent)
     : QObject(parent)
     , opmode(mode)
     , hist_size(history_size < 2 ? 2 : history_size)
-    , fb(fallback)
+    , fb(std::move(fallback))
     , elements(initial_elements)
 {
     elements.removeDuplicates();

@@ -1,5 +1,5 @@
 #include "fs_history_qt/fs_history_ui.h"
-#include "fs_history_search.h"
+#include "ar_history_search.h"
 
 #include <QApplication>
 #include <QWidget>
@@ -14,19 +14,19 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
     QApplication::setOrganizationName("Edersasch_Opensource");
-    QApplication::setApplicationName("fs_history_search");
+    QApplication::setApplicationName("ar_history_search");
 
     QWidget w;
     QVBoxLayout l;
     QSettings settings;
-    FS_History_Search hs(settings.value("filesystem/recent_dirs").toStringList(), history_size);
-    l.addWidget(&hs, FS_History_Search::main_stretch_factor);
+    AR_History_Search hs(settings.value("filesystem/recent_archives").toStringList(), history_size);
+    l.addWidget(&hs, AR_History_Search::main_stretch_factor);
     l.addStretch();
     w.setLayout(&l);
     w.resize(settings.value("main_window/size", QSize(default_width, default_height)).toSize());
     w.show();
     auto ret = QApplication::exec();
-    settings.setValue("filesystem/recent_dirs", hs.get_dirs());
+    settings.setValue("filesystem/recent_archives", hs.get_archives());
     settings.setValue("main_window/size", w.size());
     return ret;
 }

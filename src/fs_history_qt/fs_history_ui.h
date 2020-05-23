@@ -31,10 +31,10 @@ public:
     FS_History_UI(const QStringList& initial_elements = {}, QObject* parent = nullptr);
     FS_History_UI(int history_size, const QStringList& initial_elements = {}, QObject* parent = nullptr);
     FS_History_UI(const QString& fallback_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation), int history_size = FS_History::default_history_size, const QStringList& initial_elements = {}, QObject* parent = nullptr);
-    virtual ~FS_History_UI() = default;
+    virtual ~FS_History_UI() override = default;
 
     QComboBox* combobox();
-    QToolButton* browse_button(const QString& button_text = "...", const QString& dialog_caption = tr("Please select"));
+    QToolButton* browse_button(const QString& button_text = "...", const QString& dialog_caption = tr("Please select"), const QString& file_filter = QString());
     QMenu* menu(bool use_hotkey = true, const QString& name = "&History");
     QStringListModel& get_model() { return model; }
     void set_current_element(const QString& element) { history.set_current_element(element); }

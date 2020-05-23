@@ -1,0 +1,10 @@
+project(ar_history_search)
+include(prjqt)
+include(prjexe)
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    Qt5::Gui
+    Qt5::Widgets
+    arhelper_qt
+    fs_history_qt
+)

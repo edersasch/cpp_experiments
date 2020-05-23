@@ -66,15 +66,15 @@ QComboBox* FS_History_UI::combobox()
     return chooser;
 }
 
-QToolButton* FS_History_UI::browse_button(const QString& button_text, const QString& dialog_caption)
+QToolButton* FS_History_UI::browse_button(const QString& button_text, const QString& dialog_caption, const QString& file_filter)
 {
     if (!file_dialog_button) {
         file_dialog_button = new QToolButton;
         file_dialog_button->setText(button_text);
-        connect(file_dialog_button, &QToolButton::clicked, this, [this, dialog_caption] {
+        connect(file_dialog_button, &QToolButton::clicked, this, [this, dialog_caption, file_filter] {
             switch (history.operation_mode()) {
             case FS_History::Operation_Mode::OP_FILE:
-                history.set_current_element(QFileDialog::getOpenFileName(nullptr, dialog_caption, chooser->currentText()));
+                history.set_current_element(QFileDialog::getOpenFileName(nullptr, dialog_caption, chooser->currentText(), file_filter));
                 break;
             case FS_History::Operation_Mode::OP_DIR:
                 history.set_current_element(QFileDialog::getExistingDirectory(nullptr, dialog_caption, chooser->currentText()));

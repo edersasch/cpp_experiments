@@ -27,7 +27,7 @@ public:
 
     static constexpr int default_history_size {9};
 
-    FS_History(Operation_Mode mode, const QString& fallback, int history_size, const QStringList& initial_elements, QObject* parent = nullptr);
+    FS_History(Operation_Mode mode, QString fallback, int history_size, const QStringList& initial_elements, QObject* parent = nullptr);
     FS_History(const QStringList& initial_elements = {}, QObject* parent = nullptr);
     FS_History(int history_size, const QStringList& initial_elements = {}, QObject* parent = nullptr);
     FS_History(const QString& fallback, int history_size = default_history_size, const QStringList& initial_elements = {}, QObject* parent = nullptr);

@@ -19,7 +19,7 @@ public:
     static constexpr int main_stretch_factor {10};
 
     FS_History_Search(const QStringList& start_dirs = {}, int history_size = FS_History::default_history_size, QWidget* parent = nullptr);
-    virtual  ~FS_History_Search() = default;
+    virtual ~FS_History_Search() override = default;
 
     QStringList get_dirs() { return dir_ui.get_elements(); }
 

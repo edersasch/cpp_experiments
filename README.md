@@ -2,13 +2,16 @@
 
 Concepts, solved problems and examples, available under [MIT license](LICENSE)
 
+* Archive Helpers
+  * [arhelper_qt](#arhelper_qt): Uses 7z binary to handle archive content
+  * [ar_history_search_qt](#ar_history_search_qt): Store recent archives and filter the content
 * Elementary Math
   * [elementary_math_qml](#elementary_math_qml): Visualizations for math operations in elementary school
   * [emvis1000_qml](#emvis1000_qml): Highlight solutions to plus / minus / multiply questions in the number range up to 1000
 * File System Helpers
   * [fs_filter_qt](#fs_filter_qt): Searchable tree view of a directory
   * [fs_history_qt](#fs_history_qt): Maintains a string list of existing files or directories in the order of last access
-  * [fs_history_search](#fs_history_search_qt): Store nine recent directories and filter the content
+  * [fs_history_search_qt](#fs_history_search_qt): Store nine recent directories and filter the content
 
 
 # Build Requirements
@@ -36,6 +39,25 @@ The top level structure follows [the pitchfork layout](https://api.csswg.org/bik
 
 
 ## `src/`
+
+
+### arhelper_qt
+
+Runtime dependencies:
+
+* `7z` executable in `PATH`
+
+Experimenting with handling archive content.
+
+Enable build with cmake option `EXPERIMENTS_ARHELPER_QT`.
+
+
+### ar_history_search_qt
+
+Application that combines `arhelper_qt` and `fs_history_qt` to provide filtering
+to archive contents like [fs_history_search_qt](#fs_history_search_qt).
+
+Enabled if `EXPERIMENTS_ARHELPER_QT` and `EXPERIMENTS_FS_HISTORY_QT` is on.
 
 
 ### elementary_math_qml
@@ -81,18 +103,18 @@ If the list is used on directories, you can provide a fallback directory
 which will be chosen if all other entries become invalid.
 
 Some UI elements are provided that utilize the history list:
-* combobox
+* combobox and optional combobox label style to show text elided left
 * menu that adds a number as hotkey to each entry if the list size is `9` or less
 * toolbutton to start a select file or directory dialog
 
-But please try to only use the `current_element_changed(const QString&)` or
+Please try to only use the `current_element_changed(const QString&)` or
 `elements_changed(const QStringList&)` signals, because the widgets might fire
 twice when the list gets sorted because of a widget's trigger.
 
 Enable build with cmake option `EXPERIMENTS_FS_HISTORY_QT`.
 
 
-### fs_history_search
+### fs_history_search_qt
 
 Application that combines `fs_filter_qt` and `fs_history_qt`. You have an
 initially empty combobox. To the right of it is a button to start a directory

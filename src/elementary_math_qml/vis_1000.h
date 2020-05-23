@@ -16,7 +16,7 @@ class Vis_1000
 
 public:
     Vis_1000(QQmlEngine* engine, QQuickItem* parentItem);
-    virtual ~Vis_1000() = default;
+    virtual ~Vis_1000() override = default;
 
 private slots:
     void change();
