@@ -9,9 +9,9 @@
 #include <thread>
 
 
-void processEvents()
+void processEvents(int times)
 {
-    while (qApp->hasPendingEvents()) {
+    for (int i = 0; i < times; i += 1) {
         qApp->processEvents();
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }

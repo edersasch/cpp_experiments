@@ -7,4 +7,5 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Widgets
     fs_history_qt
     fs_filter_qt
+    qt_utilities
 )

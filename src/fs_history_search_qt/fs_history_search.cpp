@@ -1,4 +1,5 @@
 #include "fs_history_search.h"
+#include "qt_utilities/combobox_label_elide_left_proxy_style.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>

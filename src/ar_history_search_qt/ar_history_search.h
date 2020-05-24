@@ -7,8 +7,7 @@
 #include <QWidget>
 #include <QLineEdit>
 #include <QTreeView>
-
-#include <memory>
+#include <QRegularExpression>
 
 class QVBoxLayout;
 
@@ -26,13 +25,11 @@ public:
     QStringList get_archives() { return ar_ui.get_elements(); }
 
 private:
-    bool expand_hide(QModelIndex index);
-
     FS_History_UI ar_ui;
     Arhelper arhelper;
     QLineEdit search_text_edit;
     QTreeView dir_tree;
-    bool auto_expand {true};
+    QRegularExpression filter_pattern;
 };
 
 #endif // SRC_FS_HSEARCH_QT_FS_HSEARCH

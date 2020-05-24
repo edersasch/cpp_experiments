@@ -1,10 +1,13 @@
 #ifndef SRC_FS_FILTER_QT_FS_FILTER
 #define SRC_FS_FILTER_QT_FS_FILTER
 
+#include "qt_utilities/treeview_hide_expand.h"
+
 #include <QWidget>
 #include <QFileSystemModel>
 #include <QLineEdit>
 #include <QTreeView>
+#include <QRegularExpression>
 
 class FS_Filter
         : public QWidget
@@ -23,8 +26,7 @@ public:
     QTreeView& get_view() { return fs_view; }
 
 private:
-    void check();
-    bool expand_hide(QModelIndex index);
+    void hide_expand() { Qt_Utilities::treeview_hide_expand(&fs_view, fs_model.index(fs_model.rootPath()), filter_pattern, hide_empty_dirs, auto_expand, &wait_for_dirs); }
 
     QFileSystemModel fs_model;
     QLineEdit search_text_edit;
@@ -39,6 +41,7 @@ private:
     QSet<QPersistentModelIndex> wait_for_dirs {};
     bool auto_expand {false};
     bool hide_empty_dirs {false};
+    QRegularExpression filter_pattern;
 };
 
 #endif // SRC_FS_FILTER_QT_FS_FILTER

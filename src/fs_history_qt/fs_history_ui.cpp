@@ -7,23 +7,6 @@
 #include <QPainter>
 #include <QMenu>
 
-void Combobox_Label_Elide_Left_Proxy_Style::drawControl(QStyle::ControlElement element, const QStyleOption* combobox_option, QPainter* painter, const QWidget* widget) const
-{
-    if (element == QStyle::CE_ComboBoxLabel) {
-        if (auto cb = qstyleoption_cast<const QStyleOptionComboBox*>(combobox_option)) {
-            // https://stackoverflow.com/questions/41360618/qcombobox-elided-text-on-selected-item
-            QRect textRect = subControlRect(QStyle::CC_ComboBox, cb, QStyle::SC_ComboBoxEditField, widget);
-            QTextOption textOption;
-            textOption.setAlignment(Qt::AlignVCenter);
-            QFontMetrics fontMetric(painter->font());
-            const QString elidedText = fontMetric.elidedText(cb->currentText, Qt::ElideLeft, textRect.width());
-            painter->drawText(textRect, elidedText, textOption);
-            return;
-        }
-    }
-    QProxyStyle::drawControl(element, combobox_option, painter, widget);
-}
-
 FS_History_UI::FS_History_UI(FS_History::Operation_Mode mode, const QString& fallback, int history_size, const QStringList& initial_elements, QObject* parent)
     : QObject(parent)
     , history(mode, fallback, history_size, initial_elements)

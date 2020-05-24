@@ -1,6 +1,6 @@
 #ifndef TESTS_QT_GTEST_HELPER_QT_GTEST_HELPER
 #define TESTS_QT_GTEST_HELPER_QT_GTEST_HELPER
 
-void processEvents();
+void processEvents(int times = 2);
 
 #endif // TESTS_QT_GTEST_HELPER_QT_GTEST_HELPER

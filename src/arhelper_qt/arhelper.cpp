@@ -44,14 +44,15 @@ void Arhelper::ls(const QString& archive_path)
                             if (root->child(i)->text() == splitted.first()) {
                                 found = true;
                                 root = root->child(i);
-                                root->setIcon(fip.icon(QFileIconProvider::Folder));
                                 break;
                             }
                         }
                         if (!found) {
+                            if (splitted.size() == 1 && root->rowCount() == 0) {
+                                root->setIcon(fip.icon(QFileIconProvider::Folder));
+                            }
                             fi.setFile(splitted.first());
-                            auto icon = fip.icon(fi);
-                            root->appendRow(new QStandardItem(icon, splitted.first()));
+                            root->appendRow(new QStandardItem(fip.icon(fi), splitted.first()));
                             root = root->child(root->rowCount() - 1);
                             root->setFlags(root->flags() & ~Qt::ItemIsEditable);
                         }

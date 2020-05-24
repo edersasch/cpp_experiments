@@ -12,18 +12,21 @@ Concepts, solved problems and examples, available under [MIT license](LICENSE)
   * [fs_filter_qt](#fs_filter_qt): Searchable tree view of a directory
   * [fs_history_qt](#fs_history_qt): Maintains a string list of existing files or directories in the order of last access
   * [fs_history_search_qt](#fs_history_search_qt): Store nine recent directories and filter the content
+* [Qt Utilities](#qt_utilities)
+  * treeview_hide_expand: hides rows in a tree view that don't match a given pattern
+  * Combobox_Label_Elide_Left_Proxy_Style: If the text is too long for the label it will be elided left
 
 
 # Build Requirements
 
 * C++ 17 toolchain (e.g. [gcc](https://gcc.gnu.org/) >= 7.3.0)
 * [CMake](https://cmake.org) >= 3.10.0
-* [Qt](https://qt.io) >= 5.11.0
+* [Qt](https://qt.io) >= 5.12.0
 
 
 # Optional Tools
 
-* [GTest](https://github.com/google/googletest) >= 1.10.0, downloaded automatically if option `'EXPERIMENTS_BUILD_TESTS` is `ON`
+* [GTest](https://github.com/google/googletest) >= 1.10.0, downloaded automatically if option `EXPERIMENTS_BUILD_TESTS` is `ON`
 * [Doxygen](http://www.doxygen.nl) documentation tool, enables `apidoc` build target
 * GCov (part of [gcc](https://gcc.gnu.org/)) / [LCov](http://ltp.sourceforge.net/coverage/lcov.php) for coverage report if option `EXPERIMENTS_COVERAGE_REPORT` is `ON`
 
@@ -54,10 +57,12 @@ Enable build with cmake option `EXPERIMENTS_ARHELPER_QT`.
 
 ### ar_history_search_qt
 
-Application that combines `arhelper_qt` and `fs_history_qt` to provide filtering
-to archive contents like [fs_history_search_qt](#fs_history_search_qt).
+Application that combines `arhelper_qt` and `fs_history_qt` to provide
+filtering to archive contents like
+[fs_history_search_qt](#fs_history_search_qt).
 
-Enabled if `EXPERIMENTS_ARHELPER_QT` and `EXPERIMENTS_FS_HISTORY_QT` is on.
+Enabled if `EXPERIMENTS_ARHELPER_QT`, `EXPERIMENTS_FS_HISTORY_QT` and
+`EXPERIMENTS_FS_FILTER_QT` is on.
 
 
 ### elementary_math_qml
@@ -78,17 +83,17 @@ Enabled if `EXPERIMENTS_ELEMENTARY_MATH_QML` is on.
 
 ### fs_filter_qt
 
-This widget shows a line edit above a tree view of an existing directory.
-The line edit filters all visible rows in the tree in a case insensitive way.
-You can expand every subdirectory automatically, so everything in the
-directory will be visible. This may take some time, so use only for not so
-huge directories, depending on your machine and patience.
-Directories that become empty during filtering and do not contain the filter
-text can optionally be hidden. If the the filter line edit is empty, all
-directories are shown, even those that are empty without filtering.
+This widget shows a line edit above a tree view of an existing directory. The
+line edit filters all visible rows in the tree in a case insensitive way. You
+can expand every subdirectory automatically, so everything in the directory
+will be visible. This may take some time, so use only for not so huge
+directories, depending on your machine and patience. Directories that become
+empty during filtering and do not contain the filter text can optionally be
+hidden. If the the filter line edit is empty, all directories are shown, even
+those that are empty without filtering.
 
-Double clicking an element opens it in the associated application.
-Multiple elements can be selected, dragging is supported.
+Double clicking an element opens it in the associated application. Multiple
+elements can be selected, dragging is supported.
 
 Enable build with cmake option `EXPERIMENTS_FS_FILTER_QT`.
 
@@ -103,7 +108,7 @@ If the list is used on directories, you can provide a fallback directory
 which will be chosen if all other entries become invalid.
 
 Some UI elements are provided that utilize the history list:
-* combobox and optional combobox label style to show text elided left
+* combobox
 * menu that adds a number as hotkey to each entry if the list size is `9` or less
 * toolbutton to start a select file or directory dialog
 
@@ -126,6 +131,17 @@ filtering, it is hidden from view if its name does not contain the filter
 string.
 
 Enabled if `EXPERIMENTS_FS_FILTER_QT` and `EXPERIMENTS_FS_HISTORY_QT` are on.
+
+
+### qt_utilities
+
+`treeview_hide_expand()`: hides rows in a tree view that don't match a given
+pattern and optionally fully expands the view
+
+`Combobox_Label_Elide_Left_Proxy_Style`: If the text is too long for the label
+it will be elided left
+
+Enable build with cmake option `EXPERIMENTS_ARHELPER_QT` or `EXPERIMENTS_FS_FILTER_QT`.
 
 
 ## `tests/`

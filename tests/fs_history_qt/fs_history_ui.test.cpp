@@ -1,4 +1,5 @@
 #include "fs_history_ui.test.h"
+#include "qt_utilities/combobox_label_elide_left_proxy_style.h"
 
 #include "qt_gtest_helper/qt_gtest_helper.h"
 

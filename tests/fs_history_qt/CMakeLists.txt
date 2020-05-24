@@ -5,6 +5,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
     qt_gtest_helper
     fs_history_qt
+    qt_utilities
     Qt5::Gui
     Qt5::Widgets
 )

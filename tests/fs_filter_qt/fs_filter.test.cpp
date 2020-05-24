@@ -50,7 +50,7 @@ TEST_F(FS_Filter_Test, auto_expand)
     mkpath("1/1_1");
     mkfile("1/1_1/f1_1.1");
     mkpath("2/2_1");
-    processEvents();
+    processEvents(10);
     compare_selection(fsset);
 }
 
@@ -62,7 +62,7 @@ TEST_F(FS_Filter_Test, no_hide_empty_without_search_text)
     mkpath("1/1_1");
     mkfile("1/1_1/f1_1.1");
     mkpath("2/2_1");
-    processEvents();
+    processEvents(10);
     compare_selection(fsset); // does not hide
 }
 
@@ -83,7 +83,7 @@ TEST_F(FS_Filter_Test, hide_empty)
     mkpath("4/4_1");
     mkfile("4/4_1/f4_1.1");
     fsf.set_search_text("1");
-    processEvents();
+    processEvents(10);
     QSet<QString> expected = fsset;
     EXPECT_TRUE(expected.remove(hierarchy.absolutePath() + "/f.2"));
     EXPECT_TRUE(expected.remove(hierarchy.absolutePath() + "/2/2_2/f2_2.2"));

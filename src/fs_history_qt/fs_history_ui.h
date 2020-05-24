@@ -15,12 +15,6 @@ class QTextOption;
 class QPainter;
 class QMenu;
 
-class Combobox_Label_Elide_Left_Proxy_Style : public QProxyStyle
-{
-  public:
-    virtual void drawControl(QStyle::ControlElement element, const QStyleOption* combobox_option, QPainter* painter, const QWidget* widget = nullptr) const override;
-};
-
 class FS_History_UI
         : public QObject
 {
