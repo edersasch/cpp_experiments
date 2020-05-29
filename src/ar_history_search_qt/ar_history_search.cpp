@@ -40,7 +40,11 @@ AR_History_Search::AR_History_Search(const QStringList& start_archives, int hist
     connect(dir_tree.model(), &QAbstractItemModel::rowsInserted, this, [this](const QModelIndex& index) {
         Qt_Utilities::treeview_hide_expand(&dir_tree, index, filter_pattern, true, true);
     });
+    connect(&dir_tree, &QTreeView::doubleClicked, this, [this](const QModelIndex& index) {
+        arhelper.open_path(index, archive);
+    });
     connect(&ar_ui, &FS_History_UI::current_element_changed, this, [this](const QString& archive_path) {
+        archive = archive_path;
         arhelper.ls(archive_path);
         search_text_edit.setFocus();
     });

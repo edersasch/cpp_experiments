@@ -59,7 +59,9 @@ Enable build with cmake option `EXPERIMENTS_ARHELPER_QT`.
 
 Application that combines `arhelper_qt` and `fs_history_qt` to provide
 filtering to archive contents like
-[fs_history_search_qt](#fs_history_search_qt).
+[fs_history_search_qt](#fs_history_search_qt). Double clicking a file or
+directory extracts it to a temporary folder and opens it in the operating
+system's default application.
 
 Enabled if `EXPERIMENTS_ARHELPER_QT`, `EXPERIMENTS_FS_HISTORY_QT` and
 `EXPERIMENTS_FS_FILTER_QT` is on.

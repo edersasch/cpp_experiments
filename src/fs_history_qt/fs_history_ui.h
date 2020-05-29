@@ -30,7 +30,6 @@ public:
     QComboBox* combobox();
     QToolButton* browse_button(const QString& button_text = "...", const QString& dialog_caption = tr("Please select"), const QString& file_filter = QString());
     QMenu* menu(bool use_hotkey = true, const QString& name = "&History");
-    QStringListModel& get_model() { return model; }
     void set_current_element(const QString& element) { history.set_current_element(element); }
     QStringList get_elements() const { return model.stringList(); }
 

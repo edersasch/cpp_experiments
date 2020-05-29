@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QStandardItemModel>
 #include <QProcess>
+#include <QTemporaryDir>
 
 class Arhelper
         : public QWidget
@@ -17,14 +18,16 @@ public:
     void set_sevenzip_custom_path(const QString& path) { sevenzip_custom_path = path; }
     QStandardItemModel& get_archive_directory_model() { return archive_directory_model; }
     void ls(const QString& archive_path);
+    void open_path(const QModelIndex& index, const QString& archive_path);
 
 signals:
     void ar_error(const QString&);
 
 private:
+    QProcess* sevenzip();
     QString sevenzip_custom_path;
     QStandardItemModel archive_directory_model;
-    QProcess sevenzip;
+    QTemporaryDir tempdir {};
 };
 
 #endif // SRC_ARHELPER_QT_ARHELPER

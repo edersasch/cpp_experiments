@@ -30,6 +30,7 @@ private:
     QLineEdit search_text_edit;
     QTreeView dir_tree;
     QRegularExpression filter_pattern;
+    QString archive;
 };
 
 #endif // SRC_FS_HSEARCH_QT_FS_HSEARCH
