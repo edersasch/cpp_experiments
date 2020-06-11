@@ -12,9 +12,12 @@ Concepts, solved problems and examples, available under [MIT license](LICENSE)
   * [fs_filter_qt](#fs_filter_qt): Searchable tree view of a directory
   * [fs_history_qt](#fs_history_qt): Maintains a string list of existing files or directories in the order of last access
   * [fs_history_search_qt](#fs_history_search_qt): Store nine recent directories and filter the content
+* [QTableView Demo](#qtableview_demo): Code related to QTableView
 * [Qt Utilities](#qt_utilities)
-  * treeview_hide_expand: hides rows in a tree view that don't match a given pattern
-  * Combobox_Label_Elide_Left_Proxy_Style: If the text is too long for the label it will be elided left
+  * `Combobox_Label_Elide_Left_Proxy_Style`: If the text is too long for the label it will be elided left
+  * `tableview_adjust_row_visibility()`: hide rows that became empty
+  * `tableview_resizeColumnsToContents_maxpercent()`: resize column width up to a maximum if necessary
+  * `treeview_hide_expand()`: hides rows in a tree view that don't match a given pattern
 
 
 # Build Requirements
@@ -50,7 +53,8 @@ Runtime dependencies:
 
 * `7z` executable in `PATH`
 
-Experimenting with handling archive content.
+This library can create a model of the archive contents and extract a file or a
+tree to a given directory.
 
 Enable build with cmake option `EXPERIMENTS_ARHELPER_QT`.
 
@@ -135,15 +139,35 @@ string.
 Enabled if `EXPERIMENTS_FS_FILTER_QT` and `EXPERIMENTS_FS_HISTORY_QT` are on.
 
 
-### qt_utilities
+### qtableview_demo
 
-`treeview_hide_expand()`: hides rows in a tree view that don't match a given
-pattern and optionally fully expands the view
+Application that demostrates several features of a QTableView.
+
+* horizontal scrolling for long cell: difference between "by item" and "by pixel"
+* initial column sizes up to a maximum: resize column width up to a maximum if necessary
+* hide rows in sparse tables: if a column gets hidden and only empty cells are left in a row, hide the row
+
+Enable build with cmake option `EXPERIMENTS_QTABLEVIEW_DEMO`.
+
+
+### Qt_Utilities
+
+A namespace containing:
 
 `Combobox_Label_Elide_Left_Proxy_Style`: If the text is too long for the label
 it will be elided left
 
-Enable build with cmake option `EXPERIMENTS_ARHELPER_QT` or `EXPERIMENTS_FS_FILTER_QT`.
+`tableview_adjust_row_visibility()`: decide row visibility depending on
+decoration, background, disabled cells
+
+`tableview_resizeColumnsToContents_maxpercent()`: resize column width up to a
+maximum if necessary
+
+`treeview_hide_expand()`: hides rows in a tree view that don't match a given
+pattern and optionally fully expands the view
+
+Enable build with cmake option `EXPERIMENTS_ARHELPER_QT` or `EXPERIMENTS_FS_FILTER_QT`
+or `EXPERIMENTS_QTABLEVIEW_DEMO`.
 
 
 ## `tests/`

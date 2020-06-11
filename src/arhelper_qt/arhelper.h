@@ -15,7 +15,6 @@ public:
     Arhelper(QWidget* parent = nullptr);
     virtual ~Arhelper() override = default;
 
-    void set_sevenzip_custom_path(const QString& path) { sevenzip_custom_path = path; }
     QStandardItemModel& get_archive_directory_model() { return archive_directory_model; }
     void ls(const QString& archive_path);
     void open_path(const QModelIndex& index, const QString& archive_path);
@@ -25,7 +24,6 @@ signals:
 
 private:
     QProcess* sevenzip();
-    QString sevenzip_custom_path;
     QStandardItemModel archive_directory_model;
     QTemporaryDir tempdir {};
 };

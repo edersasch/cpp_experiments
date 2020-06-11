@@ -6,6 +6,7 @@ option(EXPERIMENTS_ARHELPER_QT "Archvie Helper" ON)
 option(EXPERIMENTS_FS_FILTER_QT "Filesystem Filter" ON)
 option(EXPERIMENTS_FS_HISTORY_QT "Filesystem History" ON)
 option(EXPERIMENTS_ELEMENTARY_MATH_QML "Elementary Math" ON)
+option(EXPERIMENTS_QTABLEVIEW_DEMO "QTableView Demo" ON)
 option(EXPERIMENTS_COVERAGE_REPORT "Compile with coverage instrumentation" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")

@@ -1,0 +1,9 @@
+project(qtableview_demo)
+include(prjqt)
+include(prjexe)
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    Qt5::Gui
+    Qt5::Widgets
+    qt_utilities
+)

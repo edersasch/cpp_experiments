@@ -25,6 +25,10 @@ if (EXPERIMENTS_ELEMENTARY_MATH_QML)
     add_subdirectory(emvis1000_qml)
 endif()
 
-if(EXPERIMENTS_ARHELPER_QT OR EXPERIMENTS_FS_FILTER_QT)
+if (EXPERIMENTS_QTABLEVIEW_DEMO)
+    add_subdirectory(qtableview_demo)
+endif()
+
+if(EXPERIMENTS_ARHELPER_QT OR EXPERIMENTS_FS_FILTER_QT OR EXPERIMENTS_QTABLEVIEW_DEMO)
     add_subdirectory(qt_utilities)
 endif()

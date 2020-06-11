@@ -4,13 +4,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project uses dates as release identifiers.
 
 
+## 2020-06-11
+
+
+### Added
+
+- QTableView Demo
+- `ar_history_search_qt`: open entry by double click
+
+
 ## 2020-05-24
 
 
 ### Changed
 
 - raised build requirements to Qt 5.12
-- move `combobox_label_elide_left_proxy_style` unified `treeview_hide_expand` `qt_utilities`
+- move `combobox_label_elide_left_proxy_style` and unified `treeview_hide_expand` to `qt_utilities`
 
 
 ## 2020-05-23
