@@ -29,6 +29,7 @@ Item {
     onLast_indexChanged: change()
     onStepChanged: change()
     onOperation_idChanged: change()
+    onIndex_to_value_offsetChanged: change()
 
     anchors.fill: parent ? parent : undefined
 

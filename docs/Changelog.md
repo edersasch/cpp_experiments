@@ -4,6 +4,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project uses dates as release identifiers.
 
 
+## unreleased
+
+
+### Fixed
+
+- `elementary_math_qml`: multiplication with first factor 1, switching off `Start with 0` at first factor 0
+
+
 ## 2020-06-11
 
 

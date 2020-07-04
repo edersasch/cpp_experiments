@@ -37,7 +37,11 @@ void Vis_1000::change()
             fi -= step;
         }
     } else { // multiply
-        auto mcolor = set_limits("multiply_color", li / 2, fi > li / 2, li / fi, step > li / fi);
+        auto step_max = li;
+        if (fi > 0) {
+            step_max /= fi;
+        }
+        auto mcolor = set_limits("multiply_color", li / 2, fi > li / 2, step_max, step > step_max);
         auto pcolor = QQmlProperty(vis.get(), "plus_color").read().toString();
         auto i = fi;
         int last = 0;
@@ -49,6 +53,9 @@ void Vis_1000::change()
                 set_color(i, pcolor);
             }
             i += fi + offs;
+            if (i == 0) {
+                break;
+            }
         }
     }
 }
