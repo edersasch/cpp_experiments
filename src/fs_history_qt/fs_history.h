@@ -6,12 +6,10 @@
 
 #include <algorithm>
 
-template <typename T>
-void move_to_front(T& sequence, int pos)
-{
+auto move_to_front = [](auto& sequence, int pos) {
     auto it = sequence.begin() + pos;
     std::rotate(sequence.begin(), it, it + 1);
-}
+};
 
 class FS_History
         : public QObject
@@ -27,7 +25,7 @@ public:
 
     static constexpr int default_history_size {9};
 
-    FS_History(Operation_Mode mode, QString fallback, int history_size, const QStringList& initial_elements, QObject* parent = nullptr);
+    FS_History(Operation_Mode mode, QString fallback, int history_size, QStringList initial_elements, QObject* parent = nullptr);
     FS_History(const QStringList& initial_elements = {}, QObject* parent = nullptr);
     FS_History(int history_size, const QStringList& initial_elements = {}, QObject* parent = nullptr);
     FS_History(const QString& fallback, int history_size = default_history_size, const QStringList& initial_elements = {}, QObject* parent = nullptr);

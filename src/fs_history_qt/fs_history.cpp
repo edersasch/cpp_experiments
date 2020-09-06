@@ -5,17 +5,17 @@
 
 #include <utility>
 
-FS_History::FS_History(Operation_Mode mode, QString fallback, int history_size, const QStringList& initial_elements, QObject* parent)
+FS_History::FS_History(Operation_Mode mode, QString fallback, int history_size, QStringList initial_elements, QObject* parent)
     : QObject(parent)
     , opmode(mode)
     , hist_size(history_size < 2 ? 2 : history_size)
     , fb(std::move(fallback))
-    , elements(initial_elements)
+    , elements(std::move(initial_elements))
 {
     elements.removeDuplicates();
     connect(&watcher, &QFileSystemWatcher::directoryChanged, this, &FS_History::check);
     connect(&watcher, &QFileSystemWatcher::fileChanged, this, &FS_History::check);
-    QTimer::singleShot(0, this, [this, initial_elements] {
+    QTimer::singleShot(0, this, [this] {
         cleanup(true);
     });
 }
@@ -39,18 +39,14 @@ void FS_History::set_current_element(const QString &element)
 {
     if (is_valid(element)) {
         auto idx = elements.indexOf(element);
-        bool changed = false;
         if (idx == -1) {
             elements.prepend(element);
-            idx = 0;
-            changed = true;
         } else {
             if (idx > 0) {
-                move_to_front(elements, elements.indexOf(element));
-                changed = true;
+                move_to_front(elements, idx);
             }
         }
-        cleanup(changed);
+        cleanup(idx != 0);
     }
 }
 
@@ -65,9 +61,7 @@ void FS_History::cleanup(bool changed)
     if (elements.count() > hist_size) {
         elements.erase(elements.begin() + hist_size, elements.end()); // no resize() in QStringList
     }
-    if (prev_count != elements.count()) {
-        changed = true;
-    }
+    changed |= prev_count != elements.count();
     if (elements.isEmpty() && opmode == Operation_Mode::OP_DIR && !fb.isEmpty() && is_valid(fb)) {
         changed = true;
         elements << fb;
