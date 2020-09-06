@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Emvis1000
+Comment=Elementary Math Visualisation up to 1000
+Comment[de]=Grundrechenanrten Visualisierung bis 1000
+Exec=emvis1000
+Icon=emvis1000
+Type=Application
+Categories=Game;
+Keywords=math;visualisation;

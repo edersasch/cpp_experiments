@@ -203,3 +203,8 @@ CMake files
 and [DownloadProject.cmake](https://github.com/Crascit/DownloadProject/blob/26983dd7883acbabf6fd98968429f9af44186baf/DownloadProject.cmake)
 are licensed under
 [MIT License](https://github.com/Crascit/DownloadProject/blob/master/LICENSE) ([local copy](docs/LICENSE_Crascit_DownloadProject)).
+
+Icon taken from [openclipart](https://openclipart.com) is licensed under
+[Creative Commons Zero 1.0 Public Domain License](https://openclipart.org/share):
+
+* emvis1000.svg ([two.svg](https://openclipart.org/detail/71101/two-animal))
