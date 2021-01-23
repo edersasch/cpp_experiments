@@ -6,11 +6,13 @@ DEBODIR="ubuntu-xenial"
 init()
 {
     sudo debootstrap xenial "$DEBODIR"/
+    # for i386: sudo --arch=i386 debootstrap xenial "$DEBODIR"/
 
     sudo chroot "$DEBODIR" adduser xenialuser
     cd "$DEBODIR"/home/xenialuser || exit 1
     git clone ~/ar/Dokumente/experiments
     mkdir -p bin
+    # also available for i386
     wget -P bin https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
     wget -P bin https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
     chmod +x bin/linuxdeploy-x86_64.AppImage
@@ -43,6 +45,7 @@ EOF
 
     wget https://github.com/Kitware/CMake/releases/download/v3.14.1/cmake-3.14.1-Linux-x86_64.tar.gz
     sudo tar -C "$DEBODIR"/usr/local --strip-components=1 -xzf cmake-3.14.1-Linux-x86_64.tar.gz
+    # linux i386: https://askubuntu.com/questions/952429/is-there-a-good-ppa-for-cmake-backports#952929
 }
 
 prepare()

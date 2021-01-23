@@ -7,6 +7,17 @@ This project uses dates as release identifiers.
 ## unreleased
 
 
+### Added
+
+- `tiddlerstore`: text storage based on [tiddlywiki](https://tiddlywiki.com) [tiddler](https://tiddlywiki.com#Tiddlers) concept
+- `emvis1000` appimage deployment
+
+
+### Changed
+
+- `fs_history`: shorten by a few lines
+
+
 ### Fixed
 
 - `elementary_math_qml`: multiplication with first factor 1, switching off `Start with 0` at first factor 0

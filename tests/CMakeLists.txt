@@ -12,6 +12,10 @@ if(EXPERIMENTS_FS_FILTER_QT)
     add_subdirectory(fs_filter_qt)
 endif()
 
-if (EXPERIMENTS_ELEMENTARY_MATH_QML)
+if(EXPERIMENTS_ELEMENTARY_MATH_QML)
     add_subdirectory(elementary_math_qml)
+endif()
+
+if(EXPERIMENTS_TIDDLERSTORE_UI_QT)
+    add_subdirectory(tiddlerstore)
 endif()

@@ -1,0 +1,2 @@
+project(tiddlerstore)
+include(prjlib)

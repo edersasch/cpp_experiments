@@ -1,13 +1,17 @@
-cmake_minimum_required(VERSION 3.10.0)
+cmake_minimum_required(VERSION 3.11.0)
 project(experiments VERSION 0.1.0)
 
-option(EXPERIMENTS_BUILD_TESTS "Build unit tests" ON)
-option(EXPERIMENTS_ARHELPER_QT "Archvie Helper" ON)
-option(EXPERIMENTS_FS_FILTER_QT "Filesystem Filter" ON)
-option(EXPERIMENTS_FS_HISTORY_QT "Filesystem History" ON)
-option(EXPERIMENTS_ELEMENTARY_MATH_QML "Elementary Math" ON)
-option(EXPERIMENTS_QTABLEVIEW_DEMO "QTableView Demo" ON)
-option(EXPERIMENTS_COVERAGE_REPORT "Compile with coverage instrumentation" OFF)
+option(EXPERIMENTS_ARHELPER_QT                      "Archvie Helper"                                            ON)
+option(EXPERIMENTS_FS_FILTER_QT                     "Filesystem Filter"                                         ON)
+option(EXPERIMENTS_FS_HISTORY_QT                    "Filesystem History"                                        ON)
+option(EXPERIMENTS_ELEMENTARY_MATH_QML              "Elementary Math"                                           ON)
+option(EXPERIMENTS_QTABLEVIEW_DEMO                  "QTableView Demo"                                           ON)
+option(EXPERIMENTS_TIDDLERSTORE_UI_QT               "Tiddler Store UI"                                          ON)
+
+option(EXPERIMENTS_USE_EXTERNAL_JSON                "Use external nlohmann json library, download otherwise"    OFF)
+
+option(EXPERIMENTS_BUILD_TESTS                      "Build unit tests"                                          ON)
+option(EXPERIMENTS_COVERAGE_REPORT                  "Compile with coverage instrumentation"                     OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -41,6 +45,25 @@ if(DOXYGEN_FOUND)
         apidoc
         ${CMAKE_SOURCE_DIR}
         )
+endif()
+
+if(EXPERIMENTS_TIDDLERSTORE_UI_QT)
+    if(EXPERIMENTS_USE_EXTERNAL_JSON)
+        find_package(nlohmann_json 3.4.0 REQUIRED)
+    else()
+        include(FetchContent)
+        FetchContent_Declare(nlohmann_json
+            URL                 https://github.com/nlohmann/json/releases/download/v3.4.0/include.zip
+            URL_HASH            SHA256=bfec46fc0cee01c509cf064d2254517e7fa80d1e7647fea37cf81d97c5682bdc
+            UPDATE_DISCONNECTED 1
+            QUIET
+            )
+        FetchContent_GetProperties(nlohmann_json)
+        if(NOT nlohmann_json_POPULATED)
+            FetchContent_Populate(nlohmann_json)
+        endif()
+        include_directories(${nlohmann_json_SOURCE_DIR})
+    endif()
 endif()
 
 include(GNUInstallDirs)

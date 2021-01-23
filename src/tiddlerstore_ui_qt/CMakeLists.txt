@@ -1,0 +1,9 @@
+project(tiddlerstore_ui_qt)
+include(prjqt)
+include(prjexe)
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    Qt5::Gui
+    Qt5::Widgets
+    tiddlerstore
+)

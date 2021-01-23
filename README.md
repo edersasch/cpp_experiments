@@ -12,6 +12,9 @@ Concepts, solved problems and examples, available under [MIT license](LICENSE)
   * [fs_filter_qt](#fs_filter_qt): Searchable tree view of a directory
   * [fs_history_qt](#fs_history_qt): Maintains a string list of existing files or directories in the order of last access
   * [fs_history_search_qt](#fs_history_search_qt): Store nine recent directories and filter the content
+* Note Taking
+  * [Tiddlerstore](#tiddlerstore): text storage based on [tiddlywiki](https://tiddlywiki.com) [tiddler](https://tiddlywiki.com#Tiddlers) concept
+  * [Tiddlerstore_ui_qt](#tiddlerstore_ui_qt): tiddlerstore ui playground
 * [QTableView Demo](#qtableview_demo): Code related to QTableView
 * [Qt Utilities](#qt_utilities)
   * `Combobox_Label_Elide_Left_Proxy_Style`: If the text is too long for the label it will be elided left
@@ -23,8 +26,9 @@ Concepts, solved problems and examples, available under [MIT license](LICENSE)
 # Build Requirements
 
 * C++ 17 toolchain (e.g. [gcc](https://gcc.gnu.org/) >= 7.3.0)
-* [CMake](https://cmake.org) >= 3.10.0
+* [CMake](https://cmake.org) >= 3.11.0
 * [Qt](https://qt.io) >= 5.12.0
+* [nlohmann/json](https://github.com/nlohmann/json/) >= 3.4.0 for [tiddlerstore](#tiddlerstore), downloaded automatically if option `EXPERIMENTS_USE_EXTERNAL_JSON` is `OFF` (license: [MIT](https://github.com/nlohmann/json/blob/v3.4.0/LICENSE.MIT))
 
 
 # Optional Tools
@@ -170,6 +174,33 @@ Enable build with cmake option `EXPERIMENTS_ARHELPER_QT` or `EXPERIMENTS_FS_FILT
 or `EXPERIMENTS_QTABLEVIEW_DEMO`.
 
 
+### tiddlerstore
+
+If you are looking for a great note taking application that also has the
+ability to store files and that runs everywhere please give [tiddlywiki](https://tiddlywiki.com)
+a try. Its concepts are used here to store text information
+
+* title
+* text with an adjustible content history
+* tags (like a named bool: either present or not)
+* fields (key / value pairs)
+* lists (key / value list pairs)
+
+together in one unit. Conversion to and from json is done using
+[nlohmann/json](https://github.com/nlohmann/json/).
+
+Enable build with cmake option `EXPERIMENTS_TIDDLERSTORE_UI_QT`
+
+
+### tiddlerstore_ui_qt
+
+Playground for frontends that utilize [tiddlerstore](#tiddlerstore).  Includes
+BSD licensed flowlayout class from Qt examples, license is contained in the
+source files itself.
+
+Enable build with cmake option `EXPERIMENTS_TIDDLERSTORE_UI_QT`
+
+
 ## `tests/`
 
 Unit tests are
@@ -197,12 +228,6 @@ CMake file `CodeCoverage.cmake` adapted from
 is licensed under a BSD 3-Clause License included in the file itself: commented
 out `COMMAND ${LCOV_PATH} --gcov-tool ${GCOV_PATH} --remove ${Coverage_NAME}.total ${COVERAGE_LCOV_EXCLUDES} ...`
 and added `COMMAND ${LCOV_PATH} --gcov-tool ${GCOV_PATH} --extract ${Coverage_NAME}.total ${COVERAGE_LCOV_INCLUDES} ...`
-
-CMake files
-[DownloadProject.CMakeLists.cmake.in](https://github.com/Crascit/DownloadProject/blob/8adf96570b583fd1c280bed8f43a9a0528670cf4/DownloadProject.CMakeLists.cmake.in)
-and [DownloadProject.cmake](https://github.com/Crascit/DownloadProject/blob/26983dd7883acbabf6fd98968429f9af44186baf/DownloadProject.cmake)
-are licensed under
-[MIT License](https://github.com/Crascit/DownloadProject/blob/master/LICENSE) ([local copy](docs/LICENSE_Crascit_DownloadProject)).
 
 Icon taken from [openclipart](https://openclipart.com) is licensed under
 [Creative Commons Zero 1.0 Public Domain License](https://openclipart.org/share):
