@@ -48,6 +48,10 @@ TEST_F(Tiddlerstore_Test, text_history)
     t.set_history_size(4);
     t.set_text(a_text);
     check_text({a_text, will_disappear_text}, 4);
+    t.set_text(a_text);
+    check_text({a_text, will_disappear_text}, 4);
+    t.set_text("");
+    check_text({a_text, will_disappear_text}, 4);
     t.set_text(b_text);
     check_text({b_text, a_text, will_disappear_text}, 4);
     t.set_text(c_text);
@@ -85,6 +89,8 @@ TEST_F(Tiddlerstore_Test, tags)
     std::string c_tag = "ccc";
     t.set_tag(a_tag);
     check_tags({a_tag});
+    t.set_tag("");
+    check_tags({a_tag});
     t.set_tag(b_tag);
     check_tags({a_tag, b_tag});
     t.set_tag(b_tag);
@@ -118,6 +124,10 @@ TEST_F(Tiddlerstore_Test, fields)
     };
     expected_fields["a_key"] = "a_val";
     t.set_field("a_key", "a_val");
+    check_fields();
+    t.set_field("", "vanish");
+    check_fields();
+    t.set_field("vanish", "");
     check_fields();
     expected_fields["b_key"] = "b_val";
     t.set_field("b_key", "b_val");
@@ -156,6 +166,10 @@ TEST_F(Tiddlerstore_Test, lists)
     };
     expected_lists["a_key"] = {"a_val", "aa_val", "a", "a"}; // duplicate entries are allowed in lists
     t.set_list("a_key", {"a_val", "aa_val", "a", "a"});
+    check_lists();
+    t.set_list("", {"vanish", "vanish"});
+    check_lists();
+    t.set_list("vanish", {});
     check_lists();
     expected_lists["b_key"] = {"b_val", "bb_val", "b"};
     t.set_list("b_key", {"b_val", "bb_val", "b"});

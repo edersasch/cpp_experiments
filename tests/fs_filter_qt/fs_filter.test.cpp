@@ -2,8 +2,6 @@
 
 #include "qt_gtest_helper/qt_gtest_helper.h"
 
-#include <QDebug>
-
 FS_Filter_Test::FS_Filter_Test()
     : fsf(root_dir.path())
     , fsf_view(fsf.get_view())

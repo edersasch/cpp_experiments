@@ -1,4 +1,4 @@
-project(tiddlerstore_ui_qt)
+project(tiddler_inspector_qt)
 include(prjqt)
 include(prjexe)
 target_link_libraries(${PROJECT_NAME}
@@ -6,4 +6,6 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Gui
     Qt5::Widgets
     tiddlerstore
+    tiddlerstore_qt
+    qt_utilities
 )

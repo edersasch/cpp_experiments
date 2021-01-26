@@ -16,6 +16,10 @@ if(EXPERIMENTS_ELEMENTARY_MATH_QML)
     add_subdirectory(elementary_math_qml)
 endif()
 
-if(EXPERIMENTS_TIDDLERSTORE_UI_QT)
+if(EXPERIMENTS_TIDDLER_INSPECTOR_QT)
     add_subdirectory(tiddlerstore)
+endif()
+
+if(EXPERIMENTS_TIDDLER_INSPECTOR_QT)
+    add_subdirectory(tiddlerstore_qt)
 endif()

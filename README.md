@@ -14,7 +14,8 @@ Concepts, solved problems and examples, available under [MIT license](LICENSE)
   * [fs_history_search_qt](#fs_history_search_qt): Store nine recent directories and filter the content
 * Note Taking
   * [Tiddlerstore](#tiddlerstore): text storage based on [tiddlywiki](https://tiddlywiki.com) [tiddler](https://tiddlywiki.com#Tiddlers) concept
-  * [Tiddlerstore_ui_qt](#tiddlerstore_ui_qt): tiddlerstore ui playground
+  * [Tiddlerstore_qt](#tiddlerstore_qt): Qt tools that utilize [tiddlerstore](#tiddlerstore)
+  * [Tiddler_Inspector_qt](#tiddler_inspector_qt): text based editor for tiddlers
 * [QTableView Demo](#qtableview_demo): Code related to QTableView
 * [Qt Utilities](#qt_utilities)
   * `Combobox_Label_Elide_Left_Proxy_Style`: If the text is too long for the label it will be elided left
@@ -156,22 +157,23 @@ Enable build with cmake option `EXPERIMENTS_QTABLEVIEW_DEMO`.
 
 ### Qt_Utilities
 
-A namespace containing:
-
 `Combobox_Label_Elide_Left_Proxy_Style`: If the text is too long for the label
 it will be elided left
 
-`tableview_adjust_row_visibility()`: decide row visibility depending on
+`FlowLayout`: BSD licensed flowlayout class from Qt examples, license is
+contained in the source files itself.
+
+`Qt_Utilities::tableview_adjust_row_visibility()`: decide row visibility depending on
 decoration, background, disabled cells
 
-`tableview_resizeColumnsToContents_maxpercent()`: resize column width up to a
+`Qt_Utilities::tableview_resizeColumnsToContents_maxpercent()`: resize column width up to a
 maximum if necessary
 
-`treeview_hide_expand()`: hides rows in a tree view that don't match a given
+`Qt_Utilities::treeview_hide_expand()`: hides rows in a tree view that don't match a given
 pattern and optionally fully expands the view
 
 Enable build with cmake option `EXPERIMENTS_ARHELPER_QT` or `EXPERIMENTS_FS_FILTER_QT`
-or `EXPERIMENTS_QTABLEVIEW_DEMO`.
+or `EXPERIMENTS_QTABLEVIEW_DEMO` or `EXPERIMENTS_TIDDLER_INSPECTOR_QT`.
 
 
 ### tiddlerstore
@@ -189,16 +191,21 @@ a try. Its concepts are used here to store text information
 together in one unit. Conversion to and from json is done using
 [nlohmann/json](https://github.com/nlohmann/json/).
 
-Enable build with cmake option `EXPERIMENTS_TIDDLERSTORE_UI_QT`
+Enable build with cmake option `EXPERIMENTS_TIDDLER_INSPECTOR_QT`
 
 
-### tiddlerstore_ui_qt
+### tiddlerstore_qt
 
-Playground for frontends that utilize [tiddlerstore](#tiddlerstore).  Includes
-BSD licensed flowlayout class from Qt examples, license is contained in the
-source files itself.
+`Tiddler_Model`: operates on a Tiddler and emits signals if a part of the Tiddler changes
 
-Enable build with cmake option `EXPERIMENTS_TIDDLERSTORE_UI_QT`
+Enable build with cmake option `EXPERIMENTS_TIDDLER_INSPECTOR_QT`
+
+
+### tiddler_inspector_qt
+
+Text based editor for tiddlers
+
+Enable build with cmake option `EXPERIMENTS_TIDDLER_INSPECTOR_QT`
 
 
 ## `tests/`

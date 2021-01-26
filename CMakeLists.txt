@@ -6,7 +6,7 @@ option(EXPERIMENTS_FS_FILTER_QT                     "Filesystem Filter"         
 option(EXPERIMENTS_FS_HISTORY_QT                    "Filesystem History"                                        ON)
 option(EXPERIMENTS_ELEMENTARY_MATH_QML              "Elementary Math"                                           ON)
 option(EXPERIMENTS_QTABLEVIEW_DEMO                  "QTableView Demo"                                           ON)
-option(EXPERIMENTS_TIDDLERSTORE_UI_QT               "Tiddler Store UI"                                          ON)
+option(EXPERIMENTS_TIDDLER_INSPECTOR_QT             "Tiddler Inspector"                                         ON)
 
 option(EXPERIMENTS_USE_EXTERNAL_JSON                "Use external nlohmann json library, download otherwise"    OFF)
 
@@ -47,7 +47,7 @@ if(DOXYGEN_FOUND)
         )
 endif()
 
-if(EXPERIMENTS_TIDDLERSTORE_UI_QT)
+if(EXPERIMENTS_TIDDLER_INSPECTOR_QT)
     if(EXPERIMENTS_USE_EXTERNAL_JSON)
         find_package(nlohmann_json 3.4.0 REQUIRED)
     else()

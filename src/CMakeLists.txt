@@ -33,10 +33,14 @@ if(EXPERIMENTS_ARHELPER_QT OR EXPERIMENTS_FS_FILTER_QT OR EXPERIMENTS_QTABLEVIEW
     add_subdirectory(qt_utilities)
 endif()
 
-if(EXPERIMENTS_TIDDLERSTORE_UI_QT)
+if(EXPERIMENTS_TIDDLER_INSPECTOR_QT)
     add_subdirectory(tiddlerstore)
 endif()
 
-if(EXPERIMENTS_TIDDLERSTORE_UI_QT)
-    add_subdirectory(tiddlerstore_ui_qt)
+if(EXPERIMENTS_TIDDLER_INSPECTOR_QT)
+    add_subdirectory(tiddlerstore_qt)
+endif()
+
+if(EXPERIMENTS_TIDDLER_INSPECTOR_QT)
+    add_subdirectory(tiddler_inspector_qt)
 endif()

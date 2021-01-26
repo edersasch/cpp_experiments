@@ -14,10 +14,12 @@ auto map_value = [](const auto& map, const auto& key)
 
 auto set_map_value = [](auto& map, const auto& key, const auto& value)
 {
-    if (value.empty()) {
-        map.erase(key);
-    } else {
-        map[key] = value;
+    if (!key.empty()) {
+        if (value.empty()) {
+            map.erase(key);
+        } else {
+            map[key] = value;
+        }
     }
 };
 
