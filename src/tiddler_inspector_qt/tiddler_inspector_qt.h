@@ -2,7 +2,6 @@
 #define SRC_TIDDLER_INSPECTOR_QT_TIDDLER_INSPECTOR_QT
 
 #include <QWidget>
-#include <QStringListModel>
 
 #include <unordered_map>
 
@@ -13,17 +12,6 @@ class QVBoxLayout;
 class QBoxLayout;
 class QToolButton;
 class QLineEdit;
-
-class NoDnDOverwriteStringListModel
-        : public QStringListModel
-{
-    Q_OBJECT
-
-public:
-    NoDnDOverwriteStringListModel(QObject* parent = nullptr);
-    virtual ~NoDnDOverwriteStringListModel() override = default;
-    Qt::ItemFlags flags(const QModelIndex& index) const override;
-};
 
 class Tiddler_Inspector
         : public QWidget
@@ -59,14 +47,14 @@ private:
     static constexpr int list_stretch_factor = field_stretch_factor;
 
     Tiddler_Model* tm {nullptr};
-    QToolButton* tag_add;
-    QLineEdit* tag_edit;
-    FlowLayout* tags_layout;
-    QLineEdit* field_name_edit;
-    QLineEdit* field_value_edit;
+    QToolButton* edit_tag_add;
+    QLineEdit* edit_tag_lineedit;
+    FlowLayout* edit_tags_layout;
+    QLineEdit* edit_field_name_lineedit;
+    QLineEdit* edit_field_value_lineedit;
     QVBoxLayout* present_fields_layout;
-    QLineEdit* list_name_edit;
-    QLineEdit* list_value_edit;
+    QLineEdit* edit_list_name_lineedit;
+    QLineEdit* edit_list_value_lineedit;
     QVBoxLayout* present_lists_layout;
     struct Single_List_Element
     {

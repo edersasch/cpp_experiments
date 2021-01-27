@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
     QApplication::setOrganizationName("Edersasch_Opensource");
-    QApplication::setApplicationName("tiddlerstoreui");
+    QApplication::setApplicationName("Tiddler Inspector");
 
     QWidget w;
     QVBoxLayout l;
