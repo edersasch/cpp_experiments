@@ -10,6 +10,35 @@ Tiddlerstore::Tiddler Tiddler_Model::tiddler() const
     return t;
 }
 
+void Tiddler_Model::request_set_tiddler_data(const Tiddlerstore::Tiddler &other)
+{
+    bool title_will_change = t.title() != other.title();
+    bool history_size_will_change =  t.history_size() != other.history_size();
+    bool text_will_change = t.text_history() != other.text_history();
+    bool tags_will_change = t.tags() != other.tags();
+    bool fields_will_change = t.fields() != other.fields();
+    bool lists_will_change = t.lists() != other.lists();
+    t = other;
+    if (title_will_change) {
+        emit title_changed();
+    }
+    if (history_size_will_change) {
+        emit history_size_changed();
+    }
+    if (text_will_change) {
+        emit text_changed();
+    }
+    if (tags_will_change) {
+        emit tags_changed();
+    }
+    if (fields_will_change) {
+        emit fields_changed();
+    }
+    if (lists_will_change) {
+        emit lists_changed();
+    }
+}
+
 std::string Tiddler_Model::title() const
 {
     return t.title();

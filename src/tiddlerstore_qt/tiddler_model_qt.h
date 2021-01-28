@@ -11,12 +11,15 @@ class Tiddler_Model
     Q_OBJECT
 
 public:
-    Tiddler_Model(QObject* parent = nullptr);
+    explicit Tiddler_Model(QObject* parent = nullptr);
     virtual ~Tiddler_Model() = default;
 
 signals:
     void title_changed();
+
+    /// can also mean that text_history has changed if changed via request_set_tiddler_data()
     void text_changed();
+
     void history_size_changed();
     void tags_changed();
     void fields_changed();
@@ -25,6 +28,7 @@ signals:
 
 public:
     Tiddlerstore::Tiddler tiddler() const;
+    void request_set_tiddler_data(const Tiddlerstore::Tiddler& other);
 
     /// Tiddler API, modifier methods are prefixed with "request_", because they check for change and eventually don't emit the corresponding signal
     std::string title() const;
@@ -51,4 +55,4 @@ private:
     Tiddlerstore::Tiddler t;
 };
 
-#endif // SRC_TIDDLERSTORE_UI_QT_TIDDLER_MODEL_QT
+#endif // SRC_TIDDLERSTORE_QT_TIDDLER_MODEL_QT

@@ -10,6 +10,14 @@ TEST_F(Tiddlerstore_Test, title)
     auto check_title = [&t](const std::string& expected_title) {
         t.set_title(expected_title);
         EXPECT_EQ(expected_title, t.title());
+        Tiddlerstore::Tiddler copy(t);
+        EXPECT_EQ(expected_title, t.title());
+        EXPECT_EQ(expected_title, copy.title());
+        Tiddlerstore::Tiddler assign;
+        assign.set_title("something unexpected");
+        assign = t;
+        EXPECT_EQ(expected_title, t.title());
+        EXPECT_EQ(expected_title, assign.title());
         nlohmann::json j(t);
         Tiddlerstore::Tiddler clone = j.get<Tiddlerstore::Tiddler>();
         EXPECT_EQ(expected_title, t.title());
@@ -29,6 +37,18 @@ TEST_F(Tiddlerstore_Test, text_history)
     auto check_text = [&t](std::deque<std::string> expected_text_history, int expected_history_size) {
         EXPECT_EQ(expected_text_history, t.text_history());
         EXPECT_EQ(expected_history_size, t.history_size());
+        Tiddlerstore::Tiddler copy(t);
+        EXPECT_EQ(expected_text_history, t.text_history());
+        EXPECT_EQ(expected_text_history, copy.text_history());
+        EXPECT_EQ(expected_history_size, t.history_size());
+        EXPECT_EQ(expected_history_size, copy.history_size());
+        Tiddlerstore::Tiddler assign;
+        assign.set_text("something unexpected");
+        assign = t;
+        EXPECT_EQ(expected_text_history, t.text_history());
+        EXPECT_EQ(expected_text_history, assign.text_history());
+        EXPECT_EQ(expected_history_size, t.history_size());
+        EXPECT_EQ(expected_history_size, assign.history_size());
         nlohmann::json j(t);
         Tiddlerstore::Tiddler clone = j.get<Tiddlerstore::Tiddler>();
         EXPECT_EQ(expected_text_history, t.text_history());
@@ -73,6 +93,14 @@ TEST_F(Tiddlerstore_Test, tags)
     Tiddlerstore::Tiddler t;
     auto check_tags = [&t](std::vector<std::string> expected_tags) {
         EXPECT_EQ(expected_tags, t.tags());
+        Tiddlerstore::Tiddler copy(t);
+        EXPECT_EQ(expected_tags, t.tags());
+        EXPECT_EQ(expected_tags, copy.tags());
+        Tiddlerstore::Tiddler assign;
+        assign.set_tag("something unexpected");
+        assign = t;
+        EXPECT_EQ(expected_tags, t.tags());
+        EXPECT_EQ(expected_tags, assign.tags());
         nlohmann::json j(t);
         Tiddlerstore::Tiddler clone = j.get<Tiddlerstore::Tiddler>();
         EXPECT_EQ(expected_tags, t.tags());
@@ -80,6 +108,7 @@ TEST_F(Tiddlerstore_Test, tags)
         for (const auto& exptag : expected_tags) {
             EXPECT_EQ(true, t.has_tag(exptag));
             EXPECT_EQ(true, clone.has_tag(exptag));
+            EXPECT_EQ(true, assign.has_tag(exptag));
         }
         EXPECT_EQ(false, t.has_tag("never ever such a tag"));
         EXPECT_EQ(false, clone.has_tag("never ever such a tag"));
@@ -112,6 +141,14 @@ TEST_F(Tiddlerstore_Test, fields)
     std::unordered_map<std::string, std::string> expected_fields;
     auto check_fields = [&t, &expected_fields]() {
         EXPECT_EQ(expected_fields, t.fields());
+        Tiddlerstore::Tiddler copy(t);
+        EXPECT_EQ(expected_fields, t.fields());
+        EXPECT_EQ(expected_fields, copy.fields());
+        Tiddlerstore::Tiddler assign;
+        assign.set_field("something unexpected", "1");
+        assign = t;
+        EXPECT_EQ(expected_fields, t.fields());
+        EXPECT_EQ(expected_fields, assign.fields());
         nlohmann::json j(t);
         Tiddlerstore::Tiddler clone = j.get<Tiddlerstore::Tiddler>();
         EXPECT_EQ(expected_fields, t.fields());
@@ -154,6 +191,14 @@ TEST_F(Tiddlerstore_Test, lists)
     std::unordered_map<std::string, std::vector<std::string>> expected_lists;
     auto check_lists = [&t, &expected_lists]() {
         EXPECT_EQ(expected_lists, t.lists());
+        Tiddlerstore::Tiddler copy(t);
+        EXPECT_EQ(expected_lists, t.lists());
+        EXPECT_EQ(expected_lists, copy.lists());
+        Tiddlerstore::Tiddler assign;
+        assign.set_list("something unexpected", {"1", "2", "3"});
+        assign = t;
+        EXPECT_EQ(expected_lists, t.lists());
+        EXPECT_EQ(expected_lists, assign.lists());
         nlohmann::json j(t);
         Tiddlerstore::Tiddler clone = j.get<Tiddlerstore::Tiddler>();
         EXPECT_EQ(expected_lists, t.lists());

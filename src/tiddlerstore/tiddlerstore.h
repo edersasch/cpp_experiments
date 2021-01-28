@@ -18,6 +18,8 @@ class Tiddler
 public:
     /// Create empty tiddler
     Tiddler() = default;
+    Tiddler(const Tiddler& other) = default;
+    Tiddler& operator=(const Tiddlerstore::Tiddler& rhs) = default;
     virtual ~Tiddler() = default;
 
     static constexpr auto version_value         = 1;

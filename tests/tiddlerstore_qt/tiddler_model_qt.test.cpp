@@ -29,6 +29,14 @@ TEST_F(Tiddler_Model_Test, title)
     tm.request_set_title("two");
     processEvents();
     EXPECT_EQ("two", tm.title());
+    EXPECT_CALL(tmt_slots, title_changed());
+    Tiddlerstore::Tiddler t;
+    t.set_title("set data");
+    tm.request_set_tiddler_data(t);
+    processEvents();
+    EXPECT_EQ(t.title(), tm.title());
+    tm.request_set_tiddler_data(t);
+    processEvents();
 }
 
 TEST_F(Tiddler_Model_Test, text)
@@ -47,6 +55,14 @@ TEST_F(Tiddler_Model_Test, text)
     tm.request_set_text("two");
     processEvents();
     EXPECT_EQ("two", tm.text());
+    EXPECT_CALL(tmt_slots, text_changed());
+    Tiddlerstore::Tiddler t;
+    t.set_text("set data");
+    tm.request_set_tiddler_data(t);
+    processEvents();
+    EXPECT_EQ(t.text(), tm.text());
+    tm.request_set_tiddler_data(t);
+    processEvents();
 }
 
 TEST_F(Tiddler_Model_Test, history_size)
@@ -65,6 +81,14 @@ TEST_F(Tiddler_Model_Test, history_size)
     tm.request_set_history_size(500);
     processEvents();
     EXPECT_EQ(100, tm.history_size());
+    EXPECT_CALL(tmt_slots, history_size_changed());
+    Tiddlerstore::Tiddler t;
+    t.set_history_size(59);
+    tm.request_set_tiddler_data(t);
+    processEvents();
+    EXPECT_EQ(t.history_size(), tm.history_size());
+    tm.request_set_tiddler_data(t);
+    processEvents();
 }
 
 TEST_F(Tiddler_Model_Test, tags)
@@ -93,6 +117,14 @@ TEST_F(Tiddler_Model_Test, tags)
     tm.request_remove_tag("not there");
     processEvents();
     EXPECT_EQ(std::vector<std::string>({"two"}), tm.tags());
+    EXPECT_CALL(tmt_slots, tags_changed());
+    Tiddlerstore::Tiddler t;
+    t.set_tag("set data");
+    tm.request_set_tiddler_data(t);
+    processEvents();
+    EXPECT_EQ(t.tags(), tm.tags());
+    tm.request_set_tiddler_data(t);
+    processEvents();
 }
 
 TEST_F(Tiddler_Model_Test, fields)
@@ -132,6 +164,14 @@ TEST_F(Tiddler_Model_Test, fields)
     tm.request_remove_field("one");
     processEvents();
     EXPECT_EQ(expected, tm.fields());
+    EXPECT_CALL(tmt_slots, fields_changed());
+    Tiddlerstore::Tiddler t;
+    t.set_field("set data", "set data");
+    tm.request_set_tiddler_data(t);
+    processEvents();
+    EXPECT_EQ(t.fields(), tm.fields());
+    tm.request_set_tiddler_data(t);
+    processEvents();
 }
 
 TEST_F(Tiddler_Model_Test, lists)
@@ -181,4 +221,12 @@ TEST_F(Tiddler_Model_Test, lists)
     tm.request_remove_list("one");
     processEvents();
     EXPECT_EQ(expected, tm.lists());
+    EXPECT_CALL(tmt_slots, lists_changed());
+    Tiddlerstore::Tiddler t;
+    t.set_list("set data", {"set data"});
+    tm.request_set_tiddler_data(t);
+    processEvents();
+    EXPECT_EQ(t.lists(), tm.lists());
+    tm.request_set_tiddler_data(t);
+    processEvents();
 }

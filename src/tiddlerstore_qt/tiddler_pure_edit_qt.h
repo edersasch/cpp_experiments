@@ -1,0 +1,68 @@
+#ifndef SRC_TIDDLERSTORE_QT_TIDDLER_PURE_EDIT_QT
+#define SRC_TIDDLERSTORE_QT_TIDDLER_PURE_EDIT_QT
+
+#include "tiddler_model_qt.h"
+
+#include <QWidget>
+
+#include <unordered_map>
+
+class FlowLayout;
+class QLineEdit;
+class QTextEdit;
+class QToolButton;
+class QMenu;
+class QVBoxLayout;
+
+class Tiddler_Pure_Edit
+        : public QWidget
+{
+    Q_OBJECT
+
+signals:
+    void accept_edit();
+    void discard_edit();
+
+public:
+    explicit Tiddler_Pure_Edit(QWidget* parent = nullptr);
+    virtual ~Tiddler_Pure_Edit() = default;
+
+    Tiddler_Model* tiddler_model();
+    void set_tiddler_model(Tiddler_Model* model);
+
+private:
+    static constexpr int field_stretch_factor = 2;
+    static constexpr int list_stretch_factor = field_stretch_factor;
+
+    void update_dirty();
+    void update_present_tags();
+    void update_present_fields();
+    void update_present_lists();
+    void update_present_list(const std::string& list_name);
+    QToolButton* deletable_value(const std::string& text, FlowLayout* parent_layout);
+
+    Tiddler_Model* tm {nullptr};
+    Tiddler_Model work_tm {};
+    QLineEdit* title_lineedit;
+    QTextEdit* text_edit;
+    QToolButton* discard_button;
+    QMenu* discard_menu;
+    QToolButton* tag_add_button;
+    QLineEdit* tag_lineedit;
+    FlowLayout* tags_layout;
+    QLineEdit* field_name_lineedit;
+    QLineEdit* field_value_lineedit;
+    QVBoxLayout* present_fields_layout;
+    QLineEdit* list_name_lineedit;
+    QLineEdit* list_value_lineedit;
+    QVBoxLayout* present_lists_layout;
+    struct Single_List_Element
+    {
+        FlowLayout* l {nullptr};
+        QToolButton* add {nullptr};
+        QLineEdit* val {nullptr};
+    };
+    std::unordered_map<std::string, Single_List_Element> single_list_elements;
+};
+
+#endif // SRC_TIDDLERSTORE_QT_TIDDLER_PURE_EDIT_QT
