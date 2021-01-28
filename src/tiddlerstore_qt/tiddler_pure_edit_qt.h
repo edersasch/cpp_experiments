@@ -30,21 +30,30 @@ public:
     Tiddler_Model* tiddler_model();
     void set_tiddler_model(Tiddler_Model* model);
 
+protected:
+    void showEvent(QShowEvent* event) override;
+
 private:
     static constexpr int field_stretch_factor = 2;
     static constexpr int list_stretch_factor = field_stretch_factor;
 
+    /// if tm is valid and its content differs from work_tm content, the discard_button gets a menu so you have to click twice
     void update_dirty();
+
     void update_present_tags();
     void update_present_fields();
     void update_present_lists();
     void update_present_list(const std::string& list_name);
     QToolButton* deletable_value(const std::string& text, FlowLayout* parent_layout);
 
+    /// accept_button will only be shown if the model tm is valid
+    void present_accept_button();
+
     Tiddler_Model* tm {nullptr};
     Tiddler_Model work_tm {};
     QLineEdit* title_lineedit;
     QTextEdit* text_edit;
+    QToolButton* accept_button;
     QToolButton* discard_button;
     QMenu* discard_menu;
     QToolButton* tag_add_button;

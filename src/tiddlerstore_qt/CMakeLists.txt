@@ -6,4 +6,5 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Gui
     Qt5::Widgets
     tiddlerstore
+    qt_utilities
 )

@@ -27,6 +27,8 @@ protected:
     void showEvent(QShowEvent* event) override;
 
 private:
+    /// edit_button will only be shown if the model tm is valid
+    void present_edit_button();
     Tiddler_Model* tm {nullptr};
     QLabel* title_label;
     QTextBrowser* text_browser;

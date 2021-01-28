@@ -39,33 +39,14 @@ void Tiddler_Pure_View::set_tiddler_model(Tiddler_Model* model)
         }
         tm = model;
         if (tm) {
-            edit_button->show();
             connect(tm, &Tiddler_Model::title_changed, this, [this] {
                 title_label->setText(tm->title().c_str());
             });
             connect(tm, &Tiddler_Model::text_changed, this, [this] {
                 text_browser->setText(tm->text().c_str());
             });
-            /*
-            connect(tm, &Tiddler_Model::history_size_changed, this, [this] {
-                //
-            });
-            connect(tm, &Tiddler_Model::tags_changed, this, [this] {
-                //
-            });
-            connect(tm, &Tiddler_Model::fields_changed, this, [this] {
-                //
-            });
-            connect(tm, &Tiddler_Model::lists_changed, this, [this] {
-                //
-            });
-            connect(tm, &Tiddler_Model::single_list_changed, this, [this](const std::string& list_name) {
-                //
-            });
-            */
-        } else {
-            edit_button->hide();
         }
+        present_edit_button();
     }
 }
 
@@ -74,9 +55,12 @@ void Tiddler_Pure_View::set_tiddler_model(Tiddler_Model* model)
 void Tiddler_Pure_View::showEvent(QShowEvent* event)
 {
     QWidget::showEvent(event);
-    if (tm) {
-        edit_button->show();
-    } else {
-        edit_button->hide();
-    }
+    present_edit_button();
+}
+
+// private
+
+void Tiddler_Pure_View::present_edit_button()
+{
+    tm ? edit_button->show() : edit_button->hide();
 }
