@@ -3,8 +3,6 @@
 #include <QToolButton>
 #include <QComboBox>
 #include <QFileDialog>
-#include <QTextOption>
-#include <QPainter>
 #include <QMenu>
 
 FS_History_UI::FS_History_UI(FS_History::Operation_Mode mode, const QString& fallback, int history_size, const QStringList& initial_elements, QObject* parent)

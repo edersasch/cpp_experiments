@@ -39,9 +39,11 @@ void Tiddler_Pure_View::set_tiddler_model(Tiddler_Model* model)
         }
         tm = model;
         if (tm) {
+            title_label->setText(tm->title().c_str());
             connect(tm, &Tiddler_Model::title_changed, this, [this] {
                 title_label->setText(tm->title().c_str());
             });
+            text_browser->setText(tm->text().c_str());
             connect(tm, &Tiddler_Model::text_changed, this, [this] {
                 text_browser->setText(tm->text().c_str());
             });

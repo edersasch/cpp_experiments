@@ -1,10 +1,18 @@
 #ifndef SRC_TIDDLER_INSPECTOR_QT_TIDDLER_INSPECTOR_QT
 #define SRC_TIDDLER_INSPECTOR_QT_TIDDLER_INSPECTOR_QT
 
+#include "tiddlerstore_qt/tiddler_model_qt.h"
+
 #include <QWidget>
+#include <QStringListModel>
+
+#include <vector>
+#include <memory>
 
 class Tiddler_Pure_View;
 class Tiddler_Pure_Edit;
+class QToolButton;
+class QMenu;
 
 class Tiddler_Inspector
         : public QWidget
@@ -18,9 +26,17 @@ public:
     QString get_store();
 
 private:
+    void update_tiddler_list();
+    void adjust_dirty(bool dirty_value);
+
     Tiddler_Pure_View* pure_view;
     Tiddler_Pure_Edit* pure_edit;
-    bool is_edit_mode_active {false};
+    std::vector<std::unique_ptr<Tiddler_Model>> tiddler_models;
+    QStringListModel title_model {};
+    bool is_dirty {false};
+    QToolButton* load_button;
+    QMenu* load_safety_menu;
+    QMenu* load_history_menu;
 };
 
 #endif // SRC_TIDDLER_INSPECTOR_QT_TIDDLER_INSPECTOR_QT

@@ -6,7 +6,6 @@
 #include <QObject>
 #include <QStringListModel>
 #include <QStandardPaths>
-#include <QProxyStyle>
 
 class QWidget;
 class QComboBox;

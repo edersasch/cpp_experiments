@@ -67,16 +67,20 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     connect(title_lineedit, &QLineEdit::textChanged, this, [this]() {
         update_dirty();
     });
-    connect(accept_button, &QToolButton::clicked, this, [this] {
+    connect(accept_button, &QToolButton::clicked, this, [this, discard_action] {
         if (tm) {
-            tm->request_set_tiddler_data(work_tm.tiddler());
-            tm->request_set_title(title_lineedit->text().toStdString());
-            tm->request_set_text(text_edit->toPlainText().toStdString());
-            emit accept_edit();
+            if (current_dirty) {
+                tm->request_set_tiddler_data(work_tm.tiddler());
+                tm->request_set_title(title_lineedit->text().toStdString());
+                tm->request_set_text(text_edit->toPlainText().toStdString());
+                emit accept_edit();
+            } else {
+                emit discard_action->trigger();
+            }
         }
     });
     connect(discard_button, &QToolButton::clicked, this, [this, discard_action] {
-        if (!discard_button->menu()) {
+        if (!current_dirty) {
             discard_action->trigger();
         }
     });
@@ -183,6 +187,10 @@ void Tiddler_Pure_Edit::update_dirty()
     dirty |= (tm && work_tm.fields() != tm->fields());
     dirty |= (tm && work_tm.lists() != tm->lists());
     discard_button->setMenu(dirty ? discard_menu : nullptr);
+    if (current_dirty != dirty) {
+        current_dirty = dirty;
+        emit unsaved_edit(dirty);
+    }
 }
 
 void Tiddler_Pure_Edit::update_present_tags()

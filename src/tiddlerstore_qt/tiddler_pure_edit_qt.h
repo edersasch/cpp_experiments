@@ -22,6 +22,7 @@ class Tiddler_Pure_Edit
 signals:
     void accept_edit();
     void discard_edit();
+    void unsaved_edit(bool);
 
 public:
     explicit Tiddler_Pure_Edit(QWidget* parent = nullptr);
@@ -72,6 +73,7 @@ private:
         QLineEdit* val {nullptr};
     };
     std::unordered_map<std::string, Single_List_Element> single_list_elements;
+    bool current_dirty {false};
 };
 
 #endif // SRC_TIDDLERSTORE_QT_TIDDLER_PURE_EDIT_QT
