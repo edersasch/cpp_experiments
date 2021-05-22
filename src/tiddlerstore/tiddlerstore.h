@@ -87,6 +87,33 @@ void to_json(nlohmann::json& j, const Tiddler& t);
 /// Every json key except version is optional. Passing an already filled tiddler will add text_history, tags, fields and lists.
 void from_json(const nlohmann::json& j, Tiddler& t);
 
+using Store = std::vector<std::unique_ptr<Tiddler>>;
+void to_json(nlohmann::json& j, const Store& s);
+void from_json(const nlohmann::json& j, Store& s);
+
+class Store_Filter
+{
+public:
+    Store_Filter(const Store& all);
+    ~Store_Filter() = default;
+
+    Store_Filter& title(const std::string& title_value);
+    Store_Filter& n_title(const std::string& title_value);
+    Store_Filter& tag(const std::string& tag_value);
+    Store_Filter& n_tag(const std::string& tag_value);
+    Store_Filter& tagged();
+    Store_Filter& n_tagged();
+    Store_Filter& field(const std::string& field_name, const std::string& value = {});
+    Store_Filter& n_field(const std::string& field_name, const std::string& value = {});
+    Store_Filter& list(const std::string& list_name, const std::vector<std::string>& contains = {});
+    Store_Filter& n_list(const std::string& list_name, const std::vector<std::string>& contains = {});
+    std::vector<std::size_t> filtered_idx();
+
+private:
+    const Store& s;
+    std::vector<std::size_t> idx;
+};
+
 }
 
 #endif // SRC_TIDDLERSTORE_TIDDLERSTORE

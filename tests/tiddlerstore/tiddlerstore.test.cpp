@@ -241,3 +241,140 @@ TEST_F(Tiddlerstore_Test, lists)
     t.set_list("a_key", {"", "", "aaa", ""}); // only "aaa" stays
     check_lists();
 }
+
+TEST_F(Tiddlerstore_Test, store)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t1->set_title("t1");
+    t1->set_text("... t1 ...");
+    auto t2 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t2->set_title("t2");
+    t2->set_text("... t2 ...");
+    nlohmann::json j(s);
+    Tiddlerstore::Store clone = j.get<Tiddlerstore::Store>();
+    EXPECT_EQ(s.size(), clone.size());
+    EXPECT_EQ(s[0]->title(), clone[0]->title());
+    EXPECT_EQ(s[0]->text(), clone[0]->text());
+    EXPECT_EQ(s[1]->title(), clone[1]->title());
+    EXPECT_EQ(s[1]->text(), clone[1]->text());
+}
+
+TEST_F(Tiddlerstore_Test, filter_title)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t1->set_title("a");
+    auto t2 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t2->set_title("b");
+    auto t3 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t3->set_title("c");
+    auto r1 = Tiddlerstore::Store_Filter(s).title("a").filtered_idx();
+    EXPECT_EQ(1, r1.size());
+    auto r2 = Tiddlerstore::Store_Filter(s).title("b").filtered_idx();
+    EXPECT_EQ(1, r2.size());
+    auto r3 = Tiddlerstore::Store_Filter(s).n_title("a").filtered_idx();
+    EXPECT_EQ(2, r3.size());
+}
+
+TEST_F(Tiddlerstore_Test, filter_tags)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t1->set_tag("a");
+    t1->set_tag("b");
+    t1->set_tag("c");
+    auto t2 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t2->set_tag("b");
+    t2->set_tag("c");
+    t2->set_tag("d");
+    auto t3 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t3->set_tag("c");
+    t3->set_tag("d");
+    t3->set_tag("e");
+    auto r1 = Tiddlerstore::Store_Filter(s).tag("a").filtered_idx();
+    EXPECT_EQ(1, r1.size());
+    auto r2 = Tiddlerstore::Store_Filter(s).tag("b").filtered_idx();
+    EXPECT_EQ(2, r2.size());
+    auto r3 = Tiddlerstore::Store_Filter(s).tag("c").filtered_idx();
+    EXPECT_EQ(3, r3.size());
+    auto r4 = Tiddlerstore::Store_Filter(s).tag("d").filtered_idx();
+    EXPECT_EQ(2, r4.size());
+    auto r5 = Tiddlerstore::Store_Filter(s).n_tag("d").filtered_idx();
+    EXPECT_EQ(1, r5.size());
+    auto r6 = Tiddlerstore::Store_Filter(s).n_tag("e").filtered_idx();
+    EXPECT_EQ(2, r6.size());
+    auto r7 = Tiddlerstore::Store_Filter(s).n_tagged().filtered_idx();
+    EXPECT_EQ(0, r7.size());
+    s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    auto r8 = Tiddlerstore::Store_Filter(s).n_tagged().filtered_idx();
+    EXPECT_EQ(1, r8.size());
+    auto r9 = Tiddlerstore::Store_Filter(s).tagged().filtered_idx();
+    EXPECT_EQ(3, r9.size());
+}
+
+TEST_F(Tiddlerstore_Test, filter_fields)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t1->set_field("a", "a_field");
+    t1->set_field("b", "b_field");
+    t1->set_field("c", "c_field");
+    auto t2 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t2->set_field("b", "b_field");
+    t2->set_field("c", "c_field");
+    t2->set_field("d", "d_field2");
+    auto t3 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t3->set_field("c", "c_field");
+    t3->set_field("d", "d_field3");
+    t3->set_field("e", "e_field");
+    auto r1 = Tiddlerstore::Store_Filter(s).field("a").filtered_idx();
+    EXPECT_EQ(1, r1.size());
+    auto r2 = Tiddlerstore::Store_Filter(s).field("b").filtered_idx();
+    EXPECT_EQ(2, r2.size());
+    auto r3 = Tiddlerstore::Store_Filter(s).field("c").filtered_idx();
+    EXPECT_EQ(3, r3.size());
+    auto r4 = Tiddlerstore::Store_Filter(s).field("d").filtered_idx();
+    EXPECT_EQ(2, r4.size());
+    auto r5 = Tiddlerstore::Store_Filter(s).n_field("d").filtered_idx();
+    EXPECT_EQ(1, r5.size());
+    auto r6 = Tiddlerstore::Store_Filter(s).n_field("e").filtered_idx();
+    EXPECT_EQ(2, r6.size());
+    auto r7 = Tiddlerstore::Store_Filter(s).field("d", "d_field2").filtered_idx();
+    EXPECT_EQ(1, r7.size());
+    auto r8 = Tiddlerstore::Store_Filter(s).field("d", "not there").filtered_idx();
+    EXPECT_EQ(0, r8.size());
+}
+
+TEST_F(Tiddlerstore_Test, filter_lists)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t1->set_list("a", {"a1_1", "a1_2", "a1_3"});
+    t1->set_list("b", {"b1_1", "b1_2", "b1_3"});
+    t1->set_list("c", {"c1_1", "c1_2", "c1_3"});
+    auto t2 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t2->set_list("b", {"b2_1", "b2_2", "b2_3"});
+    t2->set_list("c", {"c2_1", "c2_2", "c2_3"});
+    t2->set_list("d", {"d2_1", "d2_2", "d2_3"});
+    auto t3 = s.emplace_back(std::make_unique<Tiddlerstore::Tiddler>()).get();
+    t3->set_list("c", {"c3_1", "c3_2", "c3_3"});
+    t3->set_list("d", {"d3_1", "d3_2", "d3_3"});
+    t3->set_list("e", {"e3_1", "e3_2", "e3_3"});
+    auto r1 = Tiddlerstore::Store_Filter(s).list("a").filtered_idx();
+    EXPECT_EQ(1, r1.size());
+    auto r2 = Tiddlerstore::Store_Filter(s).list("b").filtered_idx();
+    EXPECT_EQ(2, r2.size());
+    auto r3 = Tiddlerstore::Store_Filter(s).list("c").filtered_idx();
+    EXPECT_EQ(3, r3.size());
+    auto r4 = Tiddlerstore::Store_Filter(s).list("d").filtered_idx();
+    EXPECT_EQ(2, r4.size());
+    auto r5 = Tiddlerstore::Store_Filter(s).n_list("d").filtered_idx();
+    EXPECT_EQ(1, r5.size());
+    auto r6 = Tiddlerstore::Store_Filter(s).n_list("e").filtered_idx();
+    EXPECT_EQ(2, r6.size());
+    auto r7 = Tiddlerstore::Store_Filter(s).list("d", {"d2_1", "d2_3"}).filtered_idx();
+    EXPECT_EQ(1, r7.size());
+    auto r8 = Tiddlerstore::Store_Filter(s).list("d", {"d3_2", "not there"}).filtered_idx();
+    EXPECT_EQ(0, r8.size());
+}

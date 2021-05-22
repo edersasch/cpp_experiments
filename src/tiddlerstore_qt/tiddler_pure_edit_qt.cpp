@@ -37,7 +37,6 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     , accept_button(new QToolButton)
     , discard_button(new QToolButton)
     , discard_menu(new QMenu(this))
-    , tag_add_button(new QToolButton)
     , tag_lineedit(new QLineEdit)
     , tags_layout(new FlowLayout)
     , field_name_lineedit(new QLineEdit)
@@ -97,12 +96,11 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     main_layout->addWidget(tags_group);
     tag_lineedit->setPlaceholderText("Tag name");
     tags_layout->addWidget(tag_lineedit);
-    tag_add_button->setIcon(style()->standardIcon(QStyle::SP_DialogApplyButton));
-    tags_layout->addWidget(tag_add_button);
-    connect(tag_add_button, &QToolButton::clicked, this, [this] {
+    auto tag_add_action = tag_lineedit->addAction(style()->standardIcon(QStyle::SP_DialogApplyButton), QLineEdit::LeadingPosition);
+    connect(tag_add_action, &QAction::triggered, this, [this] {
         work_tm.request_set_tag(tag_lineedit->text().toStdString());
     });
-    connect(tag_lineedit, &QLineEdit::returnPressed, tag_add_button, &QToolButton::click);
+    connect(tag_lineedit, &QLineEdit::returnPressed, tag_add_action, &QAction::trigger);
 
     auto add_field_layout(new QHBoxLayout);
     auto fields_group(new QGroupBox("Fields"));
@@ -176,7 +174,6 @@ void Tiddler_Pure_Edit::showEvent(QShowEvent* event)
     present_accept_button();
 }
 
-
 // private
 
 void Tiddler_Pure_Edit::update_dirty()
@@ -195,7 +192,6 @@ void Tiddler_Pure_Edit::update_dirty()
 
 void Tiddler_Pure_Edit::update_present_tags()
 {
-    tags_layout->removeWidget(tag_add_button);
     tags_layout->removeWidget(tag_lineedit);
     tag_lineedit->clear();
     clear_layout(tags_layout);
@@ -204,7 +200,6 @@ void Tiddler_Pure_Edit::update_present_tags()
             work_tm.request_remove_tag(tag);
         });
     }
-    tags_layout->addWidget(tag_add_button);
     tags_layout->addWidget(tag_lineedit);
     update_dirty();
 }
@@ -228,6 +223,7 @@ void Tiddler_Pure_Edit::update_present_fields()
             work_tm.request_remove_field(field.first);
         });
     }
+    update_dirty();
 }
 
 void Tiddler_Pure_Edit::update_present_lists()
@@ -242,45 +238,42 @@ void Tiddler_Pure_Edit::update_present_lists()
         auto del(new QToolButton);
         auto listnamelabel(new QLabel(QString(list.first.c_str()) + ": "));
         auto listvalues = list.second;
-        auto ladd(new QToolButton);
         auto lval(new QLineEdit);
         del->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
-        ladd->setIcon(style()->standardIcon(QStyle::SP_DialogApplyButton));
         lval->setPlaceholderText("add ...");
+        auto ladd_action = lval->addAction(style()->standardIcon(QStyle::SP_DialogApplyButton), QLineEdit::LeadingPosition);
         l->addWidget(del);
         l->addWidget(listnamelabel);
-        present_values_layout->addWidget(ladd);
         present_values_layout->addWidget(lval);
         l->addLayout(present_values_layout, list_stretch_factor);
-        single_list_elements[list.first] = {present_values_layout, ladd, lval};
+        single_list_elements[list.first] = {present_values_layout, lval};
         update_present_list(list.first);
         present_lists_layout->addLayout(l);
         connect(del, &QToolButton::clicked, this, [this, list] {
             work_tm.request_remove_list(list.first);
         });
-        connect(ladd, &QToolButton::clicked, this, [this, list, lval] {
+        connect(ladd_action, &QAction::triggered, this, [this, list, lval] {
             if (!lval->text().isEmpty()) {
                 auto values = work_tm.list(list.first);
                 values.push_back(lval->text().toStdString());
                 work_tm.request_set_list(list.first, values);
             }
         });
-        connect(lval, &QLineEdit::returnPressed, ladd, &QToolButton::click);
+        connect(lval, &QLineEdit::returnPressed, ladd_action, &QAction::trigger);
     }
+    update_dirty();
 }
 
 void Tiddler_Pure_Edit::update_present_list(const std::string &list_name)
 {
     auto listvalues = work_tm.list(list_name);
     auto lui = single_list_elements[list_name];
-    if (!lui.l || !lui.add || !lui.val) {
+    if (!lui.l || !lui.val) {
         return;
     }
-    lui.l->removeWidget(lui.add);
     lui.l->removeWidget(lui.val);
     clear_layout(lui.l);
     if (listvalues.empty()) {
-        delete(lui.add);
         delete(lui.val);
         update_present_lists();
     } else {
@@ -295,8 +288,8 @@ void Tiddler_Pure_Edit::update_present_list(const std::string &list_name)
             });
         }
         lui.val->clear();
-        lui.l->addWidget(lui.add);
         lui.l->addWidget(lui.val);
+        update_dirty();
     }
 }
 

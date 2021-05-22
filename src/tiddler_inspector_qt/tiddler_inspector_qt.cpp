@@ -3,8 +3,6 @@
 #include "tiddlerstore_qt/tiddler_pure_view_qt.h"
 #include "tiddlerstore_qt/tiddler_pure_edit_qt.h"
 
-#include "fs_history_qt/fs_history_ui.h"
-
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <QStackedWidget>
@@ -21,9 +19,8 @@ Tiddler_Inspector::Tiddler_Inspector(const QString& tiddlerstore_json, QWidget* 
     : QWidget(parent)
     , pure_view(new Tiddler_Pure_View)
     , pure_edit(new Tiddler_Pure_Edit)
+    , store_chooser({})
     , load_button(new QToolButton)
-    , load_safety_menu(new QMenu)
-    , load_history_menu(new QMenu)
 {
     auto tiddler_view_edit_stack(new QStackedWidget(this));
     auto view_index = tiddler_view_edit_stack->addWidget(pure_view);
@@ -95,19 +92,16 @@ Tiddler_Inspector::Tiddler_Inspector(const QString& tiddlerstore_json, QWidget* 
         placeholder_tiddler_action->setVisible(!(show_open || show_add));
     });
 
+    load_history_menu = store_chooser.menu(true, "attention: unsaved changes", true);
     load_button->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
     load_button->setPopupMode(QToolButton::InstantPopup);
-    load_history_menu->setTitle("attention: usaved changes");
     load_button->setMenu(load_history_menu);
-
-    load_history_menu->addAction("bastel 1");
-    load_history_menu->addAction("bastel 2");
-    load_history_menu->addAction("bastel 3");
 
     auto save_button(new QToolButton);
     save_button->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
     save_button->setPopupMode(QToolButton::InstantPopup);
     auto save_menu(new QMenu);
+    save_menu->addAction(store_chooser.browse_action());
     save_button->setMenu(save_menu);
 
     auto file_handling_layout(new QHBoxLayout);
@@ -143,6 +137,17 @@ Tiddler_Inspector::Tiddler_Inspector(const QString& tiddlerstore_json, QWidget* 
         }
         update_tiddler_list();
     }
+
+    connect(&store_chooser, &FS_History_UI::current_element_changed, this, [this, save_menu](const QString& elem) {
+        save_menu->clear();
+        if (!elem.isEmpty()) {
+            auto a = save_menu->addAction(elem);
+            connect(a, &QAction::triggered, this, [] {
+                //
+            });
+        }
+        save_menu->addAction(store_chooser.browse_action());
+    });
 }
 
 QString Tiddler_Inspector::get_store()
@@ -170,7 +175,9 @@ void Tiddler_Inspector::adjust_dirty(bool dirty_value)
     if (dirty_value != is_dirty) {
         is_dirty = dirty_value;
         if (is_dirty) {
-            is_dirty = true;
+            if (!load_safety_menu) {
+                load_safety_menu = new QMenu;
+            }
             load_button->setMenu(load_safety_menu);
             load_safety_menu->addMenu(load_history_menu);
         } else {

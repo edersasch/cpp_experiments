@@ -2,6 +2,7 @@
 #define SRC_TIDDLER_INSPECTOR_QT_TIDDLER_INSPECTOR_QT
 
 #include "tiddlerstore_qt/tiddler_model_qt.h"
+#include "fs_history_qt/fs_history_ui.h"
 
 #include <QWidget>
 #include <QStringListModel>
@@ -34,9 +35,10 @@ private:
     std::vector<std::unique_ptr<Tiddler_Model>> tiddler_models;
     QStringListModel title_model {};
     bool is_dirty {false};
+    FS_History_UI store_chooser;
     QToolButton* load_button;
-    QMenu* load_safety_menu;
-    QMenu* load_history_menu;
+    QMenu* load_safety_menu {nullptr};
+    QMenu* load_history_menu {nullptr};
 };
 
 #endif // SRC_TIDDLER_INSPECTOR_QT_TIDDLER_INSPECTOR_QT

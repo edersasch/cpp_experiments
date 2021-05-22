@@ -240,4 +240,148 @@ void from_json(const nlohmann::json& j, Tiddler& t)
     }
 }
 
+void to_json(nlohmann::json& j, const Store& s)
+{
+    for (const auto& t : s) {
+        j.push_back(*t);
+    }
+}
+
+void from_json(const nlohmann::json& j, Store& s)
+{
+    for (const auto& dings : j) {
+        auto t = s.emplace_back(std::make_unique<Tiddler>()).get();
+        from_json(dings, *t);
+    }
+}
+
+Tiddlerstore::Store_Filter::Store_Filter(const Store& all)
+    : s(all)
+{
+    for (std::size_t i = 0; i < s.size(); i += 1) {
+        idx.push_back(i);
+    }
+}
+
+Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::title(const std::string& title_value)
+{
+    if (!title_value.empty()) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [this, title_value](const std::size_t& i) {
+            return s[i]->title() != title_value;
+        }), idx.end());
+    }
+    return *this;
+}
+
+Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_title(const std::string& title_value)
+{
+    if (!title_value.empty()) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [this, title_value](const std::size_t& i) {
+            return s[i]->title() == title_value;
+        }), idx.end());
+    }
+    return *this;
+}
+
+Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::tag(const std::string& tag_value)
+{
+    if (!tag_value.empty()) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [this, tag_value](const std::size_t& i) {
+            return !s[i]->has_tag(tag_value);
+        }), idx.end());
+    }
+    return *this;
+}
+
+Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_tag(const std::string& tag_value)
+{
+    if (!tag_value.empty()) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [this, tag_value](const std::size_t& i) {
+            return s[i]->has_tag(tag_value);
+        }), idx.end());
+    }
+    return *this;
+}
+
+Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::tagged()
+{
+    idx.erase(std::remove_if(idx.begin(), idx.end(), [this](const std::size_t& i) {
+        return s[i]->tags().empty();
+    }), idx.end());
+    return *this;
+}
+
+Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_tagged()
+{
+    idx.erase(std::remove_if(idx.begin(), idx.end(), [this](const std::size_t& i) {
+        return !s[i]->tags().empty();
+    }), idx.end());
+    return *this;
+}
+
+Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::field(const std::string& field_name, const std::string& value)
+{
+    if (!field_name.empty()) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [this, field_name, value](const std::size_t& i) {
+            auto fv = s[i]->field_value(field_name);
+            return fv.empty() || (!value.empty() && fv != value);
+        }), idx.end());
+    }
+    return *this;
+}
+
+Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_field(const std::string& field_name, const std::string& value)
+{
+    if (!field_name.empty()) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [this, field_name, value](const std::size_t& i) {
+            auto fv = s[i]->field_value(field_name);
+            return !fv.empty() && (value.empty() || fv == value);
+        }), idx.end());
+    }
+    return *this;
+}
+
+Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::list(const std::string& list_name, const std::vector<std::string>& contains)
+{
+    if (!list_name.empty()) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [this, list_name, contains](const std::size_t& i) {
+            auto l = s[i]->list(list_name);
+            if (l.empty()) {
+                return true;
+            }
+            for (const auto& c : contains) {
+                if (std::find(l.begin(), l.end(), c) == l.end()) {
+                    return true;
+                }
+            }
+            return false;
+        }), idx.end());
+    }
+    return *this;
+}
+
+Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_list(const std::string& list_name, const std::vector<std::string>& contains)
+{
+    if (!list_name.empty()) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [this, list_name, contains](const std::size_t& i) {
+            auto l = s[i]->list(list_name);
+            if (l.empty()) {
+                return false;
+            }
+            for (const auto& c : contains) {
+                if (std::find(l.begin(), l.end(), c) == l.end()) {
+                    return false;
+                }
+            }
+            return true;
+        }), idx.end());
+    }
+    return *this;
+}
+
+std::vector<std::size_t> Tiddlerstore::Store_Filter::filtered_idx()
+{
+    return idx;
+}
+
 }

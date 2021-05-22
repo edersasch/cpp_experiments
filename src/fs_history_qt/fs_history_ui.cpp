@@ -47,29 +47,21 @@ QComboBox* FS_History_UI::combobox()
     return chooser;
 }
 
-QToolButton* FS_History_UI::browse_button(const QString& button_text, const QString& dialog_caption, const QString& file_filter)
+QToolButton* FS_History_UI::browse_button(const QString& action_text, const QString& dialog_caption, const QString& file_filter)
 {
     if (!file_dialog_button) {
         file_dialog_button = new QToolButton;
-        file_dialog_button->setText(button_text);
-        connect(file_dialog_button, &QToolButton::clicked, this, [this, dialog_caption, file_filter] {
-            switch (history.operation_mode()) {
-            case FS_History::Operation_Mode::OP_FILE:
-                history.set_current_element(QFileDialog::getOpenFileName(nullptr, dialog_caption, chooser->currentText(), file_filter));
-                break;
-            case FS_History::Operation_Mode::OP_DIR:
-                history.set_current_element(QFileDialog::getExistingDirectory(nullptr, dialog_caption, chooser->currentText()));
-                break;
-            }
-        });
+        file_dialog_button->setDefaultAction(browse_action(action_text, dialog_caption, file_filter));
     }
     return file_dialog_button;
 }
 
-QMenu* FS_History_UI::menu(bool use_hotkey, const QString& name)
+QMenu* FS_History_UI::menu(bool use_hotkey, const QString& name, bool append_browse_action, const QString& action_text, const QString& dialog_caption, const QString& file_filter)
 {
     if (!fs_menu) {
         fs_menu = new QMenu(name);
+        menu_uses_hotkey = use_hotkey;
+        menu_appends_browse_action = append_browse_action;
     }
     fs_menu->clear();
     auto elms = history.get_elements();
@@ -80,11 +72,39 @@ QMenu* FS_History_UI::menu(bool use_hotkey, const QString& name)
         connect(a, &QAction::triggered, this, [this, element] {
             history.set_current_element(element);
         });
-        if (prepend_hotkey && use_hotkey) {
+        if (prepend_hotkey && menu_uses_hotkey) {
             element.prepend("&" + QString::number(hotkey) + " ");
             a->setText(element);
             hotkey += 1;
         }
     }
+    if (menu_appends_browse_action) {
+        fs_menu->addAction(browse_action(action_text, dialog_caption, file_filter));
+    }
     return fs_menu;
+}
+
+// private
+
+QAction* FS_History_UI::browse_action(const QString& action_text, const QString& dialog_caption, const QString& file_filter)
+{
+    if (!file_dialog_action) {
+        file_dialog_action = new QAction(action_text);
+        connect(file_dialog_action, &QAction::triggered, this, [this, dialog_caption, file_filter] {
+            auto location = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+            auto list = history.get_elements();
+            if (!list.isEmpty()) {
+                location = list.first();
+            }
+            switch (history.operation_mode()) {
+            case FS_History::Operation_Mode::OP_FILE:
+                history.set_current_element(QFileDialog::getOpenFileName(nullptr, dialog_caption, location, file_filter));
+                break;
+            case FS_History::Operation_Mode::OP_DIR:
+                history.set_current_element(QFileDialog::getExistingDirectory(nullptr, dialog_caption, location));
+                break;
+            }
+        });
+    }
+    return file_dialog_action;
 }

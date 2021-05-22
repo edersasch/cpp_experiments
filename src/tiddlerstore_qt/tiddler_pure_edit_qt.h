@@ -26,7 +26,7 @@ signals:
 
 public:
     explicit Tiddler_Pure_Edit(QWidget* parent = nullptr);
-    virtual ~Tiddler_Pure_Edit() = default;
+    virtual ~Tiddler_Pure_Edit() override = default;
 
     Tiddler_Model* tiddler_model();
     void set_tiddler_model(Tiddler_Model* model);
@@ -57,7 +57,6 @@ private:
     QToolButton* accept_button;
     QToolButton* discard_button;
     QMenu* discard_menu;
-    QToolButton* tag_add_button;
     QLineEdit* tag_lineedit;
     FlowLayout* tags_layout;
     QLineEdit* field_name_lineedit;
@@ -69,7 +68,6 @@ private:
     struct Single_List_Element
     {
         FlowLayout* l {nullptr};
-        QToolButton* add {nullptr};
         QLineEdit* val {nullptr};
     };
     std::unordered_map<std::string, Single_List_Element> single_list_elements;

@@ -44,7 +44,6 @@ std::string Tiddler_Model::title() const
     return t.title();
 }
 
-
 void Tiddler_Model::request_set_title(const std::string& new_title)
 {
     auto old = t.title();

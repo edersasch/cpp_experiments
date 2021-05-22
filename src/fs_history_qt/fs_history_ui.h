@@ -10,9 +10,8 @@
 class QWidget;
 class QComboBox;
 class QToolButton;
-class QTextOption;
-class QPainter;
 class QMenu;
+class QAction;
 
 class FS_History_UI
         : public QObject
@@ -27,8 +26,9 @@ public:
     virtual ~FS_History_UI() override = default;
 
     QComboBox* combobox();
-    QToolButton* browse_button(const QString& button_text = "...", const QString& dialog_caption = tr("Please select"), const QString& file_filter = QString());
-    QMenu* menu(bool use_hotkey = true, const QString& name = "&History");
+    QToolButton* browse_button(const QString& action_text = "...", const QString& dialog_caption = tr("Please select"), const QString& file_filter = QString());
+    QAction* browse_action(const QString& action_text = "...", const QString& dialog_caption = tr("Please select"), const QString& file_filter = QString());
+    QMenu* menu(bool use_hotkey = true, const QString& name = "&History", bool append_browse_action = false, const QString& action_text = "...", const QString& dialog_caption = tr("Please select"), const QString& file_filter = QString());
     void set_current_element(const QString& element) { history.set_current_element(element); }
     QStringList get_elements() const { return model.stringList(); }
 
@@ -37,10 +37,13 @@ signals:
 
 private:
     QComboBox* chooser {nullptr};
+    QAction* file_dialog_action {nullptr};
     QToolButton* file_dialog_button {nullptr};
     QMenu* fs_menu {nullptr};
     QStringListModel model;
     FS_History history;
+    bool menu_uses_hotkey {false};
+    bool menu_appends_browse_action {false};
 };
 
 #endif // SRC_FS_HISTORY_QT_FS_HISTORY_UI
