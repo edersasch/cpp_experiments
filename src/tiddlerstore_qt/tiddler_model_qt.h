@@ -1,9 +1,14 @@
 #ifndef SRC_TIDDLERSTORE_QT_TIDDLER_MODEL_QT
 #define SRC_TIDDLERSTORE_QT_TIDDLER_MODEL_QT
 
-#include "tiddlerstore/tiddlerstore.h"
-
 #include <QObject>
+
+#include <deque>
+
+namespace Tiddlerstore
+{
+    class Tiddler;
+}
 
 class Tiddler_Model
         : public QObject
@@ -11,7 +16,7 @@ class Tiddler_Model
     Q_OBJECT
 
 public:
-    explicit Tiddler_Model(QObject* parent = nullptr);
+    explicit Tiddler_Model(Tiddlerstore::Tiddler* tiddler, QObject* parent = nullptr);
     virtual ~Tiddler_Model() = default;
 
 signals:
@@ -27,7 +32,7 @@ signals:
     void single_list_changed(const char* list_name);
 
 public:
-    Tiddlerstore::Tiddler tiddler() const;
+    Tiddlerstore::Tiddler* tiddler() const;
     void request_set_tiddler_data(const Tiddlerstore::Tiddler& other);
 
     /// Tiddler API, modifier methods are prefixed with "request_", because they check for change and eventually don't emit the corresponding signal
@@ -52,7 +57,7 @@ public:
     void request_remove_list(const std::string& list_name);
 
 private:
-    Tiddlerstore::Tiddler t;
+    Tiddlerstore::Tiddler* t {nullptr};
 };
 
 #endif // SRC_TIDDLERSTORE_QT_TIDDLER_MODEL_QT

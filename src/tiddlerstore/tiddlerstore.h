@@ -90,6 +90,8 @@ void from_json(const nlohmann::json& j, Tiddler& t);
 using Store = std::vector<std::unique_ptr<Tiddler>>;
 void to_json(nlohmann::json& j, const Store& s);
 void from_json(const nlohmann::json& j, Store& s);
+Store open_store_from_file(const std::string& path);
+bool save_store_to_file(const Store& store, const std::string& path);
 
 class Store_Filter
 {

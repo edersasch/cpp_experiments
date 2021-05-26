@@ -1,5 +1,4 @@
 #include "tiddler_pure_edit_qt.h"
-#include "tiddler_model_qt.h"
 #include "qt_utilities/flowlayout.h"
 
 #include <QVBoxLayout>
@@ -69,7 +68,7 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     connect(accept_button, &QToolButton::clicked, this, [this, discard_action] {
         if (tm) {
             if (current_dirty) {
-                tm->request_set_tiddler_data(work_tm.tiddler());
+                tm->request_set_tiddler_data(*work_tm.tiddler());
                 tm->request_set_title(title_lineedit->text().toStdString());
                 tm->request_set_text(text_edit->toPlainText().toStdString());
                 emit accept_edit();
@@ -157,7 +156,7 @@ Tiddler_Model* Tiddler_Pure_Edit::tiddler_model()
 void Tiddler_Pure_Edit::set_tiddler_model(Tiddler_Model* model)
 {
     tm = model;
-    work_tm.request_set_tiddler_data(tm ? tm->tiddler(): Tiddlerstore::Tiddler());
+    work_tm.request_set_tiddler_data(tm ? *tm->tiddler(): Tiddlerstore::Tiddler());
     title_lineedit->setText(work_tm.title().c_str());
     text_edit->setText(work_tm.text().c_str());
     update_present_tags();

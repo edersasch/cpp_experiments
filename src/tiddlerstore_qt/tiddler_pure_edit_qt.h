@@ -1,12 +1,14 @@
 #ifndef SRC_TIDDLERSTORE_QT_TIDDLER_PURE_EDIT_QT
 #define SRC_TIDDLERSTORE_QT_TIDDLER_PURE_EDIT_QT
 
+#include "tiddlerstore/tiddlerstore.h"
 #include "tiddler_model_qt.h"
 
 #include <QWidget>
 
 #include <unordered_map>
 
+class Tiddler_Model;
 class FlowLayout;
 class QLineEdit;
 class QTextEdit;
@@ -51,7 +53,8 @@ private:
     void present_accept_button();
 
     Tiddler_Model* tm {nullptr};
-    Tiddler_Model work_tm {};
+    Tiddlerstore::Tiddler work;
+    Tiddler_Model work_tm {&work};
     QLineEdit* title_lineedit;
     QTextEdit* text_edit;
     QToolButton* accept_button;

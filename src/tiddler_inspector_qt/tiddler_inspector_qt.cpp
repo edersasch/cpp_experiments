@@ -14,13 +14,16 @@
 #include <QComboBox>
 #include <QToolButton>
 #include <QMenu>
+#include <QFileDialog>
+#include <QStandardPaths>
 
-Tiddler_Inspector::Tiddler_Inspector(const QString& tiddlerstore_json, QWidget* parent)
+Tiddler_Inspector::Tiddler_Inspector(const QStringList& tiddlerstore_list, QWidget* parent)
     : QWidget(parent)
     , pure_view(new Tiddler_Pure_View)
     , pure_edit(new Tiddler_Pure_Edit)
-    , store_chooser({})
+    , tiddlerstore_history(tiddlerstore_list)
     , load_button(new QToolButton)
+    , load_history_menu(new QMenu(tr("Attention! Unsaved Changes")))
 {
     auto tiddler_view_edit_stack(new QStackedWidget(this));
     auto view_index = tiddler_view_edit_stack->addWidget(pure_view);
@@ -45,10 +48,12 @@ Tiddler_Inspector::Tiddler_Inspector(const QString& tiddlerstore_json, QWidget* 
     auto open_tiddler_action = tiddler_selector_lineedit->addAction(style()->standardIcon(QStyle::SP_DirOpenIcon), QLineEdit::LeadingPosition);
     open_tiddler_action->setVisible(false);
     connect(open_tiddler_action, &QAction::triggered, this, [this, title_filter_model, tiddler_selector_lineedit] {
-        for (const auto& tm : tiddler_models) {
-            if (tm->title() == title_filter_model->data(title_filter_model->index(0, 0)).toString().toStdString()) {
+        for (const auto& t : store) {
+            if (t->title() == title_filter_model->data(title_filter_model->index(0, 0)).toString().toStdString()) {
                 tiddler_selector_lineedit->clear();
-                pure_view->set_tiddler_model(tm.get());
+                tiddler_model = std::make_unique<Tiddler_Model>(t.get());
+                connect(tiddler_model.get(), &Tiddler_Model::title_changed, this, &Tiddler_Inspector::update_tiddler_list);
+                pure_view->set_tiddler_model(tiddler_model.get());
                 return;
             }
         }
@@ -56,17 +61,14 @@ Tiddler_Inspector::Tiddler_Inspector(const QString& tiddlerstore_json, QWidget* 
     auto add_tiddler_action = tiddler_selector_lineedit->addAction(style()->standardIcon(QStyle::SP_FileDialogNewFolder), QLineEdit::LeadingPosition);
     add_tiddler_action->setVisible(false);
     connect(add_tiddler_action, &QAction::triggered, this, [this, tiddler_selector_lineedit] {
-        tiddler_models.push_back(std::make_unique<Tiddler_Model>());
+        auto t = store.emplace_back(new Tiddlerstore::Tiddler).get();
         adjust_dirty(true);
-        auto tm = tiddler_models.back().get();
-        tm->request_set_title(tiddler_selector_lineedit->text().toStdString());
-        tiddler_selector_lineedit->clear();
-        if (tm->title().empty()) {
-            tm->request_set_title("New Entry ...");
+        t->set_title(tiddler_selector_lineedit->text().toStdString());
+        if (t->title().empty()) {
+            t->set_title(tr("New Entry ...").toStdString());
         }
-        pure_view->set_tiddler_model(tm);
+        tiddler_selector_lineedit->clear();
         update_tiddler_list();
-        connect(tm, &Tiddler_Model::title_changed, this, &Tiddler_Inspector::update_tiddler_list);
     });
     auto placeholder_tiddler_action = tiddler_selector_lineedit->addAction(style()->standardIcon(QStyle::SP_FileIcon), QLineEdit::LeadingPosition);
     connect(tiddler_selector_lineedit, &QLineEdit::returnPressed, this, [open_tiddler_action, add_tiddler_action] {
@@ -92,17 +94,56 @@ Tiddler_Inspector::Tiddler_Inspector(const QString& tiddlerstore_json, QWidget* 
         placeholder_tiddler_action->setVisible(!(show_open || show_add));
     });
 
-    load_history_menu = store_chooser.menu(true, "attention: unsaved changes", true);
     load_button->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
     load_button->setPopupMode(QToolButton::InstantPopup);
     load_button->setMenu(load_history_menu);
+
+    connect(load_history_menu, &QMenu::aboutToShow, this, [this] {
+        auto elems = tiddlerstore_history.get_elements();
+        auto default_location = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+        load_history_menu->clear();
+        for (auto it = elems.begin(); it != elems.end(); it += 1) {
+            auto path = *it;
+            auto load = load_history_menu->addAction(path);
+            connect(load, &QAction::triggered, this, [this, path] {
+                open_store(path);
+            });
+        }
+        auto load_other = load_history_menu->addAction("...");
+        connect(load_other, &QAction::triggered, this, [this, default_location] {
+            auto path = QFileDialog::getOpenFileName(nullptr, tr("Select Tiddlerstore"), default_location);
+            if (!path.isEmpty()) {
+                open_store(path);
+            }
+        });
+    });
 
     auto save_button(new QToolButton);
     save_button->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
     save_button->setPopupMode(QToolButton::InstantPopup);
     auto save_menu(new QMenu);
-    save_menu->addAction(store_chooser.browse_action());
     save_button->setMenu(save_menu);
+
+    connect(save_menu, &QMenu::aboutToShow, this, [this, save_menu] {
+        auto elems = tiddlerstore_history.get_elements();
+        auto default_location = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+        save_menu->clear();
+        if (!elems.isEmpty()) {
+            auto save_current = save_menu->addAction(elems.first());
+            connect(save_current, &QAction::triggered, this, [this, save_current]{
+                save_store(save_current->text());
+            });
+            QFileInfo fi(elems.first());
+            default_location = fi.path();
+        }
+        auto save_other = save_menu->addAction("...");
+        connect(save_other, &QAction::triggered, this, [this, default_location] {
+            auto other_name = QFileDialog::getSaveFileName(nullptr, tr("Where do you want to save?"), default_location);
+            if (!other_name.isEmpty()) {
+                save_store(other_name);
+            }
+        });
+    });
 
     auto file_handling_layout(new QHBoxLayout);
     file_handling_layout->addWidget(load_button);
@@ -126,37 +167,6 @@ Tiddler_Inspector::Tiddler_Inspector(const QString& tiddlerstore_json, QWidget* 
 
     auto main_layout(new QVBoxLayout(this));
     main_layout->addWidget(main_splitter, 1);
-
-    if (!tiddlerstore_json.isEmpty()) {
-        nlohmann::json tj = tiddlerstore_json.toStdString();
-        for (auto& t : tj) {
-            tiddler_models.push_back(std::make_unique<Tiddler_Model>());
-            auto tm = tiddler_models.back().get();
-            tm->request_set_tiddler_data(t.get<Tiddlerstore::Tiddler>());
-            connect(tm, &Tiddler_Model::title_changed, this, &Tiddler_Inspector::update_tiddler_list);
-        }
-        update_tiddler_list();
-    }
-
-    connect(&store_chooser, &FS_History_UI::current_element_changed, this, [this, save_menu](const QString& elem) {
-        save_menu->clear();
-        if (!elem.isEmpty()) {
-            auto a = save_menu->addAction(elem);
-            connect(a, &QAction::triggered, this, [] {
-                //
-            });
-        }
-        save_menu->addAction(store_chooser.browse_action());
-    });
-}
-
-QString Tiddler_Inspector::get_store()
-{
-    nlohmann::json j;
-    for (const auto& tm : tiddler_models) {
-        j.push_back(tm->tiddler());
-    }
-    return QString(j.dump().c_str());
 }
 
 // private
@@ -164,8 +174,8 @@ QString Tiddler_Inspector::get_store()
 void Tiddler_Inspector::update_tiddler_list()
 {
     QStringList titles;
-    for (const auto& tm : tiddler_models) {
-        titles << tm->title().c_str();
+    for (const auto& t : store) {
+        titles << t->title().c_str();
     }
     title_model.setStringList(titles);
 }
@@ -183,5 +193,19 @@ void Tiddler_Inspector::adjust_dirty(bool dirty_value)
         } else {
             load_button->setMenu(load_history_menu);
         }
+    }
+}
+
+void Tiddler_Inspector::open_store(const QString& path)
+{
+    store = Tiddlerstore::open_store_from_file(path.toStdString());
+    update_tiddler_list();
+}
+
+void Tiddler_Inspector::save_store(const QString& path)
+{
+    if (Tiddlerstore::save_store_to_file(store, path.toStdString())) {
+        tiddlerstore_history.set_current_element(path);
+        adjust_dirty(false);
     }
 }

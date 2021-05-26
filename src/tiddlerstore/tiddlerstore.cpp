@@ -1,7 +1,7 @@
 #include "tiddlerstore.h"
 
 #include <algorithm>
-#include <iostream>
+#include <fstream>
 
 namespace
 {
@@ -250,12 +250,30 @@ void to_json(nlohmann::json& j, const Store& s)
 void from_json(const nlohmann::json& j, Store& s)
 {
     for (const auto& dings : j) {
-        auto t = s.emplace_back(std::make_unique<Tiddler>()).get();
+        auto t = s.emplace_back(new Tiddler).get();
         from_json(dings, *t);
     }
 }
 
-Tiddlerstore::Store_Filter::Store_Filter(const Store& all)
+Store open_store_from_file(const std::string& path)
+{
+    nlohmann::json j;
+    std::ifstream in(path);
+    Store s;
+    in >> j;
+    from_json(j, s);
+    return s;
+}
+
+bool save_store_to_file(const Store& store, const std::string& path)
+{
+    std::ofstream out(path);
+    nlohmann::json j(store);
+    out << j.dump();
+    return out.good();
+}
+
+Store_Filter::Store_Filter(const Store& all)
     : s(all)
 {
     for (std::size_t i = 0; i < s.size(); i += 1) {
@@ -263,7 +281,7 @@ Tiddlerstore::Store_Filter::Store_Filter(const Store& all)
     }
 }
 
-Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::title(const std::string& title_value)
+Store_Filter& Store_Filter::title(const std::string& title_value)
 {
     if (!title_value.empty()) {
         idx.erase(std::remove_if(idx.begin(), idx.end(), [this, title_value](const std::size_t& i) {
@@ -273,7 +291,7 @@ Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::title(const std::string&
     return *this;
 }
 
-Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_title(const std::string& title_value)
+Store_Filter& Store_Filter::n_title(const std::string& title_value)
 {
     if (!title_value.empty()) {
         idx.erase(std::remove_if(idx.begin(), idx.end(), [this, title_value](const std::size_t& i) {
@@ -283,7 +301,7 @@ Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_title(const std::strin
     return *this;
 }
 
-Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::tag(const std::string& tag_value)
+Store_Filter& Store_Filter::tag(const std::string& tag_value)
 {
     if (!tag_value.empty()) {
         idx.erase(std::remove_if(idx.begin(), idx.end(), [this, tag_value](const std::size_t& i) {
@@ -293,7 +311,7 @@ Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::tag(const std::string& t
     return *this;
 }
 
-Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_tag(const std::string& tag_value)
+Store_Filter& Store_Filter::n_tag(const std::string& tag_value)
 {
     if (!tag_value.empty()) {
         idx.erase(std::remove_if(idx.begin(), idx.end(), [this, tag_value](const std::size_t& i) {
@@ -303,7 +321,7 @@ Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_tag(const std::string&
     return *this;
 }
 
-Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::tagged()
+Store_Filter& Store_Filter::tagged()
 {
     idx.erase(std::remove_if(idx.begin(), idx.end(), [this](const std::size_t& i) {
         return s[i]->tags().empty();
@@ -311,7 +329,7 @@ Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::tagged()
     return *this;
 }
 
-Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_tagged()
+Store_Filter& Store_Filter::n_tagged()
 {
     idx.erase(std::remove_if(idx.begin(), idx.end(), [this](const std::size_t& i) {
         return !s[i]->tags().empty();
@@ -319,7 +337,7 @@ Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_tagged()
     return *this;
 }
 
-Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::field(const std::string& field_name, const std::string& value)
+Store_Filter& Store_Filter::field(const std::string& field_name, const std::string& value)
 {
     if (!field_name.empty()) {
         idx.erase(std::remove_if(idx.begin(), idx.end(), [this, field_name, value](const std::size_t& i) {
@@ -330,7 +348,7 @@ Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::field(const std::string&
     return *this;
 }
 
-Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_field(const std::string& field_name, const std::string& value)
+Store_Filter& Store_Filter::n_field(const std::string& field_name, const std::string& value)
 {
     if (!field_name.empty()) {
         idx.erase(std::remove_if(idx.begin(), idx.end(), [this, field_name, value](const std::size_t& i) {
@@ -341,7 +359,7 @@ Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_field(const std::strin
     return *this;
 }
 
-Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::list(const std::string& list_name, const std::vector<std::string>& contains)
+Store_Filter& Store_Filter::list(const std::string& list_name, const std::vector<std::string>& contains)
 {
     if (!list_name.empty()) {
         idx.erase(std::remove_if(idx.begin(), idx.end(), [this, list_name, contains](const std::size_t& i) {
@@ -360,7 +378,7 @@ Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::list(const std::string& 
     return *this;
 }
 
-Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_list(const std::string& list_name, const std::vector<std::string>& contains)
+Store_Filter& Store_Filter::n_list(const std::string& list_name, const std::vector<std::string>& contains)
 {
     if (!list_name.empty()) {
         idx.erase(std::remove_if(idx.begin(), idx.end(), [this, list_name, contains](const std::size_t& i) {
@@ -379,7 +397,7 @@ Tiddlerstore::Store_Filter& Tiddlerstore::Store_Filter::n_list(const std::string
     return *this;
 }
 
-std::vector<std::size_t> Tiddlerstore::Store_Filter::filtered_idx()
+std::vector<std::size_t> Store_Filter::filtered_idx()
 {
     return idx;
 }

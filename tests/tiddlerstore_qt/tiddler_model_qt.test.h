@@ -2,6 +2,7 @@
 #define TESTS_TIDDLERSTORE_QT_TIDDLER_MODEL_QT_TEST
 
 #include "tiddlerstore_qt/tiddler_model_qt.h"
+#include "tiddlerstore/tiddlerstore.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -36,7 +37,8 @@ public:
 
 protected:
     ::testing::StrictMock<Tiddler_Model_Test_Slots> tmt_slots;
-    Tiddler_Model tm;
+    Tiddlerstore::Tiddler tiddler_for_model;
+    Tiddler_Model tm {&tiddler_for_model};
 };
 
 #endif // TESTS_TIDDLERSTORE_QT_TIDDLER_MODEL_QT_TEST

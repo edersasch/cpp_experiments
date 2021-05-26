@@ -5,7 +5,7 @@
 
 #include <utility>
 
-FS_History::FS_History(Operation_Mode mode, QString fallback, int history_size, QStringList initial_elements, QObject* parent)
+FS_History::FS_History(Operation_Mode mode, QString fallback, std::int32_t history_size, QStringList initial_elements, QObject* parent)
     : QObject(parent)
     , opmode(mode)
     , hist_size(history_size < 2 ? 2 : history_size)
@@ -18,21 +18,6 @@ FS_History::FS_History(Operation_Mode mode, QString fallback, int history_size, 
     QTimer::singleShot(0, this, [this] {
         cleanup(true);
     });
-}
-
-FS_History::FS_History(const QStringList& initial_elements, QObject* parent)
-    : FS_History(Operation_Mode::OP_FILE, "", default_history_size, initial_elements, parent)
-{
-}
-
-FS_History::FS_History(int history_size, const QStringList& initial_elements, QObject* parent)
-    : FS_History(Operation_Mode::OP_FILE, "", history_size, initial_elements, parent)
-{
-}
-
-FS_History::FS_History(const QString& fallback, int history_size, const QStringList& initial_elements, QObject* parent)
-    : FS_History(Operation_Mode::OP_DIR, fallback, history_size, initial_elements, parent)
-{
 }
 
 void FS_History::set_current_element(const QString &element)

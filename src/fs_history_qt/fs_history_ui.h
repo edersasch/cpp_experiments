@@ -19,15 +19,15 @@ class FS_History_UI
     Q_OBJECT
 
 public:
-    FS_History_UI(FS_History::Operation_Mode mode, const QString& fallback, int history_size, const QStringList& initial_elements, QObject* parent = nullptr);
+    FS_History_UI(FS_History::Operation_Mode mode, const QString& fallback, std::int32_t history_size, const QStringList& initial_elements, QObject* parent = nullptr);
     FS_History_UI(const QStringList& initial_elements = {}, QObject* parent = nullptr);
-    FS_History_UI(int history_size, const QStringList& initial_elements = {}, QObject* parent = nullptr);
-    FS_History_UI(const QString& fallback_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation), int history_size = FS_History::default_history_size, const QStringList& initial_elements = {}, QObject* parent = nullptr);
+    FS_History_UI(std::int32_t history_size, const QStringList& initial_elements = {}, QObject* parent = nullptr);
+    FS_History_UI(const QString& fallback_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation), std::int32_t history_size = FS_History::default_history_size, const QStringList& initial_elements = {}, QObject* parent = nullptr);
     virtual ~FS_History_UI() override = default;
 
     QComboBox* combobox();
-    QToolButton* browse_button(const QString& action_text = "...", const QString& dialog_caption = tr("Please select"), const QString& file_filter = QString());
     QAction* browse_action(const QString& action_text = "...", const QString& dialog_caption = tr("Please select"), const QString& file_filter = QString());
+    QToolButton* browse_button(const QString& action_text = "...", const QString& dialog_caption = tr("Please select"), const QString& file_filter = QString());
     QMenu* menu(bool use_hotkey = true, const QString& name = "&History", bool append_browse_action = false, const QString& action_text = "...", const QString& dialog_caption = tr("Please select"), const QString& file_filter = QString());
     void set_current_element(const QString& element) { history.set_current_element(element); }
     QStringList get_elements() const { return model.stringList(); }
@@ -36,6 +36,7 @@ signals:
     void current_element_changed(const QString&);
 
 private:
+    void update_menu();
     QComboBox* chooser {nullptr};
     QAction* file_dialog_action {nullptr};
     QToolButton* file_dialog_button {nullptr};

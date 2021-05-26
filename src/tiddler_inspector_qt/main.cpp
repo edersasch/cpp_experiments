@@ -17,13 +17,13 @@ int main(int argc, char *argv[])
     QWidget w;
     QVBoxLayout l;
     QSettings settings;
-    Tiddler_Inspector ti(settings.value("tiddlers/store").toString());
+    Tiddler_Inspector ti(settings.value("tiddlers/store_list").toStringList());
     l.addWidget(&ti);
     w.setLayout(&l);
     w.resize(settings.value("main_window/size", QSize(default_width, default_height)).toSize());
     w.show();
     auto ret = QApplication::exec();
-    settings.setValue("tiddlers/store", ti.get_store());
+    settings.setValue("tiddlers/store_list", ti.get_tiddlerstore_list());
     settings.setValue("main_window/size", w.size());
     return ret;
 }
