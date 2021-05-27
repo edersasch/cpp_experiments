@@ -249,9 +249,9 @@ void to_json(nlohmann::json& j, const Store& s)
 
 void from_json(const nlohmann::json& j, Store& s)
 {
-    for (const auto& dings : j) {
+    for (const auto& elem : j) {
         auto t = s.emplace_back(new Tiddler).get();
-        from_json(dings, *t);
+        from_json(elem, *t);
     }
 }
 

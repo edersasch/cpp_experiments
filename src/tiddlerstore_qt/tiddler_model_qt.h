@@ -31,6 +31,13 @@ signals:
     void lists_changed();
     void single_list_changed(const char* list_name);
 
+    /**
+     * @brief remove_request object giving out the model shall delete it and the tiddler, removing it from a store if necessary
+     *
+     * use the destroyed() signal to react on deletion
+     */
+    void remove_request();
+
 public:
     Tiddlerstore::Tiddler* tiddler() const;
     void request_set_tiddler_data(const Tiddlerstore::Tiddler& other);
@@ -55,9 +62,10 @@ public:
     std::unordered_map<std::string, std::vector<std::string>> lists() const;
     void request_set_list(const std::string& list_name, const std::vector<std::string>& values);
     void request_remove_list(const std::string& list_name);
+    void request_remove() { emit remove_request(); }
 
 private:
-    Tiddlerstore::Tiddler* t {nullptr};
+    Tiddlerstore::Tiddler* t;
 };
 
 #endif // SRC_TIDDLERSTORE_QT_TIDDLER_MODEL_QT

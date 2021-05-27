@@ -2,6 +2,8 @@
 #define SRC_FS_HISTORY_QT_FS_HISTORY
 
 #include <QObject>
+#include <QString>
+#include <QStringList>
 #include <QFileSystemWatcher>
 
 #include <algorithm>

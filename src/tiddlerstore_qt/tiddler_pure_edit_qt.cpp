@@ -60,11 +60,9 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     title_layout->addWidget(discard_button);
     discard_button->setIcon(style()->standardIcon(QStyle::SP_DialogCloseButton));
     discard_button->setPopupMode(QToolButton::InstantPopup);
-    auto discard_action = discard_menu->addAction(style()->standardIcon(QStyle::SP_DialogCloseButton), "really discard?");
+    auto discard_action = discard_menu->addAction(style()->standardIcon(QStyle::SP_DialogCloseButton), tr("really discard?"));
     main_layout->addLayout(title_layout);
-    connect(title_lineedit, &QLineEdit::textChanged, this, [this]() {
-        update_dirty();
-    });
+    connect(title_lineedit, &QLineEdit::textChanged, this, &Tiddler_Pure_Edit::update_dirty);
     connect(accept_button, &QToolButton::clicked, this, [this, discard_action] {
         if (tm) {
             if (current_dirty) {
@@ -83,6 +81,19 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
         }
     });
     connect(discard_action, &QAction::triggered, this, &Tiddler_Pure_Edit::discard_edit);
+
+    auto remove_button(new QToolButton);
+    auto remove_menu(new QMenu);
+    auto remove_action = remove_menu->addAction(style()->standardIcon(QStyle::SP_MessageBoxCritical), tr("remove"));
+    remove_button->setIcon(style()->standardIcon(QStyle::SP_MessageBoxCritical));
+    remove_button->setMenu(remove_menu);
+    remove_button->setPopupMode(QToolButton::InstantPopup);
+    connect(remove_action, &QAction::triggered, this, [this] {
+        if (tm) {
+            tm->request_remove();
+        }
+    });
+    title_layout->addWidget(remove_button);
 
     text_edit->setPlaceholderText("Text content");
     main_layout->addWidget(text_edit);
@@ -163,6 +174,11 @@ void Tiddler_Pure_Edit::set_tiddler_model(Tiddler_Model* model)
     update_present_fields();
     update_present_lists();
     present_accept_button();
+    if (tm) {
+        connect(tm, &Tiddler_Model::destroyed, this, [this]{
+            set_tiddler_model(nullptr);
+        });
+    }
 }
 
 // protected
