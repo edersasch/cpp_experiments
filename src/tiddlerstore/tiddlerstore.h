@@ -11,7 +11,8 @@
 namespace Tiddlerstore
 {
 
-static constexpr auto version_key           = "version";
+static constexpr auto version_key           = "v";
+static constexpr auto version_value         = 1;
 
 class Tiddler
 {
@@ -22,13 +23,13 @@ public:
     Tiddler& operator=(const Tiddlerstore::Tiddler& rhs) = default;
     virtual ~Tiddler() = default;
 
-    static constexpr auto version_value         = 1;
-    static constexpr auto title_key             = "title";
-    static constexpr auto history_size_key      = "history_size";
-    static constexpr auto text_history_key      = "text_history";
-    static constexpr auto tags_key              = "tags";
-    static constexpr auto fields_key            = "fields";
-    static constexpr auto lists_key             = "lists";
+    static constexpr auto           title_key                       = "ti";
+    static constexpr auto           history_size_key                = "hs";
+    static constexpr auto           text_history_key                = "th";
+    static constexpr auto           tags_key                        = "ta";
+    static constexpr auto           fields_key                      = "f";
+    static constexpr auto           lists_key                       = "l";
+    static constexpr std::int32_t   default_text_history_size       = 1;
 
     std::string title() const;
 
@@ -72,9 +73,12 @@ public:
     /// Removing a nonexisting list does nothing
     void remove_list(const std::string& list_name);
 
+    /// true if everything is empty, text_history_size does not matter
+    bool isEmpty();
+
 private:
     std::string tiddler_title {};
-    int32_t text_history_size {1};
+    std::int32_t text_history_size {default_text_history_size};
     std::deque<std::string> tiddler_text_history {};
     std::vector<std::string> tiddler_tags {};
     std::unordered_map<std::string, std::string> tiddler_fields {};
@@ -88,6 +92,8 @@ void to_json(nlohmann::json& j, const Tiddler& t);
 void from_json(const nlohmann::json& j, Tiddler& t);
 
 using Store = std::vector<std::unique_ptr<Tiddler>>;
+
+/// no separate versioning for Store, version_value is included in every tiddler (negligible size increase of 5 chars per tiddler)
 void to_json(nlohmann::json& j, const Store& s);
 void from_json(const nlohmann::json& j, Store& s);
 Store open_store_from_file(const std::string& path);

@@ -248,7 +248,9 @@ TEST_F(Tiddlerstore_Test, store)
 {
     Tiddlerstore::Store s;
     auto t1 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    EXPECT_EQ(true, t1->isEmpty());
     t1->set_title("t1");
+    EXPECT_EQ(false, t1->isEmpty());
     t1->set_text("... t1 ...");
     auto t2 = s.emplace_back(new Tiddlerstore::Tiddler).get();
     t2->set_title("t2");
@@ -269,6 +271,15 @@ TEST_F(Tiddlerstore_Test, store)
     EXPECT_EQ(s[0]->text(), fclone[0]->text());
     EXPECT_EQ(s[1]->title(), fclone[1]->title());
     EXPECT_EQ(s[1]->text(), fclone[1]->text());
+    s.emplace_back(new Tiddlerstore::Tiddler).get();
+    EXPECT_EQ(3, s.size());
+    EXPECT_EQ(true, Tiddlerstore::save_store_to_file(s, tname)); // empty tiddler is not saved ...
+    auto fclone2 = Tiddlerstore::open_store_from_file(tname); // ... but even if it was it would not be added to the store
+    EXPECT_EQ(s.size() - 1, fclone2.size());
+    std::string store_json = R"([{"ti":"aa","v":1},{"ti":"bb","v":1},{"th":[""],"ti":"","v":1}])"; // last tiddler object is empty
+    Tiddlerstore::Store s2 = nlohmann::json::parse(store_json);
+    from_json(store_json, s2);
+    EXPECT_EQ(2, s2.size());
 }
 
 TEST_F(Tiddlerstore_Test, filter_title)

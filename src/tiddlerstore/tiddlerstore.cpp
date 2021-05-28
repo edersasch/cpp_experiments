@@ -156,14 +156,26 @@ void Tiddler::remove_list(const std::string &list_name)
     tiddler_lists.erase(list_name);
 }
 
+bool Tiddler::isEmpty()
+{
+    return  tiddler_title.empty() &&
+            tiddler_text_history.empty() &&
+            tiddler_tags.empty() &&
+            tiddler_fields.empty() &&
+            tiddler_lists.empty();
+}
+
 void to_json(nlohmann::json& j, const Tiddler& t)
 {
-    j = nlohmann::json {{ version_key, Tiddler::version_value }, { Tiddler::history_size_key, t.history_size() }};
+    j = nlohmann::json {{ version_key, version_value }};
     auto push_optional = [&j](const std::string& key, const auto& value) {
         if (!value.empty()) {
             j.push_back({key, value});
         }
     };
+    if (t.history_size() != Tiddler::default_text_history_size) {
+        j.push_back({ Tiddler::history_size_key, t.history_size() });
+    }
     push_optional(Tiddler::title_key, t.title());
     push_optional(Tiddler::text_history_key, t.text_history());
     push_optional(Tiddler::tags_key, t.tags());
@@ -243,7 +255,9 @@ void from_json(const nlohmann::json& j, Tiddler& t)
 void to_json(nlohmann::json& j, const Store& s)
 {
     for (const auto& t : s) {
-        j.push_back(*t);
+        if (!t->isEmpty()) {
+            j.push_back(*t);
+        }
     }
 }
 
@@ -252,6 +266,9 @@ void from_json(const nlohmann::json& j, Store& s)
     for (const auto& elem : j) {
         auto t = s.emplace_back(new Tiddler).get();
         from_json(elem, *t);
+        if (t->isEmpty()) {
+            s.pop_back();
+        }
     }
 }
 
