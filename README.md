@@ -100,7 +100,7 @@ can expand every subdirectory automatically, so everything in the directory
 will be visible. This may take some time, so use only for not so huge
 directories, depending on your machine and patience. Directories that become
 empty during filtering and do not contain the filter text can optionally be
-hidden. If the the filter line edit is empty, all directories are shown, even
+hidden. If the filter line edit is empty, all directories are shown, even
 those that are empty without filtering.
 
 Double clicking an element opens it in the associated application. Multiple
@@ -146,7 +146,7 @@ Enabled if `EXPERIMENTS_FS_FILTER_QT` and `EXPERIMENTS_FS_HISTORY_QT` are on.
 
 ### qtableview_demo
 
-Application that demostrates several features of a QTableView.
+Application that demonstrates several features of a QTableView.
 
 * horizontal scrolling for long cell: difference between "by item" and "by pixel"
 * initial column sizes up to a maximum: resize column width up to a maximum if necessary
@@ -183,7 +183,7 @@ ability to store files and that runs everywhere please give [tiddlywiki](https:/
 a try. Its concepts are used here to store text information
 
 * title
-* text with an adjustible content history
+* text with an adjustable content history
 * tags (like a named bool: either present or not)
 * fields (key / value pairs)
 * lists (key / value list pairs)

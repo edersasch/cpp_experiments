@@ -21,6 +21,7 @@ Tiddlerstore_Handler::Tiddlerstore_Handler(const QStringList& tiddlerstore_list,
 {
     auto title_filter_model(new QSortFilterProxyModel(this));
     title_filter_model->setSourceModel(&title_model);
+    title_filter_model->sort(0);
 
     auto tiddler_selector_lineedit(new QLineEdit);
     tiddler_selector_lineedit->setClearButtonEnabled(true);

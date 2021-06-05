@@ -16,11 +16,15 @@ auto set_map_value = [](auto& map, const auto& key, const auto& value)
 {
     if (!key.empty()) {
         if (value.empty()) {
-            map.erase(key);
+            return map.erase(key) != 0;
         } else {
-            map[key] = value;
+            if (map[key] != value) {
+                map[key] = value;
+                return true;
+            }
         }
     }
+    return false;
 };
 
 }
@@ -33,11 +37,13 @@ std::string Tiddler::title() const
     return tiddler_title;
 }
 
-void Tiddler::set_title(const std::string &new_title)
+bool Tiddler::set_title(const std::string &new_title)
 {
-    if (!new_title.empty()) {
+    if (!new_title.empty() && tiddler_title != new_title) {
         tiddler_title = new_title;
+        return true;
     }
+    return false;
 }
 
 int32_t Tiddler::history_size() const
@@ -45,15 +51,22 @@ int32_t Tiddler::history_size() const
     return text_history_size;
 }
 
-void Tiddler::set_history_size(int32_t new_history_size)
+bool Tiddler::set_history_size(int32_t new_history_size)
 {
     if (new_history_size > 0) {
         static constexpr int max_history_size = 100;
-        text_history_size = new_history_size > max_history_size ? max_history_size : new_history_size;
-        if (static_cast<std::size_t>(text_history_size) < tiddler_text_history.size()) {
-            tiddler_text_history.resize(static_cast<std::size_t>(text_history_size));
+        if (new_history_size > max_history_size) {
+            new_history_size = max_history_size;
+        }
+        if (new_history_size != text_history_size) {
+            text_history_size = new_history_size > max_history_size ? max_history_size : new_history_size;
+            if (static_cast<std::size_t>(text_history_size) < tiddler_text_history.size()) {
+                tiddler_text_history.resize(static_cast<std::size_t>(text_history_size));
+            }
+            return true;
         }
     }
+    return false;
 }
 
 std::string Tiddler::text() const
@@ -66,26 +79,34 @@ std::deque<std::string> Tiddler::text_history() const
     return tiddler_text_history;
 }
 
-void Tiddler::set_text(const std::string &text)
+bool Tiddler::set_text(const std::string &text)
 {
     if (!text.empty()) {
         auto sz = static_cast<int32_t>(tiddler_text_history.size());
         if (sz == 0) {
             tiddler_text_history.push_front(text);
+            return true;
         } else if (text_history_size == 1) {
-            tiddler_text_history.front() = text;
+            if (tiddler_text_history.front() != text) {
+                tiddler_text_history.front() = text;
+                return true;
+            }
         } else {
             auto it = std::find(tiddler_text_history.begin(), tiddler_text_history.end(), text);
-            if (it == tiddler_text_history.end()) {
-                if (sz == text_history_size) {
-                    tiddler_text_history.pop_back();
+            if (it != tiddler_text_history.begin()) {
+                if (it == tiddler_text_history.end()) {
+                    if (sz == text_history_size) {
+                        tiddler_text_history.pop_back();
+                    }
+                    tiddler_text_history.push_front(text);
+                } else {
+                    std::rotate(tiddler_text_history.begin(), it, it + 1);
                 }
-                tiddler_text_history.push_front(text);
-            } else {
-                std::rotate(tiddler_text_history.begin(), it, it + 1);
+                return true;
             }
         }
     }
+    return false;
 }
 
 std::vector<std::string> Tiddler::tags() const
@@ -98,19 +119,23 @@ bool Tiddler::has_tag(const std::string& tag) const
     return std::find(tiddler_tags.begin(), tiddler_tags.end(), tag) != tiddler_tags.end();
 }
 
-void Tiddler::set_tag(const std::string& tag)
+bool Tiddler::set_tag(const std::string& tag)
 {
     if (!tag.empty() && !has_tag(tag)) {
         tiddler_tags.push_back(tag);
+        return true;
     }
+    return false;
 }
 
-void Tiddler::remove_tag(const std::string& tag)
+bool Tiddler::remove_tag(const std::string& tag)
 {
     auto it = std::find(tiddler_tags.begin(), tiddler_tags.end(), tag);
     if (it != tiddler_tags.end()) {
         tiddler_tags.erase(it);
+        return true;
     }
+    return false;
 }
 
 std::string Tiddler::field_value(const std::string& field_name) const
@@ -123,14 +148,14 @@ std::unordered_map<std::string, std::string> Tiddler::fields() const
     return tiddler_fields;
 }
 
-void Tiddler::set_field(const std::string& field_name, const std::string& value)
+bool Tiddler::set_field(const std::string& field_name, const std::string& value)
 {
-    set_map_value(tiddler_fields, field_name, value);
+    return set_map_value(tiddler_fields, field_name, value);
 }
 
-void Tiddler::remove_field(const std::string& field_name)
+bool  Tiddler::remove_field(const std::string& field_name)
 {
-    tiddler_fields.erase(field_name);
+    return tiddler_fields.erase(field_name);
 }
 
 std::vector<std::string> Tiddler::list(const std::string &list_name) const
@@ -143,17 +168,25 @@ std::unordered_map<std::string, std::vector<std::string>> Tiddler::lists() const
     return tiddler_lists;
 }
 
-void Tiddler::set_list(const std::string &list_name, std::vector<std::string> values)
+Tiddler::List_Change_Value Tiddler::set_list(const std::string &list_name, std::vector<std::string> values)
 {
+    auto old_size = tiddler_lists.size();
     values.erase(std::remove_if(values.begin(), values.end(), [](const std::string& element) {
         return element.empty();
     }), values.end());
-    set_map_value(tiddler_lists, list_name, values);
+    auto changed = set_map_value(tiddler_lists, list_name, values);
+    if (changed) {
+        if (old_size == tiddler_lists.size()) {
+            return List_Change_Value::Single_List_Changed;
+        }
+        return List_Change_Value::Lists_Changed;
+    }
+    return List_Change_Value::No_List_Change;
 }
 
-void Tiddler::remove_list(const std::string &list_name)
+bool  Tiddler::remove_list(const std::string &list_name)
 {
-    tiddler_lists.erase(list_name);
+    return tiddler_lists.erase(list_name);
 }
 
 bool Tiddler::isEmpty()

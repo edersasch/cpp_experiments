@@ -50,12 +50,8 @@ std::string Tiddler_Model::title() const
 
 void Tiddler_Model::request_set_title(const std::string& new_title)
 {
-    if (t) {
-        auto old = t->title();
-        t->set_title(new_title);
-        if (old != t->title()) {
-            emit title_changed();
-        }
+    if (t && t->set_title(new_title)) {
+        emit title_changed();
     }
 }
 
@@ -66,12 +62,8 @@ int32_t Tiddler_Model::history_size() const
 
 void Tiddler_Model::request_set_history_size(int32_t new_history_size)
 {
-    if (t) {
-        auto old = t->history_size();
-        t->set_history_size(new_history_size);
-        if (old != t->history_size()) {
-            emit history_size_changed();
-        }
+    if (t && t->set_history_size(new_history_size)) {
+        emit history_size_changed();
     }
 }
 
@@ -87,12 +79,8 @@ std::deque<std::string> Tiddler_Model::text_history() const
 
 void Tiddler_Model::request_set_text(const std::string& text)
 {
-    if (t) {
-        auto old = t->text();
-        t->set_text(text);
-        if (old != t->text()) {
-            emit text_changed();
-        }
+    if (t && t->set_text(text)) {
+        emit text_changed();
     }
 }
 
@@ -108,23 +96,15 @@ bool Tiddler_Model::has_tag(const std::string& tag) const
 
 void Tiddler_Model::request_set_tag(const std::string& tag)
 {
-    if (t) {
-        auto old = t->tags();
-        t->set_tag(tag);
-        if (old != t->tags()) {
-            emit tags_changed();
-        }
+    if (t && t->set_tag(tag)) {
+        emit tags_changed();
     }
 }
 
 void Tiddler_Model::request_remove_tag(const std::string& tag)
 {
-    if (t) {
-        auto old = t->tags();
-        t->remove_tag(tag);
-        if (old != t->tags()) {
-            emit tags_changed();
-        }
+    if (t && t->remove_tag(tag)) {
+        emit tags_changed();
     }
 }
 
@@ -138,25 +118,17 @@ std::unordered_map<std::string, std::string> Tiddler_Model::fields() const
     return t ? t->fields() : std::unordered_map<std::string, std::string>();
 }
 
-void Tiddler_Model::request_set_field(const std::string& field_name, const std::string& field_value)
+void Tiddler_Model::request_set_field(const std::string& field_name, const std::string& field_val)
 {
-    if (t) {
-        auto old = t->fields();
-        t->set_field(field_name, field_value);
-        if (old != t->fields()) {
-            emit fields_changed();
-        }
+    if (t && t->set_field(field_name, field_val)) {
+        emit fields_changed();
     }
 }
 
 void Tiddler_Model::request_remove_field(const std::string& field_name)
 {
-    if (t) {
-        auto old = t->fields();
-        t->remove_field(field_name);
-        if (old != t->fields()) {
-            emit fields_changed();
-        }
+    if (t && t->remove_field(field_name)) {
+        emit fields_changed();
     }
 }
 
@@ -173,22 +145,22 @@ std::unordered_map<std::string, std::vector<std::string>> Tiddler_Model::lists()
 void Tiddler_Model::request_set_list(const std::string& list_name, const std::vector<std::string>& values)
 {
     if (t) {
-        auto old = t->list(list_name);
-        t->set_list(list_name, values);
-        auto current = t->list(list_name);
-        if (old != current) {
-            emit (old.empty() || current.empty()) ? lists_changed() : single_list_changed(list_name.c_str());
+        switch (t->set_list(list_name, values)) {
+        case Tiddlerstore::Tiddler::List_Change_Value::Single_List_Changed:
+            emit single_list_changed(list_name.c_str());
+            break;
+        case Tiddlerstore::Tiddler::List_Change_Value::Lists_Changed:
+            emit lists_changed();
+            break;
+        default:
+            break;
         }
     }
 }
 
 void Tiddler_Model::request_remove_list(const std::string& list_name)
 {
-    if (t) {
-        auto old = t->lists();
-        t->remove_list(list_name);
-        if (old != t->lists()) {
-            emit lists_changed();
-        }
+    if (t && t->remove_list(list_name)) {
+        emit lists_changed();
     }
 }

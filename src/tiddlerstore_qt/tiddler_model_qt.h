@@ -56,7 +56,7 @@ public:
     void request_remove_tag(const std::string& tag);
     std::string field_value(const std::string& field_name) const;
     std::unordered_map<std::string, std::string> fields() const;
-    void request_set_field(const std::string& field_name, const std::string& field_value);
+    void request_set_field(const std::string& field_name, const std::string& field_val);
     void request_remove_field(const std::string& field_name);
     std::vector<std::string> list(const std::string& list_name) const;
     std::unordered_map<std::string, std::vector<std::string>> lists() const;

@@ -23,6 +23,13 @@ public:
     Tiddler& operator=(const Tiddlerstore::Tiddler& rhs) = default;
     virtual ~Tiddler() = default;
 
+    enum class List_Change_Value
+    {
+        No_List_Change,
+        Single_List_Changed,
+        Lists_Changed
+    };
+
     static constexpr auto           title_key                       = "ti";
     static constexpr auto           history_size_key                = "hs";
     static constexpr auto           text_history_key                = "th";
@@ -33,45 +40,86 @@ public:
 
     std::string title() const;
 
-    /// If new_title is empty, the old title is preserved.
-    void set_title(const std::string& new_title);
+    /**
+     * @brief set_title set a new non-empty title
+     * @param new_title old title is preserved if empty
+     * @return true on change
+     */
+    bool set_title(const std::string& new_title);
 
     int32_t history_size() const;
 
-    /// If new_history_size < 1, the old size is preserved. On values > 100 the max history size 100 is used.
-    void set_history_size(int32_t new_history_size);
+    /**
+     * @brief set_history_size set a new history size between 1 and 100
+     * @param new_history_size old size is preserved if < 1, 100 is used if > 100
+     * @return true on change
+     */
+    bool set_history_size(int32_t new_history_size);
     std::string text() const;
     std::deque<std::string> text_history() const;
 
-    /// If text is not empty, it is put in front of the existing history. The oldest entry will be discarded if history_size() would be exceeded.
-    void set_text(const std::string& text);
+    /**
+     * @brief set_text set a new non-empty text, potentially altering the history
+     * @param text put in front of the existing history if not empty, oldest entry will be discarded if @see history_size() would be exceeded
+     * @return true on change
+     */
+    bool set_text(const std::string& text);
 
     std::vector<std::string> tags() const;
     bool has_tag(const std::string& tag) const;
 
-    /// The tag will be added if it is not empty and not already present.
-    void set_tag(const std::string& tag);
+    /**
+     * @brief set_tag set a new non-empty tag
+     * @param tag will be added if it is not empty and not already present
+     * @return true on add
+     */
+    bool set_tag(const std::string& tag);
 
-    /// Removing a nonexisting tag does nothing
-    void remove_tag(const std::string& tag);
+    /**
+     * @brief remove_tag remove a present non-empty tag
+     * @param tag removing a nonexisting or empty tag does nothing
+     * @return true on remove
+     */
+    bool remove_tag(const std::string& tag);
 
     std::string field_value(const std::string& field_name) const;
     std::unordered_map<std::string, std::string> fields() const;
 
-    /// Nothing will be done if field_name is empty. An empty field_value removes the field.
-    void set_field(const std::string& field_name, const std::string& field_value);
+    /**
+     * @brief set_field add / remove / modify a field
+     * @param field_name if empty nothing will be done
+     * @param field_value removes the field if empty
+     * @return true on change
+     */
+    bool set_field(const std::string& field_name, const std::string& field_value);
 
-    /// Removing a nonexisting field does nothing
-    void remove_field(const std::string& field_name);
+    /**
+     * @brief remove_field remove a present field
+     * @param field_name will not remove if empty or field is nonexisting
+     * @return true on remove
+     */
+    bool remove_field(const std::string& field_name);
 
     std::vector<std::string> list(const std::string& list_name) const;
     std::unordered_map<std::string, std::vector<std::string>> lists() const;
 
-    /// Nothing will be done if list_name is empty. Empty strings get removed from values paratemer. An empty values parameter removes the list. Duplicate entries in the values parameter are preserved.
-    void set_list(const std::string& list_name, std::vector<std::string> values);
+    /**
+     * @brief add / remove / modify a list
+     * @param list_name nothing will be done if list_name is empty.
+     * @param values empty strings get removed, an empty parameter removes the list, duplicate entries in the values parameter are preserved
+     * @return
+     *     @see List_Change_Value::No_List_Change if nothing was changed
+     *     @see List_Change_Value::Single_List_Changed if an existing list's content was modified
+     *     @see List_Change_Value::Lists_Changed if a list was added or removed
+     */
+    List_Change_Value set_list(const std::string& list_name, std::vector<std::string> values);
 
-    /// Removing a nonexisting list does nothing
-    void remove_list(const std::string& list_name);
+    /**
+     * @brief remove_list remove a present list
+     * @param list_name will not remove if empty or list is nonexisting
+     * @return true on remove
+     */
+    bool remove_list(const std::string& list_name);
 
     /// true if everything is empty, text_history_size does not matter
     bool isEmpty();
