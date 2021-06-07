@@ -27,9 +27,14 @@ signals:
 
     void history_size_changed();
     void tags_changed();
-    void fields_changed();
-    void lists_changed();
-    void single_list_changed(const char* list_name);
+    void field_changed(const char* field_name);
+    void field_added(const char* field_name);
+    void field_removed(const char* field_name);
+    void fields_reset();
+    void list_changed(const char* list_name);
+    void list_added(const char* list_name);
+    void list_removed(const char* list_name);
+    void lists_reset();
 
     /**
      * @brief remove_request object giving out the model shall delete it and the tiddler, removing it from a store if necessary

@@ -20,9 +20,14 @@ public:
     MOCK_METHOD(void, text_changed, ());
     MOCK_METHOD(void, history_size_changed, ());
     MOCK_METHOD(void, tags_changed, ());
-    MOCK_METHOD(void, fields_changed, ());
-    MOCK_METHOD(void, lists_changed, ());
-    MOCK_METHOD(void, single_list_changed, (const char*));
+    MOCK_METHOD(void, field_changed, (const char*));
+    MOCK_METHOD(void, field_added, (const char*));
+    MOCK_METHOD(void, field_removed, (const char*));
+    MOCK_METHOD(void, fields_reset, ());
+    MOCK_METHOD(void, list_changed, (const char*));
+    MOCK_METHOD(void, list_added, (const char*));
+    MOCK_METHOD(void, list_removed, (const char*));
+    MOCK_METHOD(void, lists_reset, ());
 };
 
 class Tiddler_Model_Test

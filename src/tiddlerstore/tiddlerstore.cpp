@@ -16,16 +16,28 @@ auto set_map_value = [](auto& map, const auto& key, const auto& value)
 {
     if (!key.empty()) {
         if (value.empty()) {
-            return map.erase(key) != 0;
+            if (map.erase(key) != 0) {
+                return Tiddlerstore::Tiddler::Change::Remove;
+            }
         } else {
-            if (map[key] != value) {
-                map[key] = value;
-                return true;
+            auto& val = map[key];
+            if (val != value) {
+                auto ret = val.empty() ? Tiddlerstore::Tiddler::Change::Add : Tiddlerstore::Tiddler::Change::Value;
+                val = value;
+                return ret;
             }
         }
     }
-    return false;
+    return Tiddlerstore::Tiddler::Change::None;
 };
+
+bool string_find_case_insensitive(const std::string& haystack, const std::string& needle)
+{
+    auto it = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), [](char c1, char c2) {
+        return std::tolower(c1) == std::tolower(c2);
+    });
+    return it != haystack.end();
+}
 
 }
 
@@ -86,7 +98,8 @@ bool Tiddler::set_text(const std::string &text)
         if (sz == 0) {
             tiddler_text_history.push_front(text);
             return true;
-        } else if (text_history_size == 1) {
+        }
+        if (text_history_size == 1) {
             if (tiddler_text_history.front() != text) {
                 tiddler_text_history.front() = text;
                 return true;
@@ -148,7 +161,7 @@ std::unordered_map<std::string, std::string> Tiddler::fields() const
     return tiddler_fields;
 }
 
-bool Tiddler::set_field(const std::string& field_name, const std::string& value)
+Tiddler::Change Tiddler::set_field(const std::string& field_name, const std::string& value)
 {
     return set_map_value(tiddler_fields, field_name, value);
 }
@@ -168,20 +181,12 @@ std::unordered_map<std::string, std::vector<std::string>> Tiddler::lists() const
     return tiddler_lists;
 }
 
-Tiddler::List_Change_Value Tiddler::set_list(const std::string &list_name, std::vector<std::string> values)
+Tiddler::Change Tiddler::set_list(const std::string &list_name, std::vector<std::string> values)
 {
-    auto old_size = tiddler_lists.size();
     values.erase(std::remove_if(values.begin(), values.end(), [](const std::string& element) {
         return element.empty();
     }), values.end());
-    auto changed = set_map_value(tiddler_lists, list_name, values);
-    if (changed) {
-        if (old_size == tiddler_lists.size()) {
-            return List_Change_Value::Single_List_Changed;
-        }
-        return List_Change_Value::Lists_Changed;
-    }
-    return List_Change_Value::No_List_Change;
+    return set_map_value(tiddler_lists, list_name, values);
 }
 
 bool  Tiddler::remove_list(const std::string &list_name)
@@ -351,6 +356,38 @@ Store_Filter& Store_Filter::n_title(const std::string& title_value)
     return *this;
 }
 
+Store_Filter& Store_Filter::title_contains(const std::string& title_value, bool case_sensitive)
+{
+    if (!title_value.empty()) {
+        if (case_sensitive) {
+            idx.erase(std::remove_if(idx.begin(), idx.end(), [this, title_value](const std::size_t& i) {
+                return s[i]->title().find(title_value) == std::string::npos;
+            }), idx.end());
+        } else {
+            idx.erase(std::remove_if(idx.begin(), idx.end(), [this, title_value](const std::size_t& i) {
+                return !string_find_case_insensitive(s[i]->title(), title_value);
+            }), idx.end());
+        }
+    }
+    return *this;
+}
+
+Store_Filter& Store_Filter::n_title_contains(const std::string& title_value, bool case_sensitive)
+{
+    if (!title_value.empty()) {
+        if (case_sensitive) {
+            idx.erase(std::remove_if(idx.begin(), idx.end(), [this, title_value](const std::size_t& i) {
+                return s[i]->title().find(title_value) != std::string::npos;
+            }), idx.end());
+        } else {
+            idx.erase(std::remove_if(idx.begin(), idx.end(), [this, title_value](const std::size_t& i) {
+                return string_find_case_insensitive(s[i]->title(), title_value);
+            }), idx.end());
+        }
+    }
+    return *this;
+}
+
 Store_Filter& Store_Filter::tag(const std::string& tag_value)
 {
     if (!tag_value.empty()) {
@@ -447,7 +484,29 @@ Store_Filter& Store_Filter::n_list(const std::string& list_name, const std::vect
     return *this;
 }
 
-std::vector<std::size_t> Store_Filter::filtered_idx()
+Store_Filter& Store_Filter::intersect(const Store_Filter& other)
+{
+    if (s == other.s) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [other](const std::size_t& i) {
+            return std::find(other.idx.begin(), other.idx.end(), i) == other.idx.end();
+        }), idx.end());
+    }
+    return *this;
+}
+
+Store_Filter& Store_Filter::join(const Store_Filter& other)
+{
+    if (s == other.s) {
+        for (const auto& i : other.filtered_idx()) {
+            if (std::find(idx.begin(), idx.end(), i) == idx.end()) {
+                idx.push_back(i);
+            }
+        }
+    }
+    return *this;
+}
+
+std::vector<std::size_t> Store_Filter::filtered_idx() const
 {
     return idx;
 }

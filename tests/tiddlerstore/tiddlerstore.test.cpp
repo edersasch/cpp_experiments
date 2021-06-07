@@ -147,7 +147,7 @@ TEST_F(Tiddlerstore_Test, fields)
         EXPECT_EQ(expected_fields, t.fields());
         EXPECT_EQ(expected_fields, copy.fields());
         Tiddlerstore::Tiddler assign;
-        EXPECT_EQ(true, assign.set_field("something unexpected", "1"));
+        EXPECT_EQ(Tiddlerstore::Tiddler::Change::Add, assign.set_field("something unexpected", "1"));
         assign = t;
         EXPECT_EQ(expected_fields, t.fields());
         EXPECT_EQ(expected_fields, assign.fields());
@@ -162,17 +162,17 @@ TEST_F(Tiddlerstore_Test, fields)
         EXPECT_EQ("", clone.field_value("never ever such a field"));
     };
     expected_fields["a_key"] = "a_val";
-    EXPECT_EQ(true, t.set_field("a_key", "a_val"));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Add, t.set_field("a_key", "a_val"));
     check_fields();
-    EXPECT_EQ(false, t.set_field("", "vanish"));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::None, t.set_field("", "vanish"));
     check_fields();
-    EXPECT_EQ(false, t.set_field("vanish", ""));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::None, t.set_field("vanish", ""));
     check_fields();
     expected_fields["b_key"] = "b_val";
-    EXPECT_EQ(true, t.set_field("b_key", "b_val"));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Add, t.set_field("b_key", "b_val"));
     check_fields();
     expected_fields["c_key"] = "c_val";
-    EXPECT_EQ(true, t.set_field("c_key", "c_val"));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Add, t.set_field("c_key", "c_val"));
     check_fields();
     expected_fields.erase("b_key");
     EXPECT_EQ(false, t.remove_field("nonexisting"));
@@ -180,10 +180,10 @@ TEST_F(Tiddlerstore_Test, fields)
     EXPECT_EQ(false, t.remove_field("b_key"));
     check_fields();
     expected_fields["c_key"] = "ccc";
-    EXPECT_EQ(true, t.set_field("c_key", "ccc"));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Value, t.set_field("c_key", "ccc"));
     check_fields();
     expected_fields.erase("a_key");
-    EXPECT_EQ(true, t.set_field("a_key", "")); // setting to empty erases
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Remove, t.set_field("a_key", "")); // setting to empty erases
     check_fields();
 }
 
@@ -197,7 +197,7 @@ TEST_F(Tiddlerstore_Test, lists)
         EXPECT_EQ(expected_lists, t.lists());
         EXPECT_EQ(expected_lists, copy.lists());
         Tiddlerstore::Tiddler assign;
-        EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::Lists_Changed, assign.set_list("something unexpected", {"1", "2", "3"}));
+        EXPECT_EQ(Tiddlerstore::Tiddler::Change::Add, assign.set_list("something unexpected", {"1", "2", "3"}));
         assign = t;
         EXPECT_EQ(expected_lists, t.lists());
         EXPECT_EQ(expected_lists, assign.lists());
@@ -212,17 +212,17 @@ TEST_F(Tiddlerstore_Test, lists)
         EXPECT_EQ(std::vector<std::string>(), clone.list("never ever such a list"));
     };
     expected_lists["a_key"] = {"a_val", "aa_val", "a", "a"}; // duplicate entries are allowed in lists
-    EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::Lists_Changed, t.set_list("a_key", {"a_val", "aa_val", "a", "a"}));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Add, t.set_list("a_key", {"a_val", "aa_val", "a", "a"}));
     check_lists();
-    EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::No_List_Change, t.set_list("", {"vanish", "vanish"}));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::None, t.set_list("", {"vanish", "vanish"}));
     check_lists();
-    EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::No_List_Change, t.set_list("vanish", {}));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::None, t.set_list("vanish", {}));
     check_lists();
     expected_lists["b_key"] = {"b_val", "bb_val", "b"};
-    EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::Lists_Changed, t.set_list("b_key", {"b_val", "bb_val", "b"}));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Add, t.set_list("b_key", {"b_val", "bb_val", "b"}));
     check_lists();
     expected_lists["c_key"] = {"c_val", "c"};
-    EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::Lists_Changed, t.set_list("c_key", {"c_val", "c"}));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Add, t.set_list("c_key", {"c_val", "c"}));
     check_lists();
     expected_lists.erase("b_key");
     EXPECT_EQ(false, t.remove_list("nonexisting"));
@@ -230,17 +230,17 @@ TEST_F(Tiddlerstore_Test, lists)
     EXPECT_EQ(false, t.remove_list("b_key"));
     check_lists();
     expected_lists["c_key"] = {"ccc", "caa", "cbb"};
-    EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::Single_List_Changed, t.set_list("c_key", {"ccc", "caa", "cbb"}));
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Value, t.set_list("c_key", {"ccc", "caa", "cbb"}));
     check_lists();
     expected_lists.erase("a_key");
-    EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::Lists_Changed, t.set_list("a_key", {})); // setting to empty erases
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Remove, t.set_list("a_key", {})); // setting to empty erases
     check_lists();
-    EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::No_List_Change, t.set_list("a_key", {""})); // must stay empty
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::None, t.set_list("a_key", {""})); // must stay empty
     check_lists();
-    EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::No_List_Change, t.set_list("a_key", {"", "", ""})); // must stay empty
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::None, t.set_list("a_key", {"", "", ""})); // must stay empty
     check_lists();
     expected_lists["a_key"] = {"aaa"};
-    EXPECT_EQ(Tiddlerstore::Tiddler::List_Change_Value::Lists_Changed, t.set_list("a_key", {"", "", "aaa", ""})); // only "aaa" stays
+    EXPECT_EQ(Tiddlerstore::Tiddler::Change::Add, t.set_list("a_key", {"", "", "aaa", ""})); // only "aaa" stays
     check_lists();
 }
 
@@ -291,12 +291,40 @@ TEST_F(Tiddlerstore_Test, filter_title)
     t2->set_title("b");
     auto t3 = s.emplace_back(new Tiddlerstore::Tiddler).get();
     t3->set_title("c");
+    auto t4 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t4->set_title("ab");
+    auto t5 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t5->set_title("bc");
+    auto t6 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t6->set_title("abc");
+    auto t7 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t7->set_title("ABC");
     auto r1 = Tiddlerstore::Store_Filter(s).title("a").filtered_idx();
-    EXPECT_EQ(1, r1.size());
+    EXPECT_EQ(r1, std::vector<std::size_t>{0});
     auto r2 = Tiddlerstore::Store_Filter(s).title("b").filtered_idx();
-    EXPECT_EQ(1, r2.size());
+    EXPECT_EQ(r2, std::vector<std::size_t>{1});
     auto r3 = Tiddlerstore::Store_Filter(s).n_title("a").filtered_idx();
-    EXPECT_EQ(2, r3.size());
+    EXPECT_EQ(r3, std::vector<std::size_t>({1, 2, 3, 4, 5, 6}));
+    auto r4 = Tiddlerstore::Store_Filter(s).title_contains("a").filtered_idx();
+    EXPECT_EQ(r4, std::vector<std::size_t>({0, 3, 5, 6}));
+    auto r5 = Tiddlerstore::Store_Filter(s).n_title_contains("a").filtered_idx();
+    EXPECT_EQ(r5, std::vector<std::size_t>({1, 2, 4}));
+    auto r6 = Tiddlerstore::Store_Filter(s).title_contains("A", true).filtered_idx();
+    EXPECT_EQ(r6, std::vector<std::size_t>({6}));
+    auto r7 = Tiddlerstore::Store_Filter(s).n_title_contains("A", true).filtered_idx();
+    EXPECT_EQ(r7, std::vector<std::size_t>({0, 1, 2, 3, 4, 5}));
+    Tiddlerstore::Store_Filter f1(s);
+    f1.title_contains("c");
+    EXPECT_EQ(f1.filtered_idx(), std::vector<std::size_t>({2, 4, 5, 6}));
+    Tiddlerstore::Store_Filter f2(s);
+    f2.title_contains("b", true);
+    EXPECT_EQ(f2.filtered_idx(), std::vector<std::size_t>({1, 3, 4, 5}));
+    f1.join(f2);
+    EXPECT_EQ(f1.filtered_idx(), std::vector<std::size_t>({2, 4, 5, 6, 1, 3}));
+    Tiddlerstore::Store_Filter f3(s);
+    f3.title_contains("C", true);
+    f1.intersect(f3);
+    EXPECT_EQ(f1.filtered_idx(), std::vector<std::size_t>({6}));
 }
 
 TEST_F(Tiddlerstore_Test, filter_tags)

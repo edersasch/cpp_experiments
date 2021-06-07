@@ -23,11 +23,13 @@ public:
     Tiddler& operator=(const Tiddlerstore::Tiddler& rhs) = default;
     virtual ~Tiddler() = default;
 
-    enum class List_Change_Value
+    /// indicates change of fields or lists
+    enum class Change
     {
-        No_List_Change,
-        Single_List_Changed,
-        Lists_Changed
+        None,   /// nothing changed
+        Value,  /// an already present element got a different value
+        Add,    /// a new element was added
+        Remove  /// an elment was removed
     };
 
     static constexpr auto           title_key                       = "ti";
@@ -89,9 +91,9 @@ public:
      * @brief set_field add / remove / modify a field
      * @param field_name if empty nothing will be done
      * @param field_value removes the field if empty
-     * @return true on change
+     * @return @see Change
      */
-    bool set_field(const std::string& field_name, const std::string& field_value);
+    Change set_field(const std::string& field_name, const std::string& field_value);
 
     /**
      * @brief remove_field remove a present field
@@ -107,12 +109,9 @@ public:
      * @brief add / remove / modify a list
      * @param list_name nothing will be done if list_name is empty.
      * @param values empty strings get removed, an empty parameter removes the list, duplicate entries in the values parameter are preserved
-     * @return
-     *     @see List_Change_Value::No_List_Change if nothing was changed
-     *     @see List_Change_Value::Single_List_Changed if an existing list's content was modified
-     *     @see List_Change_Value::Lists_Changed if a list was added or removed
+     * @return @see Change
      */
-    List_Change_Value set_list(const std::string& list_name, std::vector<std::string> values);
+    Change set_list(const std::string& list_name, std::vector<std::string> values);
 
     /**
      * @brief remove_list remove a present list
@@ -155,6 +154,8 @@ public:
 
     Store_Filter& title(const std::string& title_value);
     Store_Filter& n_title(const std::string& title_value);
+    Store_Filter& title_contains(const std::string& title_value, bool case_sensitive = false);
+    Store_Filter& n_title_contains(const std::string& title_value, bool case_sensitive = false);
     Store_Filter& tag(const std::string& tag_value);
     Store_Filter& n_tag(const std::string& tag_value);
     Store_Filter& tagged();
@@ -163,7 +164,9 @@ public:
     Store_Filter& n_field(const std::string& field_name, const std::string& value = {});
     Store_Filter& list(const std::string& list_name, const std::vector<std::string>& contains = {});
     Store_Filter& n_list(const std::string& list_name, const std::vector<std::string>& contains = {});
-    std::vector<std::size_t> filtered_idx();
+    Store_Filter& intersect(const Store_Filter& other);
+    Store_Filter& join(const Store_Filter& other);
+    std::vector<std::size_t> filtered_idx() const;
 
 private:
     const Store& s;

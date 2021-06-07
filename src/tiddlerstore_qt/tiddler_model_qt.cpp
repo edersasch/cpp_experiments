@@ -35,10 +35,10 @@ void Tiddler_Model::request_set_tiddler_data(const Tiddlerstore::Tiddler &other)
             emit tags_changed();
         }
         if (fields_will_change) {
-            emit fields_changed();
+            emit fields_reset();
         }
         if (lists_will_change) {
-            emit lists_changed();
+            emit lists_reset();
         }
     }
 }
@@ -120,15 +120,27 @@ std::unordered_map<std::string, std::string> Tiddler_Model::fields() const
 
 void Tiddler_Model::request_set_field(const std::string& field_name, const std::string& field_val)
 {
-    if (t && t->set_field(field_name, field_val)) {
-        emit fields_changed();
+    if (t) {
+        switch(t->set_field(field_name, field_val)) {
+        case Tiddlerstore::Tiddler::Change::Add:
+            emit field_added(field_name.c_str());
+            break;
+        case Tiddlerstore::Tiddler::Change::Remove:
+            emit field_removed(field_name.c_str());
+            break;
+        case Tiddlerstore::Tiddler::Change::Value:
+            emit field_changed(field_name.c_str());
+            break;
+        default:
+            break;
+        }
     }
 }
 
 void Tiddler_Model::request_remove_field(const std::string& field_name)
 {
     if (t && t->remove_field(field_name)) {
-        emit fields_changed();
+        emit field_removed(field_name.c_str());
     }
 }
 
@@ -145,12 +157,15 @@ std::unordered_map<std::string, std::vector<std::string>> Tiddler_Model::lists()
 void Tiddler_Model::request_set_list(const std::string& list_name, const std::vector<std::string>& values)
 {
     if (t) {
-        switch (t->set_list(list_name, values)) {
-        case Tiddlerstore::Tiddler::List_Change_Value::Single_List_Changed:
-            emit single_list_changed(list_name.c_str());
+        switch(t->set_list(list_name, values)) {
+        case Tiddlerstore::Tiddler::Change::Add:
+            emit list_added(list_name.c_str());
             break;
-        case Tiddlerstore::Tiddler::List_Change_Value::Lists_Changed:
-            emit lists_changed();
+        case Tiddlerstore::Tiddler::Change::Remove:
+            emit list_removed(list_name.c_str());
+            break;
+        case Tiddlerstore::Tiddler::Change::Value:
+            emit list_changed(list_name.c_str());
             break;
         default:
             break;
@@ -161,6 +176,6 @@ void Tiddler_Model::request_set_list(const std::string& list_name, const std::ve
 void Tiddler_Model::request_remove_list(const std::string& list_name)
 {
     if (t && t->remove_list(list_name)) {
-        emit lists_changed();
+        emit list_removed(list_name.c_str());
     }
 }

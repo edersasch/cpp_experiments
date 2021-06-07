@@ -46,9 +46,12 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     , present_lists_layout(new QVBoxLayout)
 {
     connect(&work_tm, &Tiddler_Model::tags_changed, this, &Tiddler_Pure_Edit::update_present_tags);
-    connect(&work_tm, &Tiddler_Model::fields_changed, this, &Tiddler_Pure_Edit::update_present_fields);
-    connect(&work_tm, &Tiddler_Model::lists_changed, this, &Tiddler_Pure_Edit::update_present_lists);
-    connect(&work_tm, &Tiddler_Model::single_list_changed, this, &Tiddler_Pure_Edit::update_present_list);
+    connect(&work_tm, &Tiddler_Model::field_changed, this, &Tiddler_Pure_Edit::update_present_fields);
+    connect(&work_tm, &Tiddler_Model::field_added, this, &Tiddler_Pure_Edit::update_present_fields);
+    connect(&work_tm, &Tiddler_Model::field_removed, this, &Tiddler_Pure_Edit::update_present_fields);
+    connect(&work_tm, &Tiddler_Model::list_changed, this, &Tiddler_Pure_Edit::update_present_list);
+    connect(&work_tm, &Tiddler_Model::list_added, this, &Tiddler_Pure_Edit::update_present_lists);
+    connect(&work_tm, &Tiddler_Model::list_removed, this, &Tiddler_Pure_Edit::update_present_lists);
 
     auto main_layout = new QVBoxLayout(this);
 
@@ -279,7 +282,7 @@ void Tiddler_Pure_Edit::update_present_lists()
     update_dirty();
 }
 
-void Tiddler_Pure_Edit::update_present_list(const std::string &list_name)
+void Tiddler_Pure_Edit::update_present_list(const std::string& list_name)
 {
     auto listvalues = work_tm.list(list_name);
     auto lui = single_list_elements[list_name];
