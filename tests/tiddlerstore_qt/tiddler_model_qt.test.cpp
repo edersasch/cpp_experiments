@@ -235,3 +235,46 @@ TEST_F(Tiddler_Model_Test, lists)
     tm.request_set_tiddler_data(t);
     processEvents();
 }
+
+Tiddlerstore_Model_Test::Tiddlerstore_Model_Test()
+    : tsm(ts)
+{
+    connect(&tsm, &Tiddlerstore_Model::added, &tsm_slots, &Tiddlerstore_Model_Test_Slots::added);
+    connect(&tsm, &Tiddlerstore_Model::model_created, &tsm_slots, &Tiddlerstore_Model_Test_Slots::model_created);
+    connect(&tsm, &Tiddlerstore_Model::removed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::removed);
+}
+
+TEST_F(Tiddlerstore_Model_Test, add_model_remove)
+{
+    using testing::_;
+    EXPECT_CALL(tsm_slots, added(0));
+    EXPECT_CALL(tsm_slots, model_created(_));
+    auto tm1 = tsm.add();
+    auto tm1_same = tsm.model_for_index(0);
+    auto tm1_still_same = tsm.model_for_tiddler(tm1->tiddler());
+    EXPECT_EQ(tm1, tm1_same);
+    EXPECT_EQ(tm1, tm1_still_same);
+    EXPECT_EQ(nullptr, tsm.model_for_index(1));
+    EXPECT_CALL(tsm_slots, added(1));
+    EXPECT_CALL(tsm_slots, model_created(_));
+    auto tm2 = tsm.add();
+    auto tm2_same = tsm.model_for_index(1);
+    auto tm2_still_same = tsm.model_for_tiddler(tm2->tiddler());
+    EXPECT_EQ(tm2, tm2_same);
+    EXPECT_EQ(tm2, tm2_still_same);
+    EXPECT_EQ(nullptr, tsm.model_for_index(2));
+    auto t1 = ts.emplace_back(new Tiddlerstore::Tiddler).get();
+    EXPECT_CALL(tsm_slots, model_created(_));
+    auto tm3 = tsm.model_for_tiddler(t1);
+    Tiddlerstore::Tiddler f1;
+    EXPECT_EQ(nullptr, tsm.model_for_tiddler(&f1));
+    EXPECT_CALL(tsm_slots, removed);
+    tm1->request_remove();
+    auto tm2_still_there = tsm.model_for_index(0);
+    EXPECT_EQ(tm2, tm2_still_there);
+    EXPECT_CALL(tsm_slots, removed);
+    tm2->request_remove();
+    EXPECT_CALL(tsm_slots, removed);
+    tm3->request_remove();
+    EXPECT_EQ(true, ts.empty());
+}

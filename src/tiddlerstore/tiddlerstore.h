@@ -7,6 +7,7 @@
 #include <vector>
 #include <deque>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace Tiddlerstore
 {
@@ -49,14 +50,14 @@ public:
      */
     bool set_title(const std::string& new_title);
 
-    int32_t history_size() const;
+    std::int32_t history_size() const;
 
     /**
      * @brief set_history_size set a new history size between 1 and 100
      * @param new_history_size old size is preserved if < 1, 100 is used if > 100
      * @return true on change
      */
-    bool set_history_size(int32_t new_history_size);
+    bool set_history_size(std::int32_t new_history_size);
     std::string text() const;
     std::deque<std::string> text_history() const;
 
@@ -146,11 +147,29 @@ void from_json(const nlohmann::json& j, Store& s);
 Store open_store_from_file(const std::string& path);
 bool save_store_to_file(const Store& store, const std::string& path);
 
+/// returns all tags used in a store
+std::unordered_set<std::string> store_tags(const Store& store);
+
+/// returns all field names used in a store
+std::unordered_set<std::string> store_fields(const Store& store);
+
+/// returns all list names used in a store
+std::unordered_set<std::string> store_lists(const Store& store);
+
+/// returns an iterator to the position in the store
+auto tiddler_pos_in_store(const Tiddler& tiddler, const Store& store) -> decltype(store.begin());
+
+/// erases a tiddler from the store, it's of course invalid afterwards
+void erase_tiddler_from_store(const Tiddler& tiddler, Store& store);
+
+/// returns true if a tiddler is in the store
+bool is_tiddler_in_store(const Tiddler& tiddler, const Store& store);
+
 class Store_Filter
 {
 public:
-    Store_Filter(const Store& all);
-    ~Store_Filter() = default;
+    explicit Store_Filter(const Store& all);
+    virtual ~Store_Filter() = default;
 
     Store_Filter& title(const std::string& title_value);
     Store_Filter& n_title(const std::string& title_value);

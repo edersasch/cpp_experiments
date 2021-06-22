@@ -31,6 +31,13 @@ auto set_map_value = [](auto& map, const auto& key, const auto& value)
     return Tiddlerstore::Tiddler::Change::None;
 };
 
+auto extract_map_keys = [](const auto& src, auto& dest)
+{
+    for (const auto& elem : src) {
+        dest.insert(elem.first);
+    }
+};
+
 bool string_find_case_insensitive(const std::string& haystack, const std::string& needle)
 {
     auto it = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), [](char c1, char c2) {
@@ -58,12 +65,12 @@ bool Tiddler::set_title(const std::string &new_title)
     return false;
 }
 
-int32_t Tiddler::history_size() const
+std::int32_t Tiddler::history_size() const
 {
     return text_history_size;
 }
 
-bool Tiddler::set_history_size(int32_t new_history_size)
+bool Tiddler::set_history_size(std::int32_t new_history_size)
 {
     if (new_history_size > 0) {
         static constexpr int max_history_size = 100;
@@ -326,6 +333,56 @@ bool save_store_to_file(const Store& store, const std::string& path)
     nlohmann::json j(store);
     out << j.dump();
     return out.good();
+}
+
+std::unordered_set<std::string> store_tags(const Store& store)
+{
+    std::unordered_set<std::string> ret;
+    for (const auto& t : store) {
+        auto taglist = t->tags();
+        ret.insert(taglist.begin(), taglist.end());
+    }
+    return ret;
+}
+
+std::unordered_set<std::string> store_fields(const Store& store)
+{
+    std::unordered_set<std::string> ret;
+    for (const auto& t : store) {
+        extract_map_keys(t->fields(), ret);
+    }
+    return ret;
+}
+
+std::unordered_set<std::string> store_lists(const Store& store)
+{
+    std::unordered_set<std::string> ret;
+    for (const auto& t : store) {
+        extract_map_keys(t->lists(), ret);
+    }
+    return ret;
+}
+
+auto tiddler_pos_in_store(const Tiddler& tiddler, const Store& store) -> decltype(store.begin())
+{
+    return std::find_if(store.begin(), store.end(), [&tiddler](const auto& tref) {
+        auto taddr = &tiddler;
+        auto trefaddr = tref.get();
+        return taddr == trefaddr;
+    });
+}
+
+void erase_tiddler_from_store(const Tiddler& tiddler, Store& store)
+{
+    auto it = tiddler_pos_in_store(tiddler, store);
+    if (it != store.end()) {
+        store.erase(it);
+    }
+}
+
+bool is_tiddler_in_store(const Tiddler& tiddler, const Store& store)
+{
+    return tiddler_pos_in_store(tiddler, store) != store.end();
 }
 
 Store_Filter::Store_Filter(const Store& all)

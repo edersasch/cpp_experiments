@@ -1,5 +1,4 @@
 #include "tiddler_model_qt.h"
-#include "tiddlerstore/tiddlerstore.h"
 
 Tiddler_Model::Tiddler_Model(Tiddlerstore::Tiddler* tiddler, QObject* parent)
     : QObject(parent)
@@ -55,12 +54,12 @@ void Tiddler_Model::request_set_title(const std::string& new_title)
     }
 }
 
-int32_t Tiddler_Model::history_size() const
+std::int32_t Tiddler_Model::history_size() const
 {
     return t ? t->history_size() : 0;
 }
 
-void Tiddler_Model::request_set_history_size(int32_t new_history_size)
+void Tiddler_Model::request_set_history_size(std::int32_t new_history_size)
 {
     if (t && t->set_history_size(new_history_size)) {
         emit history_size_changed();
@@ -178,4 +177,44 @@ void Tiddler_Model::request_remove_list(const std::string& list_name)
     if (t && t->remove_list(list_name)) {
         emit list_removed(list_name.c_str());
     }
+}
+
+Tiddlerstore_Model::Tiddlerstore_Model(Tiddlerstore::Store& s, QObject* parent)
+    : QObject(parent)
+    , data(s)
+{
+}
+
+Tiddler_Model* Tiddlerstore_Model::add()
+{
+    auto t = data.emplace_back(new Tiddlerstore::Tiddler).get();
+    emit added(static_cast<int>(data.size() - 1));
+    return model_for_tiddler(t);
+}
+
+Tiddler_Model* Tiddlerstore_Model::model_for_index(std::int32_t index)
+{
+    if (index >= 0 && static_cast<std::size_t>(index) < data.size()) {
+        return model_for_tiddler(data[static_cast<std::size_t>(index)].get());
+    }
+    return nullptr;
+}
+
+Tiddler_Model* Tiddlerstore_Model::model_for_tiddler(Tiddlerstore::Tiddler* t)
+{
+    auto it = active_models.find(t);
+    if (it == active_models.end()) {
+        if (Tiddlerstore::is_tiddler_in_store(*t, data)) {
+            it = active_models.insert({t, std::make_unique<Tiddler_Model>(t)}).first;
+            connect(it->second.get(), &Tiddler_Model::remove_request, this, [this, t] {
+                active_models.erase(t);
+                Tiddlerstore::erase_tiddler_from_store(*t, data);
+                emit removed();
+            });
+            emit model_created(it->second.get());
+        } else {
+            return nullptr;
+        }
+    }
+    return it->second.get();
 }

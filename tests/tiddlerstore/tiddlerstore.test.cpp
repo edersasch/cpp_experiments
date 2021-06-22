@@ -282,6 +282,80 @@ TEST_F(Tiddlerstore_Test, store)
     EXPECT_EQ(2, s2.size());
 }
 
+TEST_F(Tiddlerstore_Test, store_tags)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t1->set_tag("tag1");
+    t1->set_tag("tag2");
+    t1->set_tag("tag3");
+    auto t2 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t2->set_tag("tag2");
+    t2->set_tag("tag3");
+    t2->set_tag("tag4");
+    auto t3 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t3->set_tag("tag3");
+    t3->set_tag("tag4");
+    t3->set_tag("tag5");
+    EXPECT_EQ(Tiddlerstore::store_tags(s), std::unordered_set<std::string>({"tag1", "tag2", "tag3", "tag4", "tag5"}));
+}
+
+TEST_F(Tiddlerstore_Test, store_fields)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t1->set_field("f1", "1_1");
+    t1->set_field("f2", "1_2");
+    t1->set_field("f3", "1_3");
+    auto t2 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t2->set_field("f2", "2_2");
+    t2->set_field("f3", "2_3");
+    t2->set_field("f4", "2_4");
+    auto t3 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t3->set_field("f3", "3_3");
+    t3->set_field("f4", "3_4");
+    t3->set_field("f5", "3_5");
+    EXPECT_EQ(Tiddlerstore::store_fields(s), std::unordered_set<std::string>({"f1", "f2", "f3", "f4", "f5"}));
+}
+
+TEST_F(Tiddlerstore_Test, store_lists)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t1->set_list("l1", {"1_1"});
+    t1->set_list("l2", {"1_2"});
+    t1->set_list("l3", {"1_3"});
+    auto t2 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t2->set_list("l2", {"2_2"});
+    t2->set_list("l3", {"2_3"});
+    t2->set_list("l4", {"2_4"});
+    auto t3 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t3->set_list("l3", {"3_3"});
+    t3->set_list("l4", {"3_4"});
+    t3->set_list("l5", {"3_5"});
+    EXPECT_EQ(Tiddlerstore::store_lists(s), std::unordered_set<std::string>({"l1", "l2", "l3", "l4", "l5"}));
+}
+
+TEST_F(Tiddlerstore_Test, store_pos_erase)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    auto t2 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    auto t3 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    Tiddlerstore::Tiddler f1;
+    EXPECT_EQ(s.begin(), Tiddlerstore::tiddler_pos_in_store(*t1, s));
+    EXPECT_EQ(true, Tiddlerstore::is_tiddler_in_store(*t1, s));
+    EXPECT_EQ(true, Tiddlerstore::is_tiddler_in_store(*t2, s));
+    EXPECT_EQ(true, Tiddlerstore::is_tiddler_in_store(*t3, s));
+    EXPECT_EQ(s.end(), Tiddlerstore::tiddler_pos_in_store(f1, s));
+    EXPECT_EQ(false, Tiddlerstore::is_tiddler_in_store(f1, s));
+    EXPECT_EQ(3, s.size());
+    Tiddlerstore::erase_tiddler_from_store(*t2, s);
+    EXPECT_EQ(2, s.size());
+    Tiddlerstore::erase_tiddler_from_store(f1, s);
+    EXPECT_EQ(2, s.size());
+}
+
 TEST_F(Tiddlerstore_Test, filter_title)
 {
     Tiddlerstore::Store s;

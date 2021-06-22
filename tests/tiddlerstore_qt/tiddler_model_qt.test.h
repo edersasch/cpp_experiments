@@ -46,4 +46,34 @@ protected:
     Tiddler_Model tm {&tiddler_for_model};
 };
 
+class Tiddlerstore_Model_Test_Slots
+        : public QObject
+{
+    Q_OBJECT
+
+public:
+    Tiddlerstore_Model_Test_Slots() = default;
+    virtual ~Tiddlerstore_Model_Test_Slots() = default;
+
+    MOCK_METHOD(void, added, (int));
+    MOCK_METHOD(void, model_created, (Tiddler_Model*));
+    MOCK_METHOD(void, removed, ());
+};
+
+class Tiddlerstore_Model_Test
+        : public QObject
+        , public ::testing::Test
+{
+    Q_OBJECT
+
+public:
+    Tiddlerstore_Model_Test();
+    virtual ~Tiddlerstore_Model_Test() = default;
+
+protected:
+    ::testing::StrictMock<Tiddlerstore_Model_Test_Slots> tsm_slots;
+    Tiddlerstore::Store ts;
+    Tiddlerstore_Model tsm;
+};
+
 #endif // TESTS_TIDDLERSTORE_QT_TIDDLER_MODEL_QT_TEST

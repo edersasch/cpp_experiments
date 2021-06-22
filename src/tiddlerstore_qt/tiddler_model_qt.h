@@ -1,14 +1,13 @@
 #ifndef SRC_TIDDLERSTORE_QT_TIDDLER_MODEL_QT
 #define SRC_TIDDLERSTORE_QT_TIDDLER_MODEL_QT
 
+#include "tiddlerstore/tiddlerstore.h"
+
 #include <QObject>
 
 #include <deque>
-
-namespace Tiddlerstore
-{
-    class Tiddler;
-}
+#include <unordered_map>
+#include <memory>
 
 class Tiddler_Model
         : public QObject
@@ -50,8 +49,8 @@ public:
     /// Tiddler API, modifier methods are prefixed with "request_", because they check for change and eventually don't emit the corresponding signal
     std::string title() const;
     void request_set_title(const std::string& new_title);
-    int32_t history_size() const;
-    void request_set_history_size(int32_t new_history_size);
+    std::int32_t history_size() const;
+    void request_set_history_size(std::int32_t new_history_size);
     std::string text() const;
     std::deque<std::string> text_history() const;
     void request_set_text(const std::string& text);
@@ -71,6 +70,34 @@ public:
 
 private:
     Tiddlerstore::Tiddler* t;
+};
+
+class Tiddlerstore_Model
+        : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit Tiddlerstore_Model(Tiddlerstore::Store& s, QObject* parent = nullptr);
+    virtual ~Tiddlerstore_Model() = default;
+
+    Tiddler_Model* add();
+    Tiddler_Model* model_for_index(std::int32_t index);
+    Tiddler_Model* model_for_tiddler(Tiddlerstore::Tiddler* t);
+
+signals:
+    /// a tiddler with the corresponding index in the store was created with the @see add() method; @see model_created() will also be emitted afterwards
+    void added(std::int32_t);
+
+    /// a model for a tiddler existing in the store was created
+    void model_created(Tiddler_Model*);
+
+    /// a model and its corresponding tiddler were removed
+    void removed();
+
+private:
+    Tiddlerstore::Store& data;
+    std::unordered_map<const Tiddlerstore::Tiddler*, std::unique_ptr<Tiddler_Model>> active_models;
 };
 
 #endif // SRC_TIDDLERSTORE_QT_TIDDLER_MODEL_QT
