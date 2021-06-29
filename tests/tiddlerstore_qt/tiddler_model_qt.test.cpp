@@ -251,7 +251,7 @@ TEST_F(Tiddlerstore_Model_Test, add_model_remove)
     EXPECT_CALL(tsm_slots, model_created(_));
     auto tm1 = tsm.add();
     auto tm1_same = tsm.model_for_index(0);
-    auto tm1_still_same = tsm.model_for_tiddler(tm1->tiddler());
+    auto tm1_still_same = tsm.model_for_tiddler(&tm1->tiddler());
     EXPECT_EQ(tm1, tm1_same);
     EXPECT_EQ(tm1, tm1_still_same);
     EXPECT_EQ(nullptr, tsm.model_for_index(1));
@@ -259,7 +259,7 @@ TEST_F(Tiddlerstore_Model_Test, add_model_remove)
     EXPECT_CALL(tsm_slots, model_created(_));
     auto tm2 = tsm.add();
     auto tm2_same = tsm.model_for_index(1);
-    auto tm2_still_same = tsm.model_for_tiddler(tm2->tiddler());
+    auto tm2_still_same = tsm.model_for_tiddler(&tm2->tiddler());
     EXPECT_EQ(tm2, tm2_same);
     EXPECT_EQ(tm2, tm2_still_same);
     EXPECT_EQ(nullptr, tsm.model_for_index(2));

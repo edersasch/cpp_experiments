@@ -543,7 +543,7 @@ Store_Filter& Store_Filter::n_list(const std::string& list_name, const std::vect
 
 Store_Filter& Store_Filter::intersect(const Store_Filter& other)
 {
-    if (s == other.s) {
+    if (&s == &other.s) {
         idx.erase(std::remove_if(idx.begin(), idx.end(), [other](const std::size_t& i) {
             return std::find(other.idx.begin(), other.idx.end(), i) == other.idx.end();
         }), idx.end());
@@ -553,13 +553,19 @@ Store_Filter& Store_Filter::intersect(const Store_Filter& other)
 
 Store_Filter& Store_Filter::join(const Store_Filter& other)
 {
-    if (s == other.s) {
+    if (&s == &other.s) {
         for (const auto& i : other.filtered_idx()) {
             if (std::find(idx.begin(), idx.end(), i) == idx.end()) {
                 idx.push_back(i);
             }
         }
     }
+    return *this;
+}
+
+Store_Filter& Store_Filter::clear()
+{
+    idx.clear();
     return *this;
 }
 

@@ -54,7 +54,7 @@ private:
 
     Tiddler_Model* tm {nullptr};
     Tiddlerstore::Tiddler work;
-    Tiddler_Model work_tm {&work};
+    Tiddler_Model work_tm {work};
     QLineEdit* title_lineedit;
     QTextEdit* text_edit;
     QToolButton* accept_button;

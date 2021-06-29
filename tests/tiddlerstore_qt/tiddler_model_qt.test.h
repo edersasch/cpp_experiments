@@ -43,7 +43,7 @@ public:
 protected:
     ::testing::StrictMock<Tiddler_Model_Test_Slots> tmt_slots;
     Tiddlerstore::Tiddler tiddler_for_model;
-    Tiddler_Model tm {&tiddler_for_model};
+    Tiddler_Model tm {tiddler_for_model};
 };
 
 class Tiddlerstore_Model_Test_Slots

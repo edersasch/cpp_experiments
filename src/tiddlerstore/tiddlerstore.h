@@ -185,6 +185,7 @@ public:
     Store_Filter& n_list(const std::string& list_name, const std::vector<std::string>& contains = {});
     Store_Filter& intersect(const Store_Filter& other);
     Store_Filter& join(const Store_Filter& other);
+    Store_Filter& clear();
     std::vector<std::size_t> filtered_idx() const;
 
 private:
