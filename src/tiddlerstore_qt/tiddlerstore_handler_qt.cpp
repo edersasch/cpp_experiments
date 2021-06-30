@@ -17,6 +17,28 @@
 #include <QCompleter>
 #include <QLabel>
 
+#include <QDebug>
+
+namespace
+{
+
+void clear_layout(QLayout* l)
+{
+    QLayoutItem* child;
+    while ((child = l->takeAt(0) ) != nullptr) {
+        if (child->widget()) {
+            child->widget()->deleteLater();
+        }
+        auto cl = child->layout();
+        if (cl) {
+            clear_layout(cl);
+        }
+        delete child;
+    }
+}
+
+}
+
 Tiddlerstore_Handler::Tiddlerstore_Handler(const QStringList& tiddlerstore_list, QWidget* parent)
     : QWidget(parent)
     , tiddlerstore_history(tiddlerstore_list)
@@ -161,49 +183,30 @@ void Tiddlerstore_Handler::setup_main_title_filter()
     }
 }
 
-QStringList Tiddlerstore_Handler::next_filter_options(const QStringList& dont_list)
-{
-    QStringList opts;
-    (void)dont_list;
-    for (const auto& t : present_tags) {
-        opts.append(QString("tag: ") + t.c_str());
-    }
-    for (const auto& t : present_fields) {
-        opts.append(QString("field: ") + t.c_str());
-    }
-    for (const auto& t : present_lists) {
-        opts.append(QString("list: ") + t.c_str());
-    }
-    return opts;
-}
-
-QComboBox* Tiddlerstore_Handler::select_next_filter_combobox(const QStringList& dont_list)
-{
-    auto box = new QComboBox(this);
-    box->insertItems(0, next_filter_options(dont_list));
-    box->setEditable(true);
-    box->setInsertPolicy(QComboBox::NoInsert);
-    box->setEditText(QString());
-    box->completer()->setFilterMode(Qt::MatchContains);
-    box->completer()->setCaseSensitivity(Qt::CaseInsensitive);
-    box->completer()->setCompletionMode(QCompleter::PopupCompletion);
-    connect(this, &Tiddlerstore_Handler::store_changed, box->model(), [this, box, dont_list] {
-        box->clear();
-        box->insertItems(0, next_filter_options(dont_list));
-    });
-    return box;
-}
-
 void Tiddlerstore_Handler::setup_filter()
 {
     if (filter_groups.empty()) {
-        filter_groups.emplace_back(new Single_Group);
+        auto single_group = filter_groups.emplace_back(new Single_Group).get();
+        single_group->emplace_back(new Filter_Data{Title});
+        setup_main_title_filter();
+        connect(main_title_filter_edit, &QLineEdit::textChanged, main_title_filter_edit, [this, single_group] (const QString& text) {
+            single_group->front()->key = text.toStdString();
+            apply_filter();
+        });
+    } else {
+        main_title_filter_edit->parentWidget()->layout()->removeWidget(main_title_filter_edit);
+        main_title_filter_edit->setParent(this);
+        clear_layout(filter_layout);
     }
-    for (auto& single_group : filter_groups) {
+    filter_groups.erase(std::remove_if(filter_groups.begin(), filter_groups.end(), [this](auto& single_group) {
+        if (single_group->empty()) {
+            return true;
+        }
         add_single_group(*single_group);
-    }
-    Single_Group next_group;
-    add_single_group(next_group);
+        return false;
+    }), filter_groups.end());
+    auto empty_group = filter_groups.emplace_back(new Single_Group).get();
+    add_single_group(*empty_group);
 }
 
 void Tiddlerstore_Handler::add_single_group(Single_Group& single_group)
@@ -213,63 +216,150 @@ void Tiddlerstore_Handler::add_single_group(Single_Group& single_group)
     group_box->setFlat(true);
     auto group_layout = new QVBoxLayout(group_box);
     auto filter_form_layout = new QFormLayout;
-    QStringList used_keys;
-    if (filter_layout->isEmpty()) {
-        if (!main_title_filter_edit) {
-            setup_main_title_filter();
-            connect(main_title_filter_edit, &QLineEdit::textChanged, main_title_filter_edit, [this, &single_group] (const QString& text) {
-                single_group[Title].key = text.toStdString();
+    QStringList title_opt {"title"};
+    QStringList text_opt {"text"};
+    QStringList tag_opts;
+    QStringList field_opts;
+    QStringList list_opts;
+    for (const auto& t : present_tags) {
+        tag_opts.append(t.c_str());
+    }
+    for (const auto& t : present_fields) {
+        field_opts.append(t.c_str());
+    }
+    for (const auto& t : present_lists) {
+        list_opts.append(t.c_str());
+    }
+    if (filter_layout->count() == 0) {
+        group_layout->addWidget(main_title_filter_edit);
+    }
+    group_layout->addLayout(filter_form_layout);
+    for (auto& filter_data : single_group) {
+        QToolButton* del = nullptr;
+        switch (filter_data->filter_type) {
+        case Title:
+            if (filter_layout->count() > 0) {
+                del = add_title_filter(*filter_data, filter_form_layout);
+            }
+            title_opt.clear();
+            break;
+        case Text:
+            add_text_filter(*filter_data, filter_form_layout);
+            text_opt.clear();
+            break;
+        case Tag:
+            del = add_tag_filter(*filter_data, filter_form_layout);
+            tag_opts.removeAll(filter_data->key.c_str());
+            break;
+        case Field:
+            del = add_field_filter(*filter_data, filter_form_layout);
+            field_opts.removeAll(filter_data->key.c_str());
+            break;
+        case List:
+            add_list_filter(*filter_data, filter_form_layout);
+            list_opts.removeAll(filter_data->key.c_str());
+            break;
+        }
+        if (del) {
+            connect(del, &QToolButton::clicked, del, [this, &single_group, &filter_data] {
+                auto it = std::find(single_group.begin(), single_group.end(), filter_data);
+                if(it != single_group.end()) {
+                    single_group.erase(it);
+                }
+                setup_filter();
                 apply_filter();
             });
         }
-        group_layout->addWidget(main_title_filter_edit);
-        used_keys << Tiddlerstore::Tiddler::title_key;
     }
-    group_layout->addLayout(filter_form_layout);
-    for (auto& [key, value] : single_group) {
-        switch (key) {
-        case Title:
-            if (!filter_layout->isEmpty()) {
-                add_title_filter(value, filter_form_layout);
-                used_keys << Tiddlerstore::Tiddler::title_key;
-            }
-            break;
-        case Text:
-            add_text_filter(value, filter_form_layout);
-            used_keys << Tiddlerstore::Tiddler::text_history_key;
-            break;
-        case Tag:
-            add_tag_filter(value, filter_form_layout);
-            used_keys << Tiddlerstore::Tiddler::tags_key;
-            break;
-        case Field:
-            add_field_filter(value, filter_form_layout);
-            used_keys << Tiddlerstore::Tiddler::fields_key;
-            break;
-        case List:
-            add_list_filter(value, filter_form_layout);
-            used_keys << Tiddlerstore::Tiddler::lists_key;
-            break;
+    QStringList remaining_opts;
+    remaining_opts << title_opt;
+    remaining_opts << text_opt;
+    for (const auto& o : tag_opts) {
+        remaining_opts.append(QString("tag: ") + o);
+    }
+    for (const auto& o : field_opts) {
+        remaining_opts.append(QString("field: ") + o);
+    }
+    for (const auto& o : list_opts) {
+        remaining_opts.append(QString("list: ") + o);
+    }
+    auto box = new QComboBox(this);
+    box->insertItems(0, remaining_opts);
+    box->setEditable(true);
+    box->setInsertPolicy(QComboBox::NoInsert);
+    box->setEditText(QString());
+    box->setCurrentIndex(-1);
+    box->completer()->setFilterMode(Qt::MatchContains);
+    box->completer()->setCaseSensitivity(Qt::CaseInsensitive);
+    box->completer()->setCompletionMode(QCompleter::PopupCompletion);
+    connect(box, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), box, [this, title_opt, text_opt, tag_opts, field_opts, list_opts, &single_group](int index) {
+        int offs = 0;
+        int sz = title_opt.size();
+        if (index < offs + sz) {
+            single_group.emplace_back(new Filter_Data{Title});
+            setup_filter();
+            apply_filter();
+            qDebug() << "title " << title_opt[index - offs];
+            return;
         }
-    }
-    group_layout->addWidget(select_next_filter_combobox(used_keys));
+        offs += sz;
+        sz = text_opt.size();
+        if (index < offs + sz) {
+            qDebug() << "text " << tag_opts[index - offs];
+            return;
+        }
+        offs += sz;
+        sz = tag_opts.size();
+        if (index < offs + sz) {
+            single_group.emplace_back(new Filter_Data{Tag, false, tag_opts[index - offs].toStdString()});
+            setup_filter();
+            apply_filter();
+            qDebug() << "tag " << tag_opts[index - offs];
+            return;
+        }
+        offs += sz;
+        sz = field_opts.size();
+        if (index < offs + sz) {
+            single_group.emplace_back(new Filter_Data{Field, false, field_opts[index - offs].toStdString()});
+            setup_filter();
+            apply_filter();
+            qDebug() << "field " << field_opts[index - offs];
+            return;
+        }
+        offs += sz;
+        sz = list_opts.size();
+        if (index < offs + sz) {
+            qDebug() << "list " << list_opts[index - offs];
+            return;
+        }
+    });
+    group_layout->addWidget(box);
     filter_layout->addWidget(group_box);
 }
 
-void Tiddlerstore_Handler::add_title_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
+QToolButton* Tiddlerstore_Handler::add_title_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
 {
     auto single_filter_functions = new QHBoxLayout;
     auto negate_button = new QToolButton(this);
     negate_button->setCheckable(true);
     negate_button->setChecked(filter_data.negate);
+    connect(negate_button, &QToolButton::toggled, negate_button, [this, &filter_data](bool checked) {
+        filter_data.negate = checked;
+        apply_filter();
+    });
     single_filter_functions->addWidget(negate_button);
     auto line_edit = new QLineEdit(this);
     line_edit->setText(filter_data.key.c_str());
+    connect(line_edit, &QLineEdit::textChanged, line_edit, [this, &filter_data](const QString& text) {
+        filter_data.key = text.toStdString();
+        apply_filter();
+    });
     single_filter_functions->addWidget(line_edit);
     auto label = new QLabel(tr("Title"), this);
     auto delete_button = new QToolButton(this);
     single_filter_functions->addWidget(delete_button);
     filter_form_layout->addRow(label, single_filter_functions);
+    return delete_button;
 }
 
 void Tiddlerstore_Handler::add_text_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
@@ -288,35 +378,49 @@ void Tiddlerstore_Handler::add_text_filter(Filter_Data& filter_data, QFormLayout
     filter_form_layout->addRow(label, single_filter_functions);
 }
 
-void Tiddlerstore_Handler::add_tag_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
+QToolButton* Tiddlerstore_Handler::add_tag_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
 {
     auto single_filter_functions = new QHBoxLayout;
     auto negate_button = new QToolButton(this);
     negate_button->setCheckable(true);
     negate_button->setChecked(filter_data.negate);
+    connect(negate_button, &QToolButton::toggled, negate_button, [this, &filter_data](bool checked) {
+        filter_data.negate = checked;
+        apply_filter();
+    });
     single_filter_functions->addWidget(negate_button);
     auto tag_value = new QLabel(filter_data.key.c_str(), this);
     single_filter_functions->addWidget(tag_value);
-    auto label = new QLabel(tr("Tag") + filter_data.key.c_str(), this);
+    auto label = new QLabel(tr("Tag"), this);
     auto delete_button = new QToolButton(this);
     single_filter_functions->addWidget(delete_button);
     filter_form_layout->addRow(label, single_filter_functions);
+    return delete_button;
 }
 
-void Tiddlerstore_Handler::add_field_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
+QToolButton* Tiddlerstore_Handler::add_field_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
 {
     auto single_filter_functions = new QHBoxLayout;
     auto negate_button = new QToolButton(this);
     negate_button->setCheckable(true);
     negate_button->setChecked(filter_data.negate);
+    connect(negate_button, &QToolButton::toggled, negate_button, [this, &filter_data](bool checked) {
+        filter_data.negate = checked;
+        apply_filter();
+    });
     single_filter_functions->addWidget(negate_button);
     auto line_edit = new QLineEdit(this);
     line_edit->setText(filter_data.field_value.c_str());
+    connect(line_edit, &QLineEdit::textChanged, line_edit, [this, &filter_data](const QString& text) {
+        filter_data.field_value = text.toStdString();
+        apply_filter();
+    });
     single_filter_functions->addWidget(line_edit);
     auto label = new QLabel(tr("Field: ") + filter_data.key.c_str(), this);
     auto delete_button = new QToolButton(this);
     single_filter_functions->addWidget(delete_button);
     filter_form_layout->addRow(label, single_filter_functions);
+    return delete_button;
 }
 
 void Tiddlerstore_Handler::add_list_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
@@ -347,36 +451,39 @@ void Tiddlerstore_Handler::connect_model(Tiddler_Model* model)
     connect(model, &Tiddler_Model::list_changed,            this, &Tiddlerstore_Handler::set_dirty);
     connect(model, &Tiddler_Model::list_added,              this, &Tiddlerstore_Handler::set_dirty);
     connect(model, &Tiddler_Model::list_removed,            this, &Tiddlerstore_Handler::set_dirty);
+    set_dirty();
 }
 
 void Tiddlerstore_Handler::apply_filter()
 {
     auto all_filter = Tiddlerstore::Store_Filter(store).clear();
     for (auto& single_group : filter_groups) {
-        auto grfi = Tiddlerstore::Store_Filter(store);
-        for (auto& [k, v] : *single_group) {
-            switch (k) {
-            case Title:
-                v.negate ? grfi.n_title_contains(v.key) : grfi.title_contains(v.key);
-                break;
-            case Text:
-                //data.negate ? group_filter
-                break;
-            case Tag:
-                v.negate ? grfi.n_tag(v.key) : grfi.tag(v.key);
-                break;
-            case Field:
-                v.negate ? grfi.n_field(v.key, v.field_value) : grfi.field(v.key, v.field_value);
-                break;
-            case List:
-                v.negate ? grfi.n_list(v.key, v.list_value) : grfi.list(v.key, v.list_value);
-                break;
+        if (!single_group->empty()) {
+            auto grfi = Tiddlerstore::Store_Filter(store);
+            for (auto& filter_data : *single_group) {
+                switch (filter_data->filter_type) {
+                case Title:
+                    filter_data->negate ? grfi.n_title_contains(filter_data->key) : grfi.title_contains(filter_data->key);
+                    break;
+                case Text:
+                    //data.negate ? group_filter
+                    break;
+                case Tag:
+                    filter_data->negate ? grfi.n_tag(filter_data->key) : grfi.tag(filter_data->key);
+                    break;
+                case Field:
+                    filter_data->negate ? grfi.n_field(filter_data->key, filter_data->field_value) : grfi.field(filter_data->key, filter_data->field_value);
+                    break;
+                case List:
+                    filter_data->negate ? grfi.n_list(filter_data->key, filter_data->list_value) : grfi.list(filter_data->key, filter_data->list_value);
+                    break;
+                }
+                if (grfi.filtered_idx().empty()) {
+                    break;
+                }
             }
-            if (grfi.filtered_idx().empty()) {
-                break;
-            }
+            all_filter.join(grfi);
         }
-        all_filter.join(grfi);
     }
     auto idx = all_filter.filtered_idx();
     for (int i = 0; i < title_sort_model.rowCount(); i += 1) {
@@ -411,8 +518,8 @@ void Tiddlerstore_Handler::adjust_dirty(bool dirty_value)
         titles << t->title().c_str();
     }
     title_model.setStringList(titles);
+    setup_filter();
     apply_filter();
-    emit store_changed();
 }
 
 void Tiddlerstore_Handler::open_store(const QString& path)

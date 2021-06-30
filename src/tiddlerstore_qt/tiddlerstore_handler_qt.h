@@ -38,7 +38,6 @@ public:
 
 signals:
     void open_tiddler_model(Tiddler_Model*);
-    void store_changed();
 
 private:
     enum Filter_Type
@@ -51,12 +50,13 @@ private:
     };
     struct Filter_Data
     {
+        Filter_Type filter_type;
         bool negate {false};
         std::string key {}; // title, text, tag, field name, list name
         std::string field_value {};
         std::vector<std::string> list_value {};
     };
-    using Single_Group = std::unordered_map<Filter_Type, Filter_Data>;
+    using Single_Group = std::vector<std::unique_ptr<Filter_Data>>;
     using Filter_Groups = std::vector<std::unique_ptr<Single_Group>>;
 
     QHBoxLayout* setup_toolbar();
@@ -64,14 +64,12 @@ private:
     QToolButton* setup_save_button();
     void setup_tiddler_list_view();
     void setup_main_title_filter();
-    QStringList next_filter_options(const QStringList& dont_list);
-    QComboBox* select_next_filter_combobox(const QStringList& dont_list);
     void setup_filter();
     void add_single_group(Single_Group& single_group);
-    void add_title_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout);
+    QToolButton* add_title_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout);
     void add_text_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout);
-    void add_tag_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout);
-    void add_field_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout);
+    QToolButton* add_tag_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout);
+    QToolButton* add_field_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout);
     void add_list_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout);
     void connect_model(Tiddler_Model* model);
     void apply_filter();
