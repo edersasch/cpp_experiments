@@ -1,6 +1,8 @@
 #ifndef SRC_TIDDLERSTORE_TIDDLERSTORE
 #define SRC_TIDDLERSTORE_TIDDLERSTORE
 
+#include "tiddlerstore_types.h"
+
 #include <nlohmann/json.hpp>
 
 #include <string>
@@ -23,15 +25,6 @@ public:
     Tiddler(const Tiddler& other) = default;
     Tiddler& operator=(const Tiddlerstore::Tiddler& rhs) = default;
     virtual ~Tiddler() = default;
-
-    /// indicates change of fields or lists
-    enum class Change
-    {
-        None,   /// nothing changed
-        Value,  /// an already present element got a different value
-        Add,    /// a new element was added
-        Remove  /// an elment was removed
-    };
 
     static constexpr auto           title_key                       = "ti";
     static constexpr auto           history_size_key                = "hs";
@@ -94,7 +87,7 @@ public:
      * @param field_value removes the field if empty
      * @return @see Change
      */
-    Change set_field(const std::string& field_name, const std::string& field_value);
+    Set_Field_List_Change set_field(const std::string& field_name, const std::string& field_value);
 
     /**
      * @brief remove_field remove a present field
@@ -112,7 +105,7 @@ public:
      * @param values empty strings get removed, an empty parameter removes the list, duplicate entries in the values parameter are preserved
      * @return @see Change
      */
-    Change set_list(const std::string& list_name, std::vector<std::string> values);
+    Set_Field_List_Change set_list(const std::string& list_name, std::vector<std::string> values);
 
     /**
      * @brief remove_list remove a present list
@@ -138,8 +131,6 @@ void to_json(nlohmann::json& j, const Tiddler& t);
 
 /// Every json key except version is optional. Passing an already filled tiddler will add text_history, tags, fields and lists.
 void from_json(const nlohmann::json& j, Tiddler& t);
-
-using Store = std::vector<std::unique_ptr<Tiddler>>;
 
 /// no separate versioning for Store, version_value is included in every tiddler (negligible size increase of 5 chars per tiddler)
 void to_json(nlohmann::json& j, const Store& s);
@@ -175,6 +166,10 @@ public:
     Store_Filter& n_title(const std::string& title_value);
     Store_Filter& title_contains(const std::string& title_value, bool case_sensitive = false);
     Store_Filter& n_title_contains(const std::string& title_value, bool case_sensitive = false);
+    Store_Filter& text(const std::string& text_value);
+    Store_Filter& n_text(const std::string& text_value);
+    Store_Filter& text_contains(const std::string& text_value, bool case_sensitive = false);
+    Store_Filter& n_text_contains(const std::string& text_value, bool case_sensitive = false);
     Store_Filter& tag(const std::string& tag_value);
     Store_Filter& n_tag(const std::string& tag_value);
     Store_Filter& tagged();
@@ -185,13 +180,15 @@ public:
     Store_Filter& n_list(const std::string& list_name, const std::vector<std::string>& contains = {});
     Store_Filter& intersect(const Store_Filter& other);
     Store_Filter& join(const Store_Filter& other);
-    Store_Filter& clear();
-    std::vector<std::size_t> filtered_idx() const;
+    Store_Indexes filtered_idx() const;
 
 private:
     const Store& s;
-    std::vector<std::size_t> idx;
+    Store_Indexes idx;
 };
+
+/// empty groups / filters dont change anything, filter results of one group intersect, group results are joined
+Store_Indexes apply_filter(const Store& store, const Filter_Groups& filter_groups);
 
 }
 

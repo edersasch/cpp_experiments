@@ -22,6 +22,8 @@ public:
     FS_Filter_Test();
     virtual ~FS_Filter_Test() = default;
 
+    static constexpr int processEvent_repetitions = 10;
+
 protected:
     void mkfile(const QString& path);
     void mkpath(const QString& path);

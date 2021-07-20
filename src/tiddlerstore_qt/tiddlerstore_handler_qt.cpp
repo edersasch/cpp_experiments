@@ -1,5 +1,5 @@
 #include "tiddlerstore_handler_qt.h"
-#include "tiddler_model_qt.h"
+#include "tiddlerstore/tiddlerstore.h"
 
 #include <QMenu>
 #include <QLineEdit>
@@ -17,7 +17,54 @@
 #include <QCompleter>
 #include <QLabel>
 
+#include <utility>
+
 #include <QDebug>
+
+Flow_List_View::Flow_List_View(QWidget* parent)
+    : QListView(parent)
+{
+    setFlow(QListView::LeftToRight);
+    setWrapping(true);
+    setResizeMode(QListView::Adjust);
+    setSpacing(2);
+}
+
+void Flow_List_View::doItemsLayout()
+{
+    QListView::doItemsLayout();
+    setMaximumSize(QWIDGETSIZE_MAX, contentsSize().height() + 2);
+}
+
+Move_Only_StringListModel::Move_Only_StringListModel(const QStringList& strings, QObject* parent)
+    : QStringListModel(strings, parent)
+{
+}
+
+Move_Only_StringListModel::Move_Only_StringListModel(QObject* parent)
+    : Move_Only_StringListModel({}, parent)
+{
+}
+
+Qt::ItemFlags Move_Only_StringListModel::flags(const QModelIndex& index) const
+{
+    return index.isValid() ? QStringListModel::flags(index) & ~Qt::ItemIsDropEnabled : QStringListModel::flags(index);
+}
+
+Qt::DropActions Move_Only_StringListModel::supportedDropActions() const
+{
+    return Qt::MoveAction;
+}
+
+bool Move_Only_StringListModel::dropMimeData(const QMimeData* data, Qt::DropAction action,
+                  int row, int column, const QModelIndex& parent)
+{
+    int maxrow = rowCount(parent) - 1;
+    if (row == -1 || row > maxrow) {
+        row = maxrow; // don't drop behind the add button
+    }
+    return QStringListModel::dropMimeData(data, action, row, column, parent);
+}
 
 namespace
 {
@@ -62,6 +109,8 @@ Tiddlerstore_Handler::Tiddlerstore_Handler(const QStringList& tiddlerstore_list,
         open_store(elems.first());
     }
 }
+
+Tiddlerstore_Handler::~Tiddlerstore_Handler() = default;
 
 // private
 
@@ -138,7 +187,7 @@ void Tiddlerstore_Handler::setup_tiddler_list_view()
     tiddler_list_view->setModel(&title_sort_model);
     tiddler_list_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     connect(tiddler_list_view, &QListView::clicked, tiddler_list_view, [this](const QModelIndex& index) {
-        prepare_open(store[source_row(index.row())].get());
+        prepare_open(store[static_cast<std::size_t>(source_row(index.row()))].get());
     });
 }
 
@@ -152,7 +201,7 @@ void Tiddlerstore_Handler::setup_main_title_filter()
         connect(main_title_filter_open_action, &QAction::triggered, main_title_filter_open_action, [this] {
             for (int i = 0; i < title_sort_model.rowCount(); i += 1) {
                 if (!tiddler_list_view->isRowHidden(i)) {
-                    prepare_open(store[source_row(i)].get());
+                    prepare_open(store[static_cast<std::size_t>(source_row(i))].get());
                     return;
                 }
             }
@@ -186,8 +235,8 @@ void Tiddlerstore_Handler::setup_main_title_filter()
 void Tiddlerstore_Handler::setup_filter()
 {
     if (filter_groups.empty()) {
-        auto single_group = filter_groups.emplace_back(new Single_Group).get();
-        single_group->emplace_back(new Filter_Data{Title});
+        auto single_group = filter_groups.emplace_back(new Tiddlerstore::Single_Group).get();
+        single_group->emplace_back(new Tiddlerstore::Filter_Data);
         setup_main_title_filter();
         connect(main_title_filter_edit, &QLineEdit::textChanged, main_title_filter_edit, [this, single_group] (const QString& text) {
             single_group->front()->key = text.toStdString();
@@ -205,11 +254,11 @@ void Tiddlerstore_Handler::setup_filter()
         add_single_group(*single_group);
         return false;
     }), filter_groups.end());
-    auto empty_group = filter_groups.emplace_back(new Single_Group).get();
+    auto empty_group = filter_groups.emplace_back(new Tiddlerstore::Single_Group).get();
     add_single_group(*empty_group);
 }
 
-void Tiddlerstore_Handler::add_single_group(Single_Group& single_group)
+void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Single_Group& single_group)
 {
     auto group_box = new QGroupBox(this);
     group_box->setContentsMargins(0, 0, 0, 0);
@@ -237,32 +286,31 @@ void Tiddlerstore_Handler::add_single_group(Single_Group& single_group)
     for (auto& filter_data : single_group) {
         QToolButton* del = nullptr;
         switch (filter_data->filter_type) {
-        case Title:
-            if (filter_layout->count() > 0) {
+        case Tiddlerstore::Filter_Type::Title:
+            if (filter_layout->count() > 0 || filter_data != single_group.front()) {
                 del = add_title_filter(*filter_data, filter_form_layout);
             }
-            title_opt.clear();
             break;
-        case Text:
-            add_text_filter(*filter_data, filter_form_layout);
-            text_opt.clear();
+        case Tiddlerstore::Filter_Type::Text:
+            del = add_text_filter(*filter_data, filter_form_layout);
             break;
-        case Tag:
+        case Tiddlerstore::Filter_Type::Tag:
             del = add_tag_filter(*filter_data, filter_form_layout);
             tag_opts.removeAll(filter_data->key.c_str());
             break;
-        case Field:
+        case Tiddlerstore::Filter_Type::Field:
             del = add_field_filter(*filter_data, filter_form_layout);
-            field_opts.removeAll(filter_data->key.c_str());
             break;
-        case List:
-            add_list_filter(*filter_data, filter_form_layout);
-            list_opts.removeAll(filter_data->key.c_str());
+        case Tiddlerstore::Filter_Type::List:
+            del = add_list_filter(*filter_data, filter_form_layout);
             break;
         }
         if (del) {
-            connect(del, &QToolButton::clicked, del, [this, &single_group, &filter_data] {
-                auto it = std::find(single_group.begin(), single_group.end(), filter_data);
+            const auto fd_ptr = filter_data.get();
+            connect(del, &QToolButton::clicked, del, [this, &single_group, fd_ptr] {
+                auto it = std::find_if(single_group.begin(), single_group.end(), [fd_ptr](const auto& f_data) {
+                    return f_data.get() == fd_ptr;
+                });
                 if(it != single_group.end()) {
                     single_group.erase(it);
                 }
@@ -293,53 +341,28 @@ void Tiddlerstore_Handler::add_single_group(Single_Group& single_group)
     box->completer()->setCaseSensitivity(Qt::CaseInsensitive);
     box->completer()->setCompletionMode(QCompleter::PopupCompletion);
     connect(box, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), box, [this, title_opt, text_opt, tag_opts, field_opts, list_opts, &single_group](int index) {
-        int offs = 0;
-        int sz = title_opt.size();
-        if (index < offs + sz) {
-            single_group.emplace_back(new Filter_Data{Title});
-            setup_filter();
-            apply_filter();
-            qDebug() << "title " << title_opt[index - offs];
-            return;
-        }
-        offs += sz;
-        sz = text_opt.size();
-        if (index < offs + sz) {
-            qDebug() << "text " << tag_opts[index - offs];
-            return;
-        }
-        offs += sz;
-        sz = tag_opts.size();
-        if (index < offs + sz) {
-            single_group.emplace_back(new Filter_Data{Tag, false, tag_opts[index - offs].toStdString()});
-            setup_filter();
-            apply_filter();
-            qDebug() << "tag " << tag_opts[index - offs];
-            return;
-        }
-        offs += sz;
-        sz = field_opts.size();
-        if (index < offs + sz) {
-            single_group.emplace_back(new Filter_Data{Field, false, field_opts[index - offs].toStdString()});
-            setup_filter();
-            apply_filter();
-            qDebug() << "field " << field_opts[index - offs];
-            return;
-        }
-        offs += sz;
-        sz = list_opts.size();
-        if (index < offs + sz) {
-            qDebug() << "list " << list_opts[index - offs];
-            return;
-        }
+        auto add_to_group = [this, &index, &single_group](const QStringList& opts, Tiddlerstore::Filter_Data filter_data) {
+            if (index < opts.size()) {
+                single_group.emplace_back(new Tiddlerstore::Filter_Data(std::move(filter_data)));
+                setup_filter();
+                apply_filter();
+                return true;
+            }
+            index -= opts.size();
+            return false;
+        };
+        add_to_group(title_opt, {Tiddlerstore::Filter_Type::Title}) ||
+        add_to_group(text_opt, {Tiddlerstore::Filter_Type::Text}) ||
+        add_to_group(tag_opts, {Tiddlerstore::Filter_Type::Tag, false, index < tag_opts.size() ? tag_opts[index].toStdString() : std::string()}) ||
+        add_to_group(field_opts, {Tiddlerstore::Filter_Type::Field, false, index < field_opts.size() ? field_opts[index].toStdString() : std::string()}) ||
+        add_to_group(list_opts, {Tiddlerstore::Filter_Type::List, false, index < list_opts.size() ? list_opts[index].toStdString() : std::string()});
     });
     group_layout->addWidget(box);
     filter_layout->addWidget(group_box);
 }
 
-QToolButton* Tiddlerstore_Handler::add_title_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
+void Tiddlerstore_Handler::add_negate_button(Tiddlerstore::Filter_Data& filter_data, QLayout* layout)
 {
-    auto single_filter_functions = new QHBoxLayout;
     auto negate_button = new QToolButton(this);
     negate_button->setCheckable(true);
     negate_button->setChecked(filter_data.negate);
@@ -347,7 +370,23 @@ QToolButton* Tiddlerstore_Handler::add_title_filter(Filter_Data& filter_data, QF
         filter_data.negate = checked;
         apply_filter();
     });
-    single_filter_functions->addWidget(negate_button);
+    layout->addWidget(negate_button);
+}
+
+QToolButton* Tiddlerstore_Handler::add_label_del_row(const QString& text, QLayout* single_filter_functions, QFormLayout* filter_form_layout)
+{
+    auto label = new QLabel(text, this);
+    auto delete_button = new QToolButton(this);
+    delete_button->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
+    single_filter_functions->addWidget(delete_button);
+    filter_form_layout->addRow(label, single_filter_functions);
+    return delete_button;
+}
+
+QToolButton* Tiddlerstore_Handler::add_title_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout)
+{
+    auto single_filter_functions = new QHBoxLayout;
+    add_negate_button(filter_data, single_filter_functions);
     auto line_edit = new QLineEdit(this);
     line_edit->setText(filter_data.key.c_str());
     connect(line_edit, &QLineEdit::textChanged, line_edit, [this, &filter_data](const QString& text) {
@@ -355,60 +394,36 @@ QToolButton* Tiddlerstore_Handler::add_title_filter(Filter_Data& filter_data, QF
         apply_filter();
     });
     single_filter_functions->addWidget(line_edit);
-    auto label = new QLabel(tr("Title"), this);
-    auto delete_button = new QToolButton(this);
-    single_filter_functions->addWidget(delete_button);
-    filter_form_layout->addRow(label, single_filter_functions);
-    return delete_button;
+    return add_label_del_row(tr("Title"), single_filter_functions, filter_form_layout);
 }
 
-void Tiddlerstore_Handler::add_text_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
+QToolButton* Tiddlerstore_Handler::add_text_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout)
 {
     auto single_filter_functions = new QHBoxLayout;
-    auto negate_button = new QToolButton(this);
-    negate_button->setCheckable(true);
-    negate_button->setChecked(filter_data.negate);
-    single_filter_functions->addWidget(negate_button);
+    add_negate_button(filter_data, single_filter_functions);
     auto line_edit = new QLineEdit(this);
     line_edit->setText(filter_data.key.c_str());
-    single_filter_functions->addWidget(line_edit);
-    auto label = new QLabel(tr("Text"), this);
-    auto delete_button = new QToolButton(this);
-    single_filter_functions->addWidget(delete_button);
-    filter_form_layout->addRow(label, single_filter_functions);
-}
-
-QToolButton* Tiddlerstore_Handler::add_tag_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
-{
-    auto single_filter_functions = new QHBoxLayout;
-    auto negate_button = new QToolButton(this);
-    negate_button->setCheckable(true);
-    negate_button->setChecked(filter_data.negate);
-    connect(negate_button, &QToolButton::toggled, negate_button, [this, &filter_data](bool checked) {
-        filter_data.negate = checked;
+    connect(line_edit, &QLineEdit::textChanged, line_edit, [this, &filter_data](const QString& text) {
+        filter_data.key = text.toStdString();
         apply_filter();
     });
-    single_filter_functions->addWidget(negate_button);
+    single_filter_functions->addWidget(line_edit);
+    return add_label_del_row(tr("Text"), single_filter_functions, filter_form_layout);
+}
+
+QToolButton* Tiddlerstore_Handler::add_tag_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout)
+{
+    auto single_filter_functions = new QHBoxLayout;
+    add_negate_button(filter_data, single_filter_functions);
     auto tag_value = new QLabel(filter_data.key.c_str(), this);
     single_filter_functions->addWidget(tag_value);
-    auto label = new QLabel(tr("Tag"), this);
-    auto delete_button = new QToolButton(this);
-    single_filter_functions->addWidget(delete_button);
-    filter_form_layout->addRow(label, single_filter_functions);
-    return delete_button;
+    return add_label_del_row(tr("Tag"), single_filter_functions, filter_form_layout);
 }
 
-QToolButton* Tiddlerstore_Handler::add_field_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
+QToolButton* Tiddlerstore_Handler::add_field_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout)
 {
     auto single_filter_functions = new QHBoxLayout;
-    auto negate_button = new QToolButton(this);
-    negate_button->setCheckable(true);
-    negate_button->setChecked(filter_data.negate);
-    connect(negate_button, &QToolButton::toggled, negate_button, [this, &filter_data](bool checked) {
-        filter_data.negate = checked;
-        apply_filter();
-    });
-    single_filter_functions->addWidget(negate_button);
+    add_negate_button(filter_data, single_filter_functions);
     auto line_edit = new QLineEdit(this);
     line_edit->setText(filter_data.field_value.c_str());
     connect(line_edit, &QLineEdit::textChanged, line_edit, [this, &filter_data](const QString& text) {
@@ -416,27 +431,69 @@ QToolButton* Tiddlerstore_Handler::add_field_filter(Filter_Data& filter_data, QF
         apply_filter();
     });
     single_filter_functions->addWidget(line_edit);
-    auto label = new QLabel(tr("Field: ") + filter_data.key.c_str(), this);
-    auto delete_button = new QToolButton(this);
-    single_filter_functions->addWidget(delete_button);
-    filter_form_layout->addRow(label, single_filter_functions);
-    return delete_button;
+    return add_label_del_row(tr("Field: ") + filter_data.key.c_str(), single_filter_functions, filter_form_layout);
 }
 
-void Tiddlerstore_Handler::add_list_filter(Filter_Data& filter_data, QFormLayout* filter_form_layout)
+void Tiddlerstore_Handler::add_list_append_button(QListView* list_view, QStringListModel* list_model)
+{
+    auto btn = new QToolButton(this);
+    btn->setText("+");
+    list_view->setIndexWidget(list_model->index(list_model->rowCount() - 1), btn);
+    connect(btn, &QToolButton::clicked, btn, [this, list_model, list_view, btn] {
+        auto dlg = new QDialog(btn, Qt::Popup);
+        auto dlgl = new QHBoxLayout(dlg);
+        auto le = new QLineEdit(dlg);
+        dlgl->addWidget(le);
+        dlg->move(btn->mapToGlobal(QPoint(0, btn->height())));
+        dlg->open();
+        le->setFocus();
+        connect(le, &QLineEdit::returnPressed, dlg, &QDialog::accept);
+        connect(dlg, &QDialog::finished, dlg, [this, le, dlg, list_model, list_view](int result) {
+            if (result == QDialog::Accepted) {
+                auto text = le->text();
+                if (!text.isEmpty()) {
+                    auto list = list_model->stringList();
+                    list.back() = text;
+                    list.append("+");
+                    list_model->setStringList(list);
+                    add_list_append_button(list_view, list_model);
+                }
+            }
+            dlg->deleteLater();
+        });
+    });
+}
+
+QToolButton* Tiddlerstore_Handler::add_list_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout)
 {
     auto single_filter_functions = new QHBoxLayout;
-    auto negate_button = new QToolButton(this);
-    negate_button->setCheckable(true);
-    negate_button->setChecked(filter_data.negate);
-    single_filter_functions->addWidget(negate_button);
-    auto line_edit = new QLineEdit(this);
-    line_edit->setText(filter_data.field_value.c_str()); // TODO: add list handling
-    single_filter_functions->addWidget(line_edit);
-    auto label = new QLabel(tr("List: ") + filter_data.key.c_str(), this);
-    auto delete_button = new QToolButton(this);
-    single_filter_functions->addWidget(delete_button);
-    filter_form_layout->addRow(label, single_filter_functions);
+    add_negate_button(filter_data, single_filter_functions);
+    auto list_view = new Flow_List_View(this);
+    list_view->setDropIndicatorShown(true);
+    list_view->setDragDropMode(QAbstractItemView::InternalMove);
+    auto list_model = new Move_Only_StringListModel({"+"});
+    list_view->setModel(list_model);
+    add_list_append_button(list_view, list_model);
+    single_filter_functions->addWidget(list_view);
+    connect(list_model, &QStringListModel::dataChanged, list_model, [this, list_view, list_model](const QModelIndex &topLeft, const QModelIndex &bottomRight) {
+        auto list = list_model->stringList();
+        int i = topLeft.row() > list.size() - 1 ? list.size() - 1 : topLeft.row();
+        int j = bottomRight.row() > list.size() - 1 ? list.size() - 1 : bottomRight.row();
+        int orig_sz = list.size();
+        while (i <= j) {
+            if (list[i].isEmpty()) {
+                list.removeAt(i);
+                j -= 1;
+            } else {
+                i += 1;
+            }
+        }
+        if (list.size() != orig_sz) {
+            list_model->setStringList(list);
+            add_list_append_button(list_view, list_model);
+        }
+    });
+    return add_label_del_row(tr("List: ") + filter_data.key.c_str(), single_filter_functions, filter_form_layout);
 }
 
 void Tiddlerstore_Handler::connect_model(Tiddler_Model* model)
@@ -456,36 +513,7 @@ void Tiddlerstore_Handler::connect_model(Tiddler_Model* model)
 
 void Tiddlerstore_Handler::apply_filter()
 {
-    auto all_filter = Tiddlerstore::Store_Filter(store).clear();
-    for (auto& single_group : filter_groups) {
-        if (!single_group->empty()) {
-            auto grfi = Tiddlerstore::Store_Filter(store);
-            for (auto& filter_data : *single_group) {
-                switch (filter_data->filter_type) {
-                case Title:
-                    filter_data->negate ? grfi.n_title_contains(filter_data->key) : grfi.title_contains(filter_data->key);
-                    break;
-                case Text:
-                    //data.negate ? group_filter
-                    break;
-                case Tag:
-                    filter_data->negate ? grfi.n_tag(filter_data->key) : grfi.tag(filter_data->key);
-                    break;
-                case Field:
-                    filter_data->negate ? grfi.n_field(filter_data->key, filter_data->field_value) : grfi.field(filter_data->key, filter_data->field_value);
-                    break;
-                case List:
-                    filter_data->negate ? grfi.n_list(filter_data->key, filter_data->list_value) : grfi.list(filter_data->key, filter_data->list_value);
-                    break;
-                }
-                if (grfi.filtered_idx().empty()) {
-                    break;
-                }
-            }
-            all_filter.join(grfi);
-        }
-    }
-    auto idx = all_filter.filtered_idx();
+    auto idx = Tiddlerstore::apply_filter(store, filter_groups);
     for (int i = 0; i < title_sort_model.rowCount(); i += 1) {
         tiddler_list_view->setRowHidden(i, std::find(idx.begin(), idx.end(), source_row(i)) == idx.end());
     }

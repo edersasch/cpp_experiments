@@ -1,4 +1,5 @@
 #include "tiddler_model_qt.h"
+#include "tiddlerstore/tiddlerstore.h"
 
 Tiddler_Model::Tiddler_Model(Tiddlerstore::Tiddler& tiddler, QObject* parent)
     : QObject(parent)
@@ -125,22 +126,22 @@ std::unordered_map<std::string, std::string> Tiddler_Model::fields() const
     return t.fields();
 }
 
-Tiddlerstore::Tiddler::Change Tiddler_Model::request_set_field(const std::string& field_name, const std::string& field_val)
+Tiddlerstore::Set_Field_List_Change Tiddler_Model::request_set_field(const std::string& field_name, const std::string& field_val)
 {
     switch(t.set_field(field_name, field_val)) {
-    case Tiddlerstore::Tiddler::Change::Add:
+    case Tiddlerstore::Set_Field_List_Change::Add:
         emit field_added(field_name.c_str());
-        return Tiddlerstore::Tiddler::Change::Add;
-    case Tiddlerstore::Tiddler::Change::Remove:
+        return Tiddlerstore::Set_Field_List_Change::Add;
+    case Tiddlerstore::Set_Field_List_Change::Remove:
         emit field_removed(field_name.c_str());
-        return Tiddlerstore::Tiddler::Change::Remove;
-    case Tiddlerstore::Tiddler::Change::Value:
+        return Tiddlerstore::Set_Field_List_Change::Remove;
+    case Tiddlerstore::Set_Field_List_Change::Value:
         emit field_changed(field_name.c_str());
-        return Tiddlerstore::Tiddler::Change::Value;
+        return Tiddlerstore::Set_Field_List_Change::Value;
     default:
         break;
     }
-    return Tiddlerstore::Tiddler::Change::None;
+    return Tiddlerstore::Set_Field_List_Change::None;
 }
 
 bool Tiddler_Model::request_remove_field(const std::string& field_name)
@@ -162,22 +163,22 @@ std::unordered_map<std::string, std::vector<std::string>> Tiddler_Model::lists()
     return t.lists();
 }
 
-Tiddlerstore::Tiddler::Change Tiddler_Model::request_set_list(const std::string& list_name, const std::vector<std::string>& values)
+Tiddlerstore::Set_Field_List_Change Tiddler_Model::request_set_list(const std::string& list_name, const std::vector<std::string>& values)
 {
     switch(t.set_list(list_name, values)) {
-    case Tiddlerstore::Tiddler::Change::Add:
+    case Tiddlerstore::Set_Field_List_Change::Add:
         emit list_added(list_name.c_str());
-        return Tiddlerstore::Tiddler::Change::Add;
-    case Tiddlerstore::Tiddler::Change::Remove:
+        return Tiddlerstore::Set_Field_List_Change::Add;
+    case Tiddlerstore::Set_Field_List_Change::Remove:
         emit list_removed(list_name.c_str());
-        return Tiddlerstore::Tiddler::Change::Remove;
-    case Tiddlerstore::Tiddler::Change::Value:
+        return Tiddlerstore::Set_Field_List_Change::Remove;
+    case Tiddlerstore::Set_Field_List_Change::Value:
         emit list_changed(list_name.c_str());
-        return Tiddlerstore::Tiddler::Change::Value;
+        return Tiddlerstore::Set_Field_List_Change::Value;
     default:
         break;
     }
-    return Tiddlerstore::Tiddler::Change::None;
+    return Tiddlerstore::Set_Field_List_Change::None;
 }
 
 bool Tiddler_Model::request_remove_list(const std::string& list_name)

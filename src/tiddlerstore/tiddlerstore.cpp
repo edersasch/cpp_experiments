@@ -17,18 +17,18 @@ auto set_map_value = [](auto& map, const auto& key, const auto& value)
     if (!key.empty()) {
         if (value.empty()) {
             if (map.erase(key) != 0) {
-                return Tiddlerstore::Tiddler::Change::Remove;
+                return Tiddlerstore::Set_Field_List_Change::Remove;
             }
         } else {
             auto& val = map[key];
             if (val != value) {
-                auto ret = val.empty() ? Tiddlerstore::Tiddler::Change::Add : Tiddlerstore::Tiddler::Change::Value;
+                auto ret = val.empty() ? Tiddlerstore::Set_Field_List_Change::Add : Tiddlerstore::Set_Field_List_Change::Value;
                 val = value;
                 return ret;
             }
         }
     }
-    return Tiddlerstore::Tiddler::Change::None;
+    return Tiddlerstore::Set_Field_List_Change::None;
 };
 
 auto extract_map_keys = [](const auto& src, auto& dest)
@@ -168,7 +168,7 @@ std::unordered_map<std::string, std::string> Tiddler::fields() const
     return tiddler_fields;
 }
 
-Tiddler::Change Tiddler::set_field(const std::string& field_name, const std::string& value)
+Set_Field_List_Change Tiddler::set_field(const std::string& field_name, const std::string& value)
 {
     return set_map_value(tiddler_fields, field_name, value);
 }
@@ -188,7 +188,7 @@ std::unordered_map<std::string, std::vector<std::string>> Tiddler::lists() const
     return tiddler_lists;
 }
 
-Tiddler::Change Tiddler::set_list(const std::string &list_name, std::vector<std::string> values)
+Set_Field_List_Change Tiddler::set_list(const std::string &list_name, std::vector<std::string> values)
 {
     values.erase(std::remove_if(values.begin(), values.end(), [](const std::string& element) {
         return element.empty();
@@ -445,6 +445,58 @@ Store_Filter& Store_Filter::n_title_contains(const std::string& title_value, boo
     return *this;
 }
 
+Store_Filter& Store_Filter::text(const std::string& text_value)
+{
+    if (!text_value.empty()) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [this, text_value](const std::size_t& i) {
+            return s[i]->text() != text_value;
+        }), idx.end());
+    }
+    return *this;
+}
+
+Store_Filter& Store_Filter::n_text(const std::string& text_value)
+{
+    if (!text_value.empty()) {
+        idx.erase(std::remove_if(idx.begin(), idx.end(), [this, text_value](const std::size_t& i) {
+            return s[i]->text() == text_value;
+        }), idx.end());
+    }
+    return *this;
+}
+
+Store_Filter& Store_Filter::text_contains(const std::string& text_value, bool case_sensitive)
+{
+    if (!text_value.empty()) {
+        if (case_sensitive) {
+            idx.erase(std::remove_if(idx.begin(), idx.end(), [this, text_value](const std::size_t& i) {
+                return s[i]->text().find(text_value) == std::string::npos;
+            }), idx.end());
+        } else {
+            idx.erase(std::remove_if(idx.begin(), idx.end(), [this, text_value](const std::size_t& i) {
+                return !string_find_case_insensitive(s[i]->text(), text_value);
+            }), idx.end());
+        }
+    }
+    return *this;
+}
+
+Store_Filter& Store_Filter::n_text_contains(const std::string& text_value, bool case_sensitive)
+{
+    if (!text_value.empty()) {
+        if (case_sensitive) {
+            idx.erase(std::remove_if(idx.begin(), idx.end(), [this, text_value](const std::size_t& i) {
+                return s[i]->text().find(text_value) != std::string::npos;
+            }), idx.end());
+        } else {
+            idx.erase(std::remove_if(idx.begin(), idx.end(), [this, text_value](const std::size_t& i) {
+                return string_find_case_insensitive(s[i]->text(), text_value);
+            }), idx.end());
+        }
+    }
+    return *this;
+}
+
 Store_Filter& Store_Filter::tag(const std::string& tag_value)
 {
     if (!tag_value.empty()) {
@@ -563,15 +615,51 @@ Store_Filter& Store_Filter::join(const Store_Filter& other)
     return *this;
 }
 
-Store_Filter& Store_Filter::clear()
-{
-    idx.clear();
-    return *this;
-}
-
-std::vector<std::size_t> Store_Filter::filtered_idx() const
+Store_Indexes Store_Filter::filtered_idx() const
 {
     return idx;
+}
+
+Store_Indexes apply_filter(const Store& store, const Filter_Groups& filter_groups)
+{
+    bool first_filter = true;
+    auto all_filter = Store_Filter(store);
+    for (auto& single_group : filter_groups) {
+        if (!single_group->empty()) {
+            bool filtered = false;
+            auto grfi = Store_Filter(store);
+            for (auto& filter_data : *single_group) {
+                if (!filter_data->key.empty()) {
+                    filtered = true;
+                    switch (filter_data->filter_type) {
+                    case Filter_Type::Title:
+                        filter_data->negate ? grfi.n_title_contains(filter_data->key, filter_data->case_sensitive) : grfi.title_contains(filter_data->key, filter_data->case_sensitive);
+                        break;
+                    case Filter_Type::Text:
+                        filter_data->negate ? grfi.n_text_contains(filter_data->key, filter_data->case_sensitive) : grfi.text_contains(filter_data->key, filter_data->case_sensitive);
+                        break;
+                    case Filter_Type::Tag:
+                        filter_data->negate ? grfi.n_tag(filter_data->key) : grfi.tag(filter_data->key);
+                        break;
+                    case Filter_Type::Field:
+                        filter_data->negate ? grfi.n_field(filter_data->key, filter_data->field_value) : grfi.field(filter_data->key, filter_data->field_value);
+                        break;
+                    case Filter_Type::List:
+                        filter_data->negate ? grfi.n_list(filter_data->key, filter_data->list_value) : grfi.list(filter_data->key, filter_data->list_value);
+                        break;
+                    }
+                    if (grfi.filtered_idx().empty()) {
+                        break;
+                    }
+                }
+            }
+            if (filtered) {
+                first_filter ? all_filter.intersect(grfi) : all_filter.join(grfi);
+                first_filter = false;
+            }
+        }
+    }
+    return all_filter.filtered_idx();
 }
 
 }

@@ -2,10 +2,12 @@
 #define TESTS_TIDDLERSTORE_QT_TIDDLER_MODEL_QT_TEST
 
 #include "tiddlerstore_qt/tiddler_model_qt.h"
-#include "tiddlerstore/tiddlerstore.h"
+#include "tiddlerstore/tiddlerstore_types.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+
+#include <memory>
 
 class Tiddler_Model_Test_Slots
         : public QObject
@@ -38,12 +40,12 @@ class Tiddler_Model_Test
 
 public:
     Tiddler_Model_Test();
-    virtual ~Tiddler_Model_Test() = default;
+    virtual ~Tiddler_Model_Test() override;
 
 protected:
     ::testing::StrictMock<Tiddler_Model_Test_Slots> tmt_slots;
-    Tiddlerstore::Tiddler tiddler_for_model;
-    Tiddler_Model tm {tiddler_for_model};
+    std::unique_ptr<Tiddlerstore::Tiddler> tiddler_for_model;
+    Tiddler_Model tm {*tiddler_for_model};
 };
 
 class Tiddlerstore_Model_Test_Slots
@@ -68,7 +70,7 @@ class Tiddlerstore_Model_Test
 
 public:
     Tiddlerstore_Model_Test();
-    virtual ~Tiddlerstore_Model_Test() = default;
+    virtual ~Tiddlerstore_Model_Test() override;
 
 protected:
     ::testing::StrictMock<Tiddlerstore_Model_Test_Slots> tsm_slots;

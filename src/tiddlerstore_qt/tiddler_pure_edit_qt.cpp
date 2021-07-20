@@ -1,4 +1,5 @@
 #include "tiddler_pure_edit_qt.h"
+#include "tiddlerstore/tiddlerstore.h"
 #include "qt_utilities/flowlayout.h"
 
 #include <QVBoxLayout>
@@ -31,6 +32,7 @@ void clear_layout(QLayout* l)
 
 Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     : QWidget(parent)
+    , work(new Tiddlerstore::Tiddler)
     , title_lineedit(new QLineEdit)
     , text_edit(new QTextEdit)
     , accept_button(new QToolButton)
@@ -161,6 +163,8 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     connect(list_name_lineedit, &QLineEdit::returnPressed, list_add_button, &QToolButton::click);
     connect(list_value_lineedit, &QLineEdit::returnPressed, list_add_button, &QToolButton::click);
 }
+
+Tiddler_Pure_Edit::~Tiddler_Pure_Edit() = default;
 
 Tiddler_Model* Tiddler_Pure_Edit::tiddler_model()
 {
@@ -311,19 +315,19 @@ void Tiddler_Pure_Edit::update_present_list(const std::string& list_name)
     }
 }
 
-QToolButton* Tiddler_Pure_Edit::deletable_value(const std::string& text, FlowLayout* parent_layout)
+QToolButton* Tiddler_Pure_Edit::deletable_value(const std::string& text, QLayout* parent_layout, bool button_after_label)
 {
-    auto w(new QWidget);
+    auto w(new QWidget(this));
     auto l(new QHBoxLayout(w));
-    auto del(new QToolButton);
-    auto label(new QLabel(text.c_str()));
+    auto del(new QToolButton(this));
+    auto label(new QLabel(text.c_str(), this));
     l->setSpacing(0);
     l->setMargin(0);
     del->setIcon(style()->standardIcon(QStyle::SP_TitleBarCloseButton));
     label->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     label->setLineWidth(1);
-    l->addWidget(del);
     l->addWidget(label);
+    l->insertWidget(button_after_label ? 1 : 0, del);
     parent_layout->addWidget(w);
     return del;
 }

@@ -1,14 +1,13 @@
 #ifndef SRC_TIDDLERSTORE_QT_TIDDLER_PURE_EDIT_QT
 #define SRC_TIDDLERSTORE_QT_TIDDLER_PURE_EDIT_QT
 
-#include "tiddlerstore/tiddlerstore.h"
 #include "tiddler_model_qt.h"
+#include "tiddlerstore/tiddlerstore_types.h"
 
 #include <QWidget>
 
 #include <unordered_map>
 
-class Tiddler_Model;
 class FlowLayout;
 class QLineEdit;
 class QTextEdit;
@@ -28,7 +27,7 @@ signals:
 
 public:
     explicit Tiddler_Pure_Edit(QWidget* parent = nullptr);
-    virtual ~Tiddler_Pure_Edit() override = default;
+    virtual ~Tiddler_Pure_Edit() override;
 
     Tiddler_Model* tiddler_model();
     void set_tiddler_model(Tiddler_Model* model);
@@ -47,14 +46,14 @@ private:
     void update_present_fields();
     void update_present_lists();
     void update_present_list(const std::string& list_name);
-    QToolButton* deletable_value(const std::string& text, FlowLayout* parent_layout);
+    QToolButton* deletable_value(const std::string& text, QLayout* parent_layout, bool button_after_label = false);
 
     /// accept_button will only be shown if the model tm is valid
     void present_accept_button();
 
     Tiddler_Model* tm {nullptr};
-    Tiddlerstore::Tiddler work;
-    Tiddler_Model work_tm {work};
+    std::unique_ptr<Tiddlerstore::Tiddler> work;
+    Tiddler_Model work_tm {*work};
     QLineEdit* title_lineedit;
     QTextEdit* text_edit;
     QToolButton* accept_button;

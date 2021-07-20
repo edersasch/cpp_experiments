@@ -1,7 +1,7 @@
 #ifndef SRC_TIDDLERSTORE_QT_TIDDLER_MODEL_QT
 #define SRC_TIDDLERSTORE_QT_TIDDLER_MODEL_QT
 
-#include "tiddlerstore/tiddlerstore.h"
+#include "tiddlerstore/tiddlerstore_types.h"
 
 #include <QObject>
 
@@ -60,11 +60,11 @@ public:
     bool request_remove_tag(const std::string& tag);
     std::string field_value(const std::string& field_name) const;
     std::unordered_map<std::string, std::string> fields() const;
-    Tiddlerstore::Tiddler::Change request_set_field(const std::string& field_name, const std::string& field_val);
+    Tiddlerstore::Set_Field_List_Change request_set_field(const std::string& field_name, const std::string& field_val);
     bool request_remove_field(const std::string& field_name);
     std::vector<std::string> list(const std::string& list_name) const;
     std::unordered_map<std::string, std::vector<std::string>> lists() const;
-    Tiddlerstore::Tiddler::Change request_set_list(const std::string& list_name, const std::vector<std::string>& values);
+    Tiddlerstore::Set_Field_List_Change request_set_list(const std::string& list_name, const std::vector<std::string>& values);
     bool request_remove_list(const std::string& list_name);
     void request_remove() { emit remove_request(); }
 

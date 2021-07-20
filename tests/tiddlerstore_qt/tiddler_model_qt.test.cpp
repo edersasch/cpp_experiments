@@ -1,8 +1,10 @@
 #include "tiddler_model_qt.test.h"
+#include "tiddlerstore/tiddlerstore.h"
 
 #include "qt_gtest_helper/qt_gtest_helper.h"
 
 Tiddler_Model_Test::Tiddler_Model_Test()
+    : tiddler_for_model(new Tiddlerstore::Tiddler)
 {
     connect(&tm, &Tiddler_Model::title_changed, &tmt_slots, &Tiddler_Model_Test_Slots::title_changed);
     connect(&tm, &Tiddler_Model::text_changed, &tmt_slots, &Tiddler_Model_Test_Slots::text_changed);
@@ -18,25 +20,27 @@ Tiddler_Model_Test::Tiddler_Model_Test()
     connect(&tm, &Tiddler_Model::lists_reset, &tmt_slots, &Tiddler_Model_Test_Slots::lists_reset);
 }
 
+Tiddler_Model_Test::~Tiddler_Model_Test() = default;
+
 TEST_F(Tiddler_Model_Test, title)
 {
     EXPECT_CALL(tmt_slots, title_changed());
-    tm.request_set_title("one");
+    EXPECT_EQ(true, tm.request_set_title("one"));
     processEvents();
     EXPECT_EQ("one", tm.title());
-    tm.request_set_title("");
+    EXPECT_EQ(false, tm.request_set_title(""));
     processEvents();
     EXPECT_EQ("one", tm.title());
-    tm.request_set_title("one");
+    EXPECT_EQ(false, tm.request_set_title("one"));
     processEvents();
     EXPECT_EQ("one", tm.title());
     EXPECT_CALL(tmt_slots, title_changed());
-    tm.request_set_title("two");
+    EXPECT_TRUE(tm.request_set_title("two"));
     processEvents();
     EXPECT_EQ("two", tm.title());
     EXPECT_CALL(tmt_slots, title_changed());
     Tiddlerstore::Tiddler t;
-    t.set_title("set data");
+    EXPECT_EQ(true, t.set_title("set data"));
     tm.request_set_tiddler_data(t);
     processEvents();
     EXPECT_EQ(t.title(), tm.title());
@@ -47,22 +51,22 @@ TEST_F(Tiddler_Model_Test, title)
 TEST_F(Tiddler_Model_Test, text)
 {
     EXPECT_CALL(tmt_slots, text_changed());
-    tm.request_set_text("one");
+    EXPECT_EQ(true, tm.request_set_text("one"));
     processEvents();
     EXPECT_EQ("one", tm.text());
-    tm.request_set_text("");
+    EXPECT_EQ(false, tm.request_set_text(""));
     processEvents();
     EXPECT_EQ("one", tm.text());
-    tm.request_set_text("one");
+    EXPECT_EQ(false, tm.request_set_text("one"));
     processEvents();
     EXPECT_EQ("one", tm.text());
     EXPECT_CALL(tmt_slots, text_changed());
-    tm.request_set_text("two");
+    EXPECT_EQ(true, tm.request_set_text("two"));
     processEvents();
     EXPECT_EQ("two", tm.text());
     EXPECT_CALL(tmt_slots, text_changed());
     Tiddlerstore::Tiddler t;
-    t.set_text("set data");
+    EXPECT_EQ(true, t.set_text("set data"));
     tm.request_set_tiddler_data(t);
     processEvents();
     EXPECT_EQ(t.text(), tm.text());
@@ -73,22 +77,22 @@ TEST_F(Tiddler_Model_Test, text)
 TEST_F(Tiddler_Model_Test, history_size)
 {
     EXPECT_CALL(tmt_slots, history_size_changed());
-    tm.request_set_history_size(5);
+    EXPECT_EQ(true, tm.request_set_history_size(5));
     processEvents();
     EXPECT_EQ(5, tm.history_size());
-    tm.request_set_history_size(0);
+    EXPECT_EQ(false, tm.request_set_history_size(0));
     processEvents();
     EXPECT_EQ(5, tm.history_size());
-    tm.request_set_history_size(5);
+    EXPECT_EQ(false, tm.request_set_history_size(5));
     processEvents();
     EXPECT_EQ(5, tm.history_size());
     EXPECT_CALL(tmt_slots, history_size_changed());
-    tm.request_set_history_size(500);
+    EXPECT_EQ(true, tm.request_set_history_size(500));
     processEvents();
     EXPECT_EQ(100, tm.history_size());
     EXPECT_CALL(tmt_slots, history_size_changed());
     Tiddlerstore::Tiddler t;
-    t.set_history_size(59);
+    EXPECT_EQ(true, t.set_history_size(59));
     tm.request_set_tiddler_data(t);
     processEvents();
     EXPECT_EQ(t.history_size(), tm.history_size());
@@ -99,32 +103,32 @@ TEST_F(Tiddler_Model_Test, history_size)
 TEST_F(Tiddler_Model_Test, tags)
 {
     EXPECT_CALL(tmt_slots, tags_changed());
-    tm.request_set_tag("one");
+    EXPECT_EQ(true, tm.request_set_tag("one"));
     processEvents();
     EXPECT_EQ(std::vector<std::string>({"one"}), tm.tags());
-    tm.request_set_tag("");
+    EXPECT_EQ(false, tm.request_set_tag(""));
     processEvents();
     EXPECT_EQ(std::vector<std::string>({"one"}), tm.tags());
-    tm.request_set_tag("one");
+    EXPECT_EQ(false, tm.request_set_tag("one"));
     processEvents();
     EXPECT_EQ(std::vector<std::string>({"one"}), tm.tags());
     EXPECT_CALL(tmt_slots, tags_changed());
-    tm.request_set_tag("two");
+    EXPECT_EQ(true, tm.request_set_tag("two"));
     processEvents();
     EXPECT_EQ(std::vector<std::string>({"one", "two"}), tm.tags());
     EXPECT_CALL(tmt_slots, tags_changed());
-    tm.request_remove_tag("one");
+    EXPECT_EQ(true, tm.request_remove_tag("one"));
     processEvents();
     EXPECT_EQ(std::vector<std::string>({"two"}), tm.tags());
-    tm.request_remove_tag("one");
+    EXPECT_EQ(false, tm.request_remove_tag("one"));
     processEvents();
     EXPECT_EQ(std::vector<std::string>({"two"}), tm.tags());
-    tm.request_remove_tag("not there");
+    EXPECT_EQ(false, tm.request_remove_tag("not there"));
     processEvents();
     EXPECT_EQ(std::vector<std::string>({"two"}), tm.tags());
     EXPECT_CALL(tmt_slots, tags_changed());
     Tiddlerstore::Tiddler t;
-    t.set_tag("set data");
+    EXPECT_EQ(true, t.set_tag("set data"));
     tm.request_set_tiddler_data(t);
     processEvents();
     EXPECT_EQ(t.tags(), tm.tags());
@@ -135,43 +139,47 @@ TEST_F(Tiddler_Model_Test, tags)
 TEST_F(Tiddler_Model_Test, fields)
 {
     EXPECT_CALL(tmt_slots, field_added(testing::StrEq("one")));
-    tm.request_set_field("one", "1");
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Add, tm.request_set_field("one", "1"));
     processEvents();
     std::unordered_map<std::string, std::string> expected;
     expected["one"] = "1";
     EXPECT_EQ(expected, tm.fields());
-    tm.request_set_field("", "vanish");
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::None, tm.request_set_field("", "vanish"));
     processEvents();
     EXPECT_EQ(expected, tm.fields());
-    tm.request_set_field("vanish", "");
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::None, tm.request_set_field("vanish", ""));
     processEvents();
     EXPECT_EQ(expected, tm.fields());
     EXPECT_CALL(tmt_slots, field_added(testing::StrEq("two")));
-    tm.request_set_field("two", "2");
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Add, tm.request_set_field("two", "2"));
     expected["two"] = "2";
     processEvents();
     EXPECT_EQ(expected, tm.fields());
     EXPECT_CALL(tmt_slots, field_removed(testing::StrEq("two")));
-    tm.request_set_field("two", "");
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Remove, tm.request_set_field("two", ""));
     expected.erase("two");
     processEvents();
     EXPECT_EQ(expected, tm.fields());
     EXPECT_CALL(tmt_slots, field_added(testing::StrEq("three")));
-    tm.request_set_field("three", "3");
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Add, tm.request_set_field("three", "3"));
     expected["three"] = "3";
+    processEvents();
+    EXPECT_CALL(tmt_slots, field_changed(testing::StrEq("three")));
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Value, tm.request_set_field("three", "333"));
+    expected["three"] = "333";
     processEvents();
     EXPECT_EQ(expected, tm.fields());
     EXPECT_CALL(tmt_slots, field_removed(testing::StrEq("one")));
-    tm.request_remove_field("one");
+    EXPECT_EQ(true, tm.request_remove_field("one"));
     expected.erase("one");
     processEvents();
     EXPECT_EQ(expected, tm.fields());
-    tm.request_remove_field("one");
+    EXPECT_EQ(false, tm.request_remove_field("one"));
     processEvents();
     EXPECT_EQ(expected, tm.fields());
     EXPECT_CALL(tmt_slots, fields_reset());
     Tiddlerstore::Tiddler t;
-    t.set_field("set data", "set data");
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Add, t.set_field("set data", "set data"));
     tm.request_set_tiddler_data(t);
     processEvents();
     EXPECT_EQ(t.fields(), tm.fields());
@@ -182,53 +190,53 @@ TEST_F(Tiddler_Model_Test, fields)
 TEST_F(Tiddler_Model_Test, lists)
 {
     EXPECT_CALL(tmt_slots, list_added(testing::StrEq("one")));
-    tm.request_set_list("one", {"1"});
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Add, tm.request_set_list("one", {"1"}));
     processEvents();
     std::unordered_map<std::string, std::vector<std::string>> expected;
     expected["one"] = {"1"};
     EXPECT_EQ(expected, tm.lists());
-    tm.request_set_list("", {"vanish"});
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::None, tm.request_set_list("", {"vanish"}));
     processEvents();
     EXPECT_EQ(expected, tm.lists());
-    tm.request_set_list("vanish", {});
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::None, tm.request_set_list("vanish", {}));
     processEvents();
     EXPECT_EQ(expected, tm.lists());
     EXPECT_CALL(tmt_slots, list_changed(testing::StrEq("one")));
-    tm.request_set_list("one", {"1", "1_1"});
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Value, tm.request_set_list("one", {"1", "1_1"}));
     expected["one"] = {"1", "1_1"};
     processEvents();
     EXPECT_EQ(expected, tm.lists());
     EXPECT_EQ(expected["one"], tm.list("one"));
-    tm.request_set_list("one", {"1", "1_1"});
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::None, tm.request_set_list("one", {"1", "1_1"}));
     processEvents();
     EXPECT_EQ(expected, tm.lists());
     EXPECT_EQ(expected["one"], tm.list("one"));
     EXPECT_CALL(tmt_slots, list_added(testing::StrEq("two")));
-    tm.request_set_list("two", {"2"});
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Add, tm.request_set_list("two", {"2"}));
     expected["two"] = {"2"};
     processEvents();
     EXPECT_EQ(expected, tm.lists());
     EXPECT_CALL(tmt_slots, list_removed(testing::StrEq("two")));
-    tm.request_set_list("two", {""});
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Remove, tm.request_set_list("two", {""}));
     expected.erase("two");
     processEvents();
     EXPECT_EQ(expected, tm.lists());
     EXPECT_CALL(tmt_slots, list_added(testing::StrEq("three")));
-    tm.request_set_list("three", {"3"});
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Add, tm.request_set_list("three", {"3"}));
     expected["three"] = {"3"};
     processEvents();
     EXPECT_EQ(expected, tm.lists());
     EXPECT_CALL(tmt_slots, list_removed(testing::StrEq("one")));
-    tm.request_remove_list("one");
+    EXPECT_EQ(true, tm.request_remove_list("one"));
     expected.erase("one");
     processEvents();
     EXPECT_EQ(expected, tm.lists());
-    tm.request_remove_list("one");
+    EXPECT_EQ(false, tm.request_remove_list("one"));
     processEvents();
     EXPECT_EQ(expected, tm.lists());
     EXPECT_CALL(tmt_slots, lists_reset());
     Tiddlerstore::Tiddler t;
-    t.set_list("set data", {"set data"});
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Add, t.set_list("set data", {"set data"}));
     tm.request_set_tiddler_data(t);
     processEvents();
     EXPECT_EQ(t.lists(), tm.lists());
@@ -243,6 +251,8 @@ Tiddlerstore_Model_Test::Tiddlerstore_Model_Test()
     connect(&tsm, &Tiddlerstore_Model::model_created, &tsm_slots, &Tiddlerstore_Model_Test_Slots::model_created);
     connect(&tsm, &Tiddlerstore_Model::removed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::removed);
 }
+
+Tiddlerstore_Model_Test::~Tiddlerstore_Model_Test() = default;
 
 TEST_F(Tiddlerstore_Model_Test, add_model_remove)
 {
