@@ -13,9 +13,9 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QComboBox>
-#include <QStringListModel>
 #include <QCompleter>
 #include <QLabel>
+#include <QMouseEvent>
 
 #include <utility>
 
@@ -36,34 +36,67 @@ void Flow_List_View::doItemsLayout()
     setMaximumSize(QWIDGETSIZE_MAX, contentsSize().height() + 2);
 }
 
-Move_Only_StringListModel::Move_Only_StringListModel(const QStringList& strings, QObject* parent)
-    : QStringListModel(strings, parent)
+void Flow_List_View::mouseMoveEvent(QMouseEvent* event)
+{
+    QModelIndex index = indexAt(event->pos());
+    if (index.row() != hoverRow || state() != QAbstractItemView::NoState) {
+        delete_del_button();
+        if (index.row() != -1 && state() == QAbstractItemView::NoState) {
+            hoverRow = index.row();
+            del_button = new QToolButton(this);
+            del_button->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
+            auto rect = visualRect(index);
+            rect.setWidth(rect.height());
+            del_button->setGeometry(rect);
+            del_button->show();
+            connect(del_button, &QToolButton::clicked, del_button, [this, index] {
+                delete_del_button();
+                model()->removeRow(index.row());
+            });
+        }
+    }
+    QListView::mouseMoveEvent(event);
+}
+
+void Flow_List_View::leaveEvent(QEvent* event)
+{
+    delete_del_button();
+    QListView::leaveEvent(event);
+}
+
+// private
+
+void Flow_List_View::delete_del_button()
+{
+    if (del_button) {
+        del_button->deleteLater();
+    }
+    del_button = nullptr;
+    hoverRow = -1;
+}
+
+Move_Only_StandardItemModel::Move_Only_StandardItemModel(QObject* parent)
+    : QStandardItemModel(parent)
 {
 }
 
-Move_Only_StringListModel::Move_Only_StringListModel(QObject* parent)
-    : Move_Only_StringListModel({}, parent)
+Qt::ItemFlags Move_Only_StandardItemModel::flags(const QModelIndex& index) const
 {
+    return index.isValid() ? QStandardItemModel::flags(index) & ~Qt::ItemIsDropEnabled : QStandardItemModel::flags(index);
 }
 
-Qt::ItemFlags Move_Only_StringListModel::flags(const QModelIndex& index) const
-{
-    return index.isValid() ? QStringListModel::flags(index) & ~Qt::ItemIsDropEnabled : QStringListModel::flags(index);
-}
-
-Qt::DropActions Move_Only_StringListModel::supportedDropActions() const
+Qt::DropActions Move_Only_StandardItemModel::supportedDropActions() const
 {
     return Qt::MoveAction;
 }
 
-bool Move_Only_StringListModel::dropMimeData(const QMimeData* data, Qt::DropAction action,
+bool Move_Only_StandardItemModel::dropMimeData(const QMimeData* data, Qt::DropAction action,
                   int row, int column, const QModelIndex& parent)
 {
-    int maxrow = rowCount(parent) - 1;
-    if (row == -1 || row > maxrow) {
-        row = maxrow; // don't drop behind the add button
+    if (parent.isValid()) {
+        return false;
     }
-    return QStringListModel::dropMimeData(data, action, row, column, parent);
+    return QStandardItemModel::dropMimeData(data, action, row, column, parent);
 }
 
 namespace
@@ -434,36 +467,6 @@ QToolButton* Tiddlerstore_Handler::add_field_filter(Tiddlerstore::Filter_Data& f
     return add_label_del_row(tr("Field: ") + filter_data.key.c_str(), single_filter_functions, filter_form_layout);
 }
 
-void Tiddlerstore_Handler::add_list_append_button(QListView* list_view, QStringListModel* list_model)
-{
-    auto btn = new QToolButton(this);
-    btn->setText("+");
-    list_view->setIndexWidget(list_model->index(list_model->rowCount() - 1), btn);
-    connect(btn, &QToolButton::clicked, btn, [this, list_model, list_view, btn] {
-        auto dlg = new QDialog(btn, Qt::Popup);
-        auto dlgl = new QHBoxLayout(dlg);
-        auto le = new QLineEdit(dlg);
-        dlgl->addWidget(le);
-        dlg->move(btn->mapToGlobal(QPoint(0, btn->height())));
-        dlg->open();
-        le->setFocus();
-        connect(le, &QLineEdit::returnPressed, dlg, &QDialog::accept);
-        connect(dlg, &QDialog::finished, dlg, [this, le, dlg, list_model, list_view](int result) {
-            if (result == QDialog::Accepted) {
-                auto text = le->text();
-                if (!text.isEmpty()) {
-                    auto list = list_model->stringList();
-                    list.back() = text;
-                    list.append("+");
-                    list_model->setStringList(list);
-                    add_list_append_button(list_view, list_model);
-                }
-            }
-            dlg->deleteLater();
-        });
-    });
-}
-
 QToolButton* Tiddlerstore_Handler::add_list_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout)
 {
     auto single_filter_functions = new QHBoxLayout;
@@ -471,26 +474,36 @@ QToolButton* Tiddlerstore_Handler::add_list_filter(Tiddlerstore::Filter_Data& fi
     auto list_view = new Flow_List_View(this);
     list_view->setDropIndicatorShown(true);
     list_view->setDragDropMode(QAbstractItemView::InternalMove);
-    auto list_model = new Move_Only_StringListModel({"+"});
+    list_view->setMouseTracking(true);
+    auto list_model = new Move_Only_StandardItemModel;
     list_view->setModel(list_model);
-    add_list_append_button(list_view, list_model);
-    single_filter_functions->addWidget(list_view);
-    connect(list_model, &QStringListModel::dataChanged, list_model, [this, list_view, list_model](const QModelIndex &topLeft, const QModelIndex &bottomRight) {
-        auto list = list_model->stringList();
-        int i = topLeft.row() > list.size() - 1 ? list.size() - 1 : topLeft.row();
-        int j = bottomRight.row() > list.size() - 1 ? list.size() - 1 : bottomRight.row();
-        int orig_sz = list.size();
-        while (i <= j) {
-            if (list[i].isEmpty()) {
-                list.removeAt(i);
-                j -= 1;
-            } else {
-                i += 1;
+    auto list_handler = new QWidget(this);
+    auto list_handler_layout = new QVBoxLayout(list_handler);
+    list_handler_layout->addWidget(list_view);
+    auto entry_enter_edit = new QLineEdit(this);
+    entry_enter_edit->setClearButtonEnabled(true);
+    entry_enter_edit->addAction(style()->standardIcon(QStyle::SP_DialogApplyButton), QLineEdit::LeadingPosition);
+    connect(entry_enter_edit, &QLineEdit::returnPressed, entry_enter_edit, [entry_enter_edit, list_model, list_view]() {
+        if (!entry_enter_edit->text().isEmpty()) {
+            auto item = new QStandardItem(entry_enter_edit->text());
+            list_model->appendRow(item);
+            auto rect = list_view->visualRect(item->index());
+            if (list_view->iconSize().height() > rect.height()) {
+                list_view->setIconSize(QSize(rect.height(), rect.height()));
             }
+            QPixmap pix(rect.height(), rect.height());
+            pix.fill(QColor(0, 0, 0, 0));
+            item->setIcon(QIcon(pix));
+            entry_enter_edit->clear();
         }
-        if (list.size() != orig_sz) {
-            list_model->setStringList(list);
-            add_list_append_button(list_view, list_model);
+    });
+    list_handler_layout->addWidget(entry_enter_edit);
+    // try to make the empty list view as high as a single line
+    list_view->setMinimumSize(QSize(1, entry_enter_edit->height() - entry_enter_edit->contentsMargins().top() - entry_enter_edit->contentsMargins().bottom()));
+    single_filter_functions->addWidget(list_handler);
+    connect(list_model, &QStandardItemModel::itemChanged, list_model, [list_model](QStandardItem* item) {
+        if (item->text().isEmpty()) {
+            list_model->removeRow(item->index().row());
         }
     });
     return add_label_del_row(tr("List: ") + filter_data.key.c_str(), single_filter_functions, filter_form_layout);

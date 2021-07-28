@@ -6,6 +6,7 @@
 
 #include <QWidget>
 #include <QStringListModel>
+#include <QStandardItemModel>
 #include <QSortFilterProxyModel>
 #include <QListView>
 
@@ -34,19 +35,24 @@ public:
     explicit Flow_List_View(QWidget* parent = nullptr);
     virtual ~Flow_List_View() override = default;
     void doItemsLayout() override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void leaveEvent(QEvent* event) override;
+private:
+    void delete_del_button();
+    int hoverRow {-1};
+    QToolButton* del_button {nullptr};
 };
 
-class Move_Only_StringListModel
-        : public QStringListModel
+class Move_Only_StandardItemModel
+        : public QStandardItemModel
 {
 public:
-    Move_Only_StringListModel(const QStringList &strings, QObject *parent = nullptr);
-    Move_Only_StringListModel(QObject* parent = nullptr);
-    virtual ~Move_Only_StringListModel() override = default;
+    Move_Only_StandardItemModel(const QStringList &strings, QObject *parent = nullptr);
+    Move_Only_StandardItemModel(QObject* parent = nullptr);
+    virtual ~Move_Only_StandardItemModel() override = default;
     virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
     Qt::DropActions supportedDropActions() const override;
-    bool dropMimeData(const QMimeData* data, Qt::DropAction action,
-                      int row, int column, const QModelIndex& parent) override;
+    bool dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) override;
 };
 
 class Tiddlerstore_Handler
@@ -77,7 +83,6 @@ private:
     QToolButton* add_text_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout);
     QToolButton* add_tag_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout);
     QToolButton* add_field_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout);
-    void add_list_append_button(QListView* list_view, QStringListModel* list_model);
     QToolButton* add_list_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout);
     void connect_model(Tiddler_Model* model);
     void apply_filter();
