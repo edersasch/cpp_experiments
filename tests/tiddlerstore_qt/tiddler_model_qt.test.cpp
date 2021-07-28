@@ -249,7 +249,20 @@ Tiddlerstore_Model_Test::Tiddlerstore_Model_Test()
 {
     connect(&tsm, &Tiddlerstore_Model::added, &tsm_slots, &Tiddlerstore_Model_Test_Slots::added);
     connect(&tsm, &Tiddlerstore_Model::model_created, &tsm_slots, &Tiddlerstore_Model_Test_Slots::model_created);
+    connect(&tsm, &Tiddlerstore_Model::begin_remove, &tsm_slots, &Tiddlerstore_Model_Test_Slots::begin_remove);
     connect(&tsm, &Tiddlerstore_Model::removed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::removed);
+    connect(&tsm, &Tiddlerstore_Model::title_changed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::title_changed);
+    connect(&tsm, &Tiddlerstore_Model::text_changed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::text_changed);
+    connect(&tsm, &Tiddlerstore_Model::history_size_changed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::history_size_changed);
+    connect(&tsm, &Tiddlerstore_Model::tags_changed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::tags_changed);
+    connect(&tsm, &Tiddlerstore_Model::field_changed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::field_changed);
+    connect(&tsm, &Tiddlerstore_Model::field_added, &tsm_slots, &Tiddlerstore_Model_Test_Slots::field_added);
+    connect(&tsm, &Tiddlerstore_Model::field_removed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::field_removed);
+    connect(&tsm, &Tiddlerstore_Model::fields_reset, &tsm_slots, &Tiddlerstore_Model_Test_Slots::fields_reset);
+    connect(&tsm, &Tiddlerstore_Model::list_changed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::list_changed);
+    connect(&tsm, &Tiddlerstore_Model::list_added, &tsm_slots, &Tiddlerstore_Model_Test_Slots::list_added);
+    connect(&tsm, &Tiddlerstore_Model::list_removed, &tsm_slots, &Tiddlerstore_Model_Test_Slots::list_removed);
+    connect(&tsm, &Tiddlerstore_Model::lists_reset, &tsm_slots, &Tiddlerstore_Model_Test_Slots::lists_reset);
 }
 
 Tiddlerstore_Model_Test::~Tiddlerstore_Model_Test() = default;
@@ -259,32 +272,93 @@ TEST_F(Tiddlerstore_Model_Test, add_model_remove)
     using testing::_;
     EXPECT_CALL(tsm_slots, added(0));
     EXPECT_CALL(tsm_slots, model_created(_));
-    auto tm1 = tsm.add();
+    auto& tm1 = tsm.add();
     auto tm1_same = tsm.model_for_index(0);
-    auto tm1_still_same = tsm.model_for_tiddler(&tm1->tiddler());
-    EXPECT_EQ(tm1, tm1_same);
-    EXPECT_EQ(tm1, tm1_still_same);
+    auto tm1_still_same = tsm.model_for_tiddler(tm1.tiddler());
+    EXPECT_EQ(&tm1, tm1_same);
+    EXPECT_EQ(&tm1, tm1_still_same);
     EXPECT_EQ(nullptr, tsm.model_for_index(1));
     EXPECT_CALL(tsm_slots, added(1));
     EXPECT_CALL(tsm_slots, model_created(_));
-    auto tm2 = tsm.add();
+    auto& tm2 = tsm.add();
     auto tm2_same = tsm.model_for_index(1);
-    auto tm2_still_same = tsm.model_for_tiddler(&tm2->tiddler());
-    EXPECT_EQ(tm2, tm2_same);
-    EXPECT_EQ(tm2, tm2_still_same);
+    auto tm2_still_same = tsm.model_for_tiddler(tm2.tiddler());
+    EXPECT_EQ(&tm2, tm2_same);
+    EXPECT_EQ(&tm2, tm2_still_same);
     EXPECT_EQ(nullptr, tsm.model_for_index(2));
-    auto t1 = ts.emplace_back(new Tiddlerstore::Tiddler).get();
+    auto& t1 = *ts.emplace_back(new Tiddlerstore::Tiddler);
     EXPECT_CALL(tsm_slots, model_created(_));
     auto tm3 = tsm.model_for_tiddler(t1);
     Tiddlerstore::Tiddler f1;
-    EXPECT_EQ(nullptr, tsm.model_for_tiddler(&f1));
+    EXPECT_EQ(nullptr, tsm.model_for_tiddler(f1));
+    EXPECT_CALL(tsm_slots, begin_remove(&tm1));
     EXPECT_CALL(tsm_slots, removed);
-    tm1->request_remove();
+    tm1.request_remove();
     auto tm2_still_there = tsm.model_for_index(0);
-    EXPECT_EQ(tm2, tm2_still_there);
+    EXPECT_EQ(&tm2, tm2_still_there);
+    EXPECT_CALL(tsm_slots, begin_remove(&tm2));
     EXPECT_CALL(tsm_slots, removed);
-    tm2->request_remove();
+    tm2.request_remove();
+    EXPECT_CALL(tsm_slots, begin_remove(tm3));
     EXPECT_CALL(tsm_slots, removed);
     tm3->request_remove();
     EXPECT_EQ(true, ts.empty());
+}
+
+TEST_F(Tiddlerstore_Model_Test, model_signals)
+{
+    using testing::_;
+    EXPECT_CALL(tsm_slots, added(0));
+    EXPECT_CALL(tsm_slots, model_created(_));
+    auto& tm1 = tsm.add();
+    EXPECT_CALL(tsm_slots, added(1));
+    EXPECT_CALL(tsm_slots, model_created(_));
+    auto& tm2 = tsm.add();
+    EXPECT_CALL(tsm_slots, title_changed(&tm1));
+    EXPECT_EQ(true, tm1.request_set_title("tm1 title"));
+    processEvents();
+    EXPECT_CALL(tsm_slots, text_changed(&tm2));
+    EXPECT_EQ(true, tm2.request_set_text("tm2 text"));
+    processEvents();
+    EXPECT_CALL(tsm_slots, history_size_changed(&tm1));
+    EXPECT_EQ(true, tm1.request_set_history_size(5));
+    processEvents();
+    EXPECT_CALL(tsm_slots, tags_changed(&tm2));
+    EXPECT_EQ(true, tm2.request_set_tag("tm2 tag"));
+    processEvents();
+    EXPECT_CALL(tsm_slots, field_added(&tm1, testing::StrEq("tm1 field")));
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Add, tm1.request_set_field("tm1 field", "1"));
+    processEvents();
+    EXPECT_CALL(tsm_slots, field_changed(&tm1, testing::StrEq("tm1 field")));
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Value, tm1.request_set_field("tm1 field", "2"));
+    processEvents();
+    EXPECT_CALL(tsm_slots, field_removed(&tm1, testing::StrEq("tm1 field")));
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Remove, tm1.request_set_field("tm1 field", ""));
+    processEvents();
+    Tiddlerstore::Tiddler t;
+    Tiddler_Model tmcopy(t);
+    tmcopy.request_set_tiddler_data(tm1);
+    tmcopy.request_set_field("tm1 field", "3");
+    EXPECT_CALL(tsm_slots, fields_reset(&tm1));
+    tm1.request_set_tiddler_data(tmcopy);
+    processEvents();
+    EXPECT_CALL(tsm_slots, list_added(&tm2, testing::StrEq("tm2 list")));
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Add, tm2.request_set_list("tm2 list", {"1"}));
+    processEvents();
+    EXPECT_CALL(tsm_slots, list_changed(&tm2, testing::StrEq("tm2 list")));
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Value, tm2.request_set_list("tm2 list", {"2"}));
+    processEvents();
+    EXPECT_CALL(tsm_slots, list_removed(&tm2, testing::StrEq("tm2 list")));
+    EXPECT_EQ(Tiddlerstore::Set_Field_List_Change::Remove, tm2.request_set_list("tm2 list", {}));
+    processEvents();
+    tmcopy.request_set_tiddler_data(tm2);
+    tmcopy.request_set_list("tm2 list", {"3"});
+    EXPECT_CALL(tsm_slots, lists_reset(&tm2));
+    tm2.request_set_tiddler_data(tmcopy);
+    processEvents();
+}
+
+TEST_F(Tiddlerstore_Model_Test, filter)
+{
+    using testing::_;
 }

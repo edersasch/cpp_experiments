@@ -42,7 +42,7 @@ QComboBox* FS_History_UI::combobox()
     if (!chooser) {
         chooser = new QComboBox;
         chooser->setModel(&model);
-        connect(chooser, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentIndexChanged), &history, &FS_History::set_current_element);
+        connect(chooser, &QComboBox::currentTextChanged, &history, &FS_History::set_current_element);
     }
     return chooser;
 }

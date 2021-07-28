@@ -620,7 +620,21 @@ Store_Indexes Store_Filter::filtered_idx() const
     return idx;
 }
 
-Store_Indexes apply_filter(const Store& store, const Filter_Groups& filter_groups)
+std::vector<Tiddler*> Store_Filter::filtered_tiddlers() const
+{
+    std::vector<Tiddler*> ret;
+    for (const auto& i : idx) {
+        ret.push_back(s[i].get());
+    }
+    return ret;
+}
+
+Tiddler* Store_Filter::first_filtered_tiddler() const
+{
+    return idx.empty() ? nullptr : s[idx.front()].get();
+}
+
+Store_Filter apply_filter(const Store& store, const Filter_Groups& filter_groups)
 {
     bool first_filter = true;
     auto all_filter = Store_Filter(store);
@@ -659,7 +673,7 @@ Store_Indexes apply_filter(const Store& store, const Filter_Groups& filter_group
             }
         }
     }
-    return all_filter.filtered_idx();
+    return all_filter;
 }
 
 }

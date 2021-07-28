@@ -181,6 +181,10 @@ public:
     Store_Filter& intersect(const Store_Filter& other);
     Store_Filter& join(const Store_Filter& other);
     Store_Indexes filtered_idx() const;
+    std::vector<Tiddler*> filtered_tiddlers() const;
+
+    /// If you are only inerested in one entry, returns nullptr if there is none
+    Tiddler* first_filtered_tiddler() const;
 
 private:
     const Store& s;
@@ -188,7 +192,7 @@ private:
 };
 
 /// empty groups / filters dont change anything, filter results of one group intersect, group results are joined
-Store_Indexes apply_filter(const Store& store, const Filter_Groups& filter_groups);
+Store_Filter apply_filter(const Store& store, const Filter_Groups& filter_groups);
 
 }
 

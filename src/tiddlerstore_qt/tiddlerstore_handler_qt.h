@@ -85,7 +85,7 @@ private:
     void adjust_dirty(bool dirty_value);
     void open_store(const QString& path);
     void save_store(const QString& path);
-    void prepare_open(Tiddlerstore::Tiddler* t);
+    void prepare_open(Tiddlerstore::Tiddler& t);
     int source_row(int filter_row);
 
     Tiddlerstore::Store store {};

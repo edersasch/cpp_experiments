@@ -7,7 +7,7 @@ Tiddler_Model::Tiddler_Model(Tiddlerstore::Tiddler& tiddler, QObject* parent)
 {
 }
 
-Tiddlerstore::Tiddler& Tiddler_Model::tiddler() const
+const Tiddlerstore::Tiddler& Tiddler_Model::tiddler() const
 {
     return t;
 }
@@ -39,6 +39,11 @@ void Tiddler_Model::request_set_tiddler_data(const Tiddlerstore::Tiddler &other)
     if (lists_will_change) {
         emit lists_reset();
     }
+}
+
+void Tiddler_Model::request_set_tiddler_data(const Tiddler_Model&other)
+{
+    request_set_tiddler_data(other.t);
 }
 
 std::string Tiddler_Model::title() const
@@ -196,36 +201,76 @@ Tiddlerstore_Model::Tiddlerstore_Model(Tiddlerstore::Store& s, QObject* parent)
 {
 }
 
-Tiddler_Model* Tiddlerstore_Model::add()
+Tiddler_Model& Tiddlerstore_Model::add()
 {
-    auto t = data.emplace_back(new Tiddlerstore::Tiddler).get();
-    emit added(static_cast<int>(data.size() - 1));
-    return model_for_tiddler(t);
+    auto& t = *data.emplace_back(new Tiddlerstore::Tiddler);
+    auto tm = model_for_tiddler(t);
+    emit added(data.size() - 1);
+    return *tm;
 }
 
-Tiddler_Model* Tiddlerstore_Model::model_for_index(std::int32_t index)
+Tiddler_Model* Tiddlerstore_Model::model_for_index(std::size_t index)
 {
-    if (index >= 0 && static_cast<std::size_t>(index) < data.size()) {
-        return model_for_tiddler(data[static_cast<std::size_t>(index)].get());
+    if (index < data.size()) {
+        return model_for_tiddler(*data[static_cast<std::size_t>(index)]);
     }
     return nullptr;
 }
 
-Tiddler_Model* Tiddlerstore_Model::model_for_tiddler(Tiddlerstore::Tiddler* t)
+Tiddler_Model* Tiddlerstore_Model::model_for_tiddler(const Tiddlerstore::Tiddler& t)
 {
-    auto it = active_models.find(t);
+    auto it = active_models.find(&t);
     if (it == active_models.end()) {
-        if (Tiddlerstore::is_tiddler_in_store(*t, data)) {
-            it = active_models.insert({t, std::make_unique<Tiddler_Model>(*t)}).first;
-            connect(it->second.get(), &Tiddler_Model::remove_request, this, [this, t] {
-                active_models.erase(t);
-                Tiddlerstore::erase_tiddler_from_store(*t, data);
+        auto store_it = Tiddlerstore::tiddler_pos_in_store(t, data);
+        if (store_it != data.end()) {
+            auto tiddler = store_it->get();
+            it = active_models.insert({tiddler, std::make_unique<Tiddler_Model>(*tiddler)}).first;
+            auto tm = it->second.get();
+            connect(tm, &Tiddler_Model::title_changed,          tm, [this, tm]                          { emit title_changed(tm); });
+            connect(tm, &Tiddler_Model::text_changed,           tm, [this, tm]                          { emit text_changed(tm); });
+            connect(tm, &Tiddler_Model::history_size_changed,   tm, [this, tm]                          { emit history_size_changed(tm); });
+            connect(tm, &Tiddler_Model::tags_changed,           tm, [this, tm]                          { emit tags_changed(tm); });
+            connect(tm, &Tiddler_Model::field_changed,          tm, [this, tm](const char* field_name)  { emit field_changed(tm, field_name); });
+            connect(tm, &Tiddler_Model::field_added,            tm, [this, tm](const char* field_name)  { emit field_added(tm, field_name); });
+            connect(tm, &Tiddler_Model::field_removed,          tm, [this, tm](const char* field_name)  { emit field_removed(tm, field_name); });
+            connect(tm, &Tiddler_Model::fields_reset,           tm, [this, tm]                          { emit fields_reset(tm); });
+            connect(tm, &Tiddler_Model::list_changed,           tm, [this, tm](const char* list_name)   { emit list_changed(tm, list_name); });
+            connect(tm, &Tiddler_Model::list_added,             tm, [this, tm](const char* list_name)   { emit list_added(tm, list_name); });
+            connect(tm, &Tiddler_Model::list_removed,           tm, [this, tm](const char* list_name)   { emit list_removed(tm, list_name); });
+            connect(tm, &Tiddler_Model::lists_reset,            tm, [this, tm]                          { emit lists_reset(tm); });
+            connect(tm, &Tiddler_Model::remove_request,         tm, [this, tm, tiddler] {
+                emit begin_remove(tm);
+                active_models.erase(tiddler);
+                Tiddlerstore::erase_tiddler_from_store(*tiddler, data);
                 emit removed();
             });
-            emit model_created(it->second.get());
+            emit model_created(tm);
         } else {
             return nullptr;
         }
     }
     return it->second.get();
+}
+
+Tiddlerstore::Store_Filter Tiddlerstore_Model::filter()
+{
+    return Tiddlerstore::Store_Filter(data);
+}
+
+std::vector<Tiddler_Model*> Tiddlerstore_Model::filtered_models(const Tiddlerstore::Store_Filter& filter)
+{
+    std::vector<Tiddler_Model*> ret;
+    for (const auto& i : filter.filtered_idx()) {
+        auto model = model_for_index(i);
+        if (model) {
+            ret.push_back(model);
+        }
+    }
+    return ret;
+}
+
+Tiddler_Model* Tiddlerstore_Model::first_filtered_model(const Tiddlerstore::Store_Filter& filter)
+{
+    auto idx = filter.filtered_idx();
+    return idx.empty() ? nullptr : model_for_index(idx.front());
 }

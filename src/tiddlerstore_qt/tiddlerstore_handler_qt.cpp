@@ -187,7 +187,7 @@ void Tiddlerstore_Handler::setup_tiddler_list_view()
     tiddler_list_view->setModel(&title_sort_model);
     tiddler_list_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     connect(tiddler_list_view, &QListView::clicked, tiddler_list_view, [this](const QModelIndex& index) {
-        prepare_open(store[static_cast<std::size_t>(source_row(index.row()))].get());
+        prepare_open(*store[static_cast<std::size_t>(source_row(index.row()))]);
     });
 }
 
@@ -201,7 +201,7 @@ void Tiddlerstore_Handler::setup_main_title_filter()
         connect(main_title_filter_open_action, &QAction::triggered, main_title_filter_open_action, [this] {
             for (int i = 0; i < title_sort_model.rowCount(); i += 1) {
                 if (!tiddler_list_view->isRowHidden(i)) {
-                    prepare_open(store[static_cast<std::size_t>(source_row(i))].get());
+                    prepare_open(*store[static_cast<std::size_t>(source_row(i))]);
                     return;
                 }
             }
@@ -209,11 +209,11 @@ void Tiddlerstore_Handler::setup_main_title_filter()
         main_title_filter_add_action = main_title_filter_edit->addAction(style()->standardIcon(QStyle::SP_FileDialogNewFolder), QLineEdit::LeadingPosition);
         main_title_filter_add_action->setVisible(false);
         connect(main_title_filter_add_action, &QAction::triggered, main_title_filter_add_action, [this] {
-            auto t = store.emplace_back(new Tiddlerstore::Tiddler).get();
+            auto& t = *store.emplace_back(new Tiddlerstore::Tiddler);
             adjust_dirty(true);
-            t->set_title(main_title_filter_edit->text().toStdString());
-            if (t->title().empty()) {
-                t->set_title(tr("New Entry ...").toStdString());
+            t.set_title(main_title_filter_edit->text().toStdString());
+            if (t.title().empty()) {
+                t.set_title(tr("New Entry ...").toStdString());
             }
             main_title_filter_edit->clear();
             prepare_open(t);
@@ -513,7 +513,7 @@ void Tiddlerstore_Handler::connect_model(Tiddler_Model* model)
 
 void Tiddlerstore_Handler::apply_filter()
 {
-    auto idx = Tiddlerstore::apply_filter(store, filter_groups);
+    auto idx = Tiddlerstore::apply_filter(store, filter_groups).filtered_idx();
     for (int i = 0; i < title_sort_model.rowCount(); i += 1) {
         tiddler_list_view->setRowHidden(i, std::find(idx.begin(), idx.end(), source_row(i)) == idx.end());
     }
@@ -564,7 +564,7 @@ void Tiddlerstore_Handler::save_store(const QString& path)
     }
 }
 
-void Tiddlerstore_Handler::prepare_open(Tiddlerstore::Tiddler* t)
+void Tiddlerstore_Handler::prepare_open(Tiddlerstore::Tiddler& t)
 {
     auto model = store_model.model_for_tiddler(t);
     if (model) {

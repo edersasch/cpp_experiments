@@ -23,9 +23,6 @@ public:
     Tiddler_Model* tiddler_model();
     void set_tiddler_model(Tiddler_Model* model);
 
-protected:
-    void showEvent(QShowEvent* event) override;
-
 private:
     /// edit_button will only be shown if the model tm is valid
     void present_edit_button();

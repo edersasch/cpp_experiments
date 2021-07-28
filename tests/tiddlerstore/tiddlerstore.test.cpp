@@ -557,29 +557,38 @@ TEST_F(Tiddlerstore_Test, apply_filter)
     from_json(store_json, s1);
     EXPECT_EQ(3, s1.size());
     Tiddlerstore::Filter_Groups fg1;
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 1, 2}), Tiddlerstore::apply_filter(s1, fg1));
+    auto check_s1_fg1 = [&s1, &fg1](Tiddlerstore::Store_Indexes si) {
+        EXPECT_EQ(si, Tiddlerstore::apply_filter(s1, fg1).filtered_idx());
+        std::vector<Tiddlerstore::Tiddler*> st;
+        for (const auto& i : si) {
+            st.push_back(s1[i].get());
+        }
+        EXPECT_EQ(st, Tiddlerstore::apply_filter(s1, fg1).filtered_tiddlers());
+        EXPECT_EQ(st[0], Tiddlerstore::apply_filter(s1, fg1).first_filtered_tiddler());
+    };
+    check_s1_fg1({0, 1, 2});
     auto sg1 = fg1.emplace_back(new Tiddlerstore::Single_Group).get();
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 1, 2}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({0, 1, 2});
     auto fd1_1 = sg1->emplace_back(new Tiddlerstore::Filter_Data).get();
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 1, 2}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({0, 1, 2});
     fd1_1->key = "c";
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 1, 2}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({0, 1, 2});
     fd1_1->case_sensitive = true;
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({2}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({2});
     fd1_1->negate = true;
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 1}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({0, 1});
     auto sg2 = fg1.emplace_back(new Tiddlerstore::Single_Group).get();
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 1}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({0, 1});
     auto fd2_1 = sg2->emplace_back(new Tiddlerstore::Filter_Data).get();
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 1}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({0, 1});
     fd2_1->key = "CC";
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 1, 2}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({0, 1, 2});
     auto fd1_2 = sg1->emplace_back(new Tiddlerstore::Filter_Data).get();
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 1, 2}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({0, 1, 2});
     fd1_2->filter_type = Tiddlerstore::Filter_Type::Tag;
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 1, 2}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({0, 1, 2});
     fd1_2->key = "bbT1";
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({1, 2}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({1, 2});
     fd1_2->negate = true;
-    EXPECT_EQ(Tiddlerstore::Store_Indexes({0, 2}), Tiddlerstore::apply_filter(s1, fg1));
+    check_s1_fg1({0, 2});
 }

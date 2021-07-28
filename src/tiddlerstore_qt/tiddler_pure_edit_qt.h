@@ -32,9 +32,6 @@ public:
     Tiddler_Model* tiddler_model();
     void set_tiddler_model(Tiddler_Model* model);
 
-protected:
-    void showEvent(QShowEvent* event) override;
-
 private:
     static constexpr int field_stretch_factor = 2;
     static constexpr int list_stretch_factor = field_stretch_factor;

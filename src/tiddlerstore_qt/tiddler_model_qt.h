@@ -43,8 +43,9 @@ signals:
     void remove_request();
 
 public:
-    Tiddlerstore::Tiddler& tiddler() const;
+    const Tiddlerstore::Tiddler& tiddler() const;
     void request_set_tiddler_data(const Tiddlerstore::Tiddler& other);
+    void request_set_tiddler_data(const Tiddler_Model& other);
 
     /// Tiddler API, modifier methods are prefixed with "request_", because they check for change and eventually don't emit the corresponding signal
     std::string title() const;
@@ -81,19 +82,39 @@ public:
     explicit Tiddlerstore_Model(Tiddlerstore::Store& s, QObject* parent = nullptr);
     virtual ~Tiddlerstore_Model() = default;
 
-    Tiddler_Model* add();
-    Tiddler_Model* model_for_index(std::int32_t index);
-    Tiddler_Model* model_for_tiddler(Tiddlerstore::Tiddler* t);
+    Tiddler_Model& add();
+    Tiddler_Model* model_for_index(std::size_t index);
+    Tiddler_Model* model_for_tiddler(const Tiddlerstore::Tiddler& t);
+    Tiddlerstore::Store_Filter filter();
+    std::vector<Tiddler_Model*> filtered_models(const Tiddlerstore::Store_Filter& filter);
+    Tiddler_Model* first_filtered_model(const Tiddlerstore::Store_Filter& filter);
 
 signals:
-    /// a tiddler with the corresponding index in the store was created with the @see add() method; @see model_created() will also be emitted afterwards
-    void added(std::int32_t index);
+    /// a tiddler with the corresponding index in the store was created with the @see add() method; @see model_created() will be emitted before
+    void added(std::size_t index);
 
     /// a model for a tiddler existing in the store was created
     void model_created(Tiddler_Model* model);
 
+    /// a model and its tiddler existing in the store will be removed and deleted
+    void begin_remove(Tiddler_Model* model);
+
     /// a model and its corresponding tiddler were removed
     void removed();
+
+    /// forward all signals a Tiddler_Model has except remove_request which results in the store_model's begin_remove and removed signals
+    void title_changed(Tiddler_Model* model);
+    void text_changed(Tiddler_Model* model);
+    void history_size_changed(Tiddler_Model* model);
+    void tags_changed(Tiddler_Model* model);
+    void field_changed(Tiddler_Model* model, const char* field_name);
+    void field_added(Tiddler_Model* model, const char* field_name);
+    void field_removed(Tiddler_Model* model, const char* field_name);
+    void fields_reset(Tiddler_Model* model);
+    void list_changed(Tiddler_Model* model, const char* list_name);
+    void list_added(Tiddler_Model* model, const char* list_name);
+    void list_removed(Tiddler_Model* model, const char* list_name);
+    void lists_reset(Tiddler_Model* model);
 
 private:
     Tiddlerstore::Store& data;

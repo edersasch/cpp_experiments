@@ -71,7 +71,7 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     connect(accept_button, &QToolButton::clicked, this, [this, discard_action] {
         if (tm) {
             if (current_dirty) {
-                tm->request_set_tiddler_data(work_tm.tiddler());
+                tm->request_set_tiddler_data(work_tm);
                 tm->request_set_title(title_lineedit->text().toStdString());
                 tm->request_set_text(text_edit->toPlainText().toStdString());
                 emit accept_edit();
@@ -162,6 +162,8 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     });
     connect(list_name_lineedit, &QLineEdit::returnPressed, list_add_button, &QToolButton::click);
     connect(list_value_lineedit, &QLineEdit::returnPressed, list_add_button, &QToolButton::click);
+
+    accept_button->hide();
 }
 
 Tiddler_Pure_Edit::~Tiddler_Pure_Edit() = default;
@@ -186,14 +188,6 @@ void Tiddler_Pure_Edit::set_tiddler_model(Tiddler_Model* model)
             set_tiddler_model(nullptr);
         });
     }
-}
-
-// protected
-
-void Tiddler_Pure_Edit::showEvent(QShowEvent* event)
-{
-    QWidget::showEvent(event);
-    present_accept_button();
 }
 
 // private

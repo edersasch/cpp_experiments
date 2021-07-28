@@ -59,7 +59,20 @@ public:
 
     MOCK_METHOD(void, added, (int));
     MOCK_METHOD(void, model_created, (Tiddler_Model*));
+    MOCK_METHOD(void, begin_remove, (Tiddler_Model*));
     MOCK_METHOD(void, removed, ());
+    MOCK_METHOD(void, title_changed, (Tiddler_Model*));
+    MOCK_METHOD(void, text_changed, (Tiddler_Model*));
+    MOCK_METHOD(void, history_size_changed, (Tiddler_Model*));
+    MOCK_METHOD(void, tags_changed, (Tiddler_Model*));
+    MOCK_METHOD(void, field_changed, (Tiddler_Model*, const char*));
+    MOCK_METHOD(void, field_added, (Tiddler_Model*, const char*));
+    MOCK_METHOD(void, field_removed, (Tiddler_Model*, const char*));
+    MOCK_METHOD(void, fields_reset, (Tiddler_Model*));
+    MOCK_METHOD(void, list_changed, (Tiddler_Model*, const char*));
+    MOCK_METHOD(void, list_added, (Tiddler_Model*, const char*));
+    MOCK_METHOD(void, list_removed, (Tiddler_Model*, const char*));
+    MOCK_METHOD(void, lists_reset,(Tiddler_Model*));
 };
 
 class Tiddlerstore_Model_Test

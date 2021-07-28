@@ -10,9 +10,9 @@
 
 Tiddler_Pure_View::Tiddler_Pure_View(QWidget* parent)
     : QWidget(parent)
-    , title_label(new QLabel)
-    , text_browser(new QTextBrowser)
-    , edit_button(new QToolButton)
+    , title_label(new QLabel(this))
+    , text_browser(new QTextBrowser(this))
+    , edit_button(new QToolButton(this))
 {
     auto main_layout = new QVBoxLayout(this);
 
@@ -24,6 +24,7 @@ Tiddler_Pure_View::Tiddler_Pure_View(QWidget* parent)
     main_layout->addLayout(title_layout);
 
     main_layout->addWidget(text_browser);
+    edit_button->hide();
 }
 
 Tiddler_Model* Tiddler_Pure_View::tiddler_model()
@@ -53,14 +54,6 @@ void Tiddler_Pure_View::set_tiddler_model(Tiddler_Model* model)
         }
         present_edit_button();
     }
-}
-
-// protected
-
-void Tiddler_Pure_View::showEvent(QShowEvent* event)
-{
-    QWidget::showEvent(event);
-    present_edit_button();
 }
 
 // private
