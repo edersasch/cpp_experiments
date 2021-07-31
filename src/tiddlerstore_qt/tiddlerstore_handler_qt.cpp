@@ -19,8 +19,6 @@
 
 #include <utility>
 
-#include <QDebug>
-
 Flow_List_View::Flow_List_View(QWidget* parent)
     : QListView(parent)
 {
@@ -44,7 +42,7 @@ void Flow_List_View::mouseMoveEvent(QMouseEvent* event)
         if (index.row() != -1 && state() == QAbstractItemView::NoState) {
             hoverRow = index.row();
             del_button = new QToolButton(this);
-            del_button->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
+            del_button->setStyleSheet("background-color: rgba(255, 255, 255, 0); border: none;");
             auto rect = visualRect(index);
             rect.setWidth(rect.height());
             del_button->setGeometry(rect);
@@ -483,17 +481,22 @@ QToolButton* Tiddlerstore_Handler::add_list_filter(Tiddlerstore::Filter_Data& fi
     auto entry_enter_edit = new QLineEdit(this);
     entry_enter_edit->setClearButtonEnabled(true);
     entry_enter_edit->addAction(style()->standardIcon(QStyle::SP_DialogApplyButton), QLineEdit::LeadingPosition);
-    connect(entry_enter_edit, &QLineEdit::returnPressed, entry_enter_edit, [entry_enter_edit, list_model, list_view]() {
-        if (!entry_enter_edit->text().isEmpty()) {
-            auto item = new QStandardItem(entry_enter_edit->text());
-            list_model->appendRow(item);
-            auto rect = list_view->visualRect(item->index());
-            if (list_view->iconSize().height() > rect.height()) {
-                list_view->setIconSize(QSize(rect.height(), rect.height()));
-            }
-            QPixmap pix(rect.height(), rect.height());
-            pix.fill(QColor(0, 0, 0, 0));
-            item->setIcon(QIcon(pix));
+    auto add_to_list_model = [this, list_model, list_view](const std::string& text) {
+        auto item = new QStandardItem(text.c_str());
+        list_model->appendRow(item);
+        auto rect = list_view->visualRect(item->index());
+        if (list_view->iconSize().height() > rect.height()) {
+            list_view->setIconSize(QSize(rect.height(), rect.height()));
+        }
+        item->setIcon(style()->standardIcon(QStyle::SP_TitleBarCloseButton));
+    };
+    for (const auto& text : filter_data.list_value) {
+        add_to_list_model(text);
+    }
+    connect(entry_enter_edit, &QLineEdit::returnPressed, entry_enter_edit, [add_to_list_model, entry_enter_edit]() {
+        auto text = entry_enter_edit->text().toStdString();
+        if (!text.empty()) {
+            add_to_list_model(text);
             entry_enter_edit->clear();
         }
     });
@@ -501,9 +504,31 @@ QToolButton* Tiddlerstore_Handler::add_list_filter(Tiddlerstore::Filter_Data& fi
     // try to make the empty list view as high as a single line
     list_view->setMinimumSize(QSize(1, entry_enter_edit->height() - entry_enter_edit->contentsMargins().top() - entry_enter_edit->contentsMargins().bottom()));
     single_filter_functions->addWidget(list_handler);
-    connect(list_model, &QStandardItemModel::itemChanged, list_model, [list_model](QStandardItem* item) {
-        if (item->text().isEmpty()) {
-            list_model->removeRow(item->index().row());
+    connect(list_model, &QStandardItemModel::dataChanged, list_model, [&filter_data, list_model](const QModelIndex& topLeft, const QModelIndex& bottomRight) {
+        int i = topLeft.row();
+        int j = bottomRight.row();
+        while (i <= j) {
+            auto text = list_model->item(i)->text();
+            if (text.isEmpty()) {
+                list_model->removeRow(i);
+                j -= 1;
+            } else {
+                if (static_cast<std::size_t>(i) < filter_data.list_value.size()) {
+                    filter_data.list_value[static_cast<std::size_t>(i)] = text.toStdString();
+                }
+                i += 1;
+            }
+        }
+    });
+    connect(list_model, &QStandardItemModel::rowsRemoved, list_model, [&filter_data](const QModelIndex&, int first, int last) {
+        for (int i = first; i <= last && i < static_cast<int>(filter_data.list_value.size()); i += 1) {
+            filter_data.list_value.erase(filter_data.list_value.begin() + i);
+        }
+    });
+    connect(list_model, &QStandardItemModel::rowsInserted, list_model, [&filter_data, list_model](const QModelIndex&, int first, int last) {
+        for (int i = first; i <= last; i += 1) {
+            auto item = list_model->item(i);
+            filter_data.list_value.insert(filter_data.list_value.begin() + i, item ? list_model->item(i)->text().toStdString() : std::string());
         }
     });
     return add_label_del_row(tr("List: ") + filter_data.key.c_str(), single_filter_functions, filter_form_layout);

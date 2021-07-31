@@ -76,7 +76,7 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
                 tm->request_set_text(text_edit->toPlainText().toStdString());
                 emit accept_edit();
             } else {
-                emit discard_action->trigger();
+                discard_action->trigger();
             }
         }
     });
