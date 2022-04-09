@@ -257,6 +257,11 @@ Tiddlerstore::Store_Filter Tiddlerstore_Model::filter()
     return Tiddlerstore::Store_Filter(data);
 }
 
+Tiddlerstore::Store_Filter Tiddlerstore_Model::apply_filter(const Tiddlerstore::Filter_Groups& filter_groups)
+{
+    return Tiddlerstore::apply_filter(data, filter_groups);
+}
+
 std::vector<Tiddler_Model*> Tiddlerstore_Model::filtered_models(const Tiddlerstore::Store_Filter& filter)
 {
     std::vector<Tiddler_Model*> ret;

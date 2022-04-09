@@ -115,7 +115,7 @@ public:
     bool remove_list(const std::string& list_name);
 
     /// true if everything is empty, text_history_size does not matter
-    bool isEmpty();
+    bool is_empty();
 
 private:
     std::string tiddler_title {};

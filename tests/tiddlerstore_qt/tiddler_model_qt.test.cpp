@@ -361,4 +361,49 @@ TEST_F(Tiddlerstore_Model_Test, model_signals)
 TEST_F(Tiddlerstore_Model_Test, filter)
 {
     using testing::_;
+    std::string store_json = R"(
+                             [
+                             {"ti":"aaTidABC","v":1},
+                             {"ti":"bbTidBCD","ta":["bbT1"],"v":1},
+                             {"ti":"ccTidCDE","v":1}
+                             ])";
+    ts = nlohmann::json::parse(store_json);
+    EXPECT_EQ(3, ts.size());
+    Tiddlerstore::Filter_Groups fg1;
+    auto check_fg1 = [this, &fg1](Tiddlerstore::Store_Indexes si) {
+        EXPECT_EQ(si, tsm.apply_filter(fg1).filtered_idx());
+        std::vector<Tiddler_Model*> expected_models;
+        for (const auto& i : si) {
+            expected_models.push_back(tsm.model_for_index(i));
+        }
+        EXPECT_EQ(expected_models, tsm.filtered_models(tsm.apply_filter(fg1)));
+        EXPECT_EQ(expected_models[0], tsm.first_filtered_model(tsm.apply_filter(fg1)));
+    };
+    EXPECT_CALL(tsm_slots, model_created(_)).Times(3);
+    check_fg1({0, 1, 2});
+    auto sg1 = fg1.emplace_back(new Tiddlerstore::Single_Group).get();
+    check_fg1({0, 1, 2});
+    auto fd1_1 = sg1->emplace_back(new Tiddlerstore::Filter_Data).get();
+    check_fg1({0, 1, 2});
+    fd1_1->key = "c";
+    check_fg1({0, 1, 2});
+    fd1_1->case_sensitive = true;
+    check_fg1({2});
+    check_fg1(tsm.filter().title_contains("c", true).filtered_idx());
+    fd1_1->negate = true;
+    check_fg1({0, 1});
+    auto sg2 = fg1.emplace_back(new Tiddlerstore::Single_Group).get();
+    check_fg1({0, 1});
+    auto fd2_1 = sg2->emplace_back(new Tiddlerstore::Filter_Data).get();
+    check_fg1({0, 1});
+    fd2_1->key = "CC";
+    check_fg1({0, 1, 2});
+    auto fd1_2 = sg1->emplace_back(new Tiddlerstore::Filter_Data).get();
+    check_fg1({0, 1, 2});
+    fd1_2->filter_type = Tiddlerstore::Filter_Type::Tag;
+    check_fg1({0, 1, 2});
+    fd1_2->key = "bbT1";
+    check_fg1({1, 2});
+    fd1_2->negate = true;
+    check_fg1({0, 2});
 }

@@ -201,7 +201,7 @@ bool  Tiddler::remove_list(const std::string &list_name)
     return tiddler_lists.erase(list_name);
 }
 
-bool Tiddler::isEmpty()
+bool Tiddler::is_empty()
 {
     return  tiddler_title.empty() &&
             tiddler_text_history.empty() &&
@@ -300,7 +300,7 @@ void from_json(const nlohmann::json& j, Tiddler& t)
 void to_json(nlohmann::json& j, const Store& s)
 {
     for (const auto& t : s) {
-        if (!t->isEmpty()) {
+        if (!t->is_empty()) {
             j.push_back(*t);
         }
     }
@@ -311,7 +311,7 @@ void from_json(const nlohmann::json& j, Store& s)
     for (const auto& elem : j) {
         auto t = s.emplace_back(new Tiddler).get();
         from_json(elem, *t);
-        if (t->isEmpty()) {
+        if (t->is_empty()) {
             s.pop_back();
         }
     }

@@ -245,9 +245,9 @@ TEST_F(Tiddlerstore_Test, store)
 {
     Tiddlerstore::Store s;
     auto t1 = s.emplace_back(new Tiddlerstore::Tiddler).get();
-    EXPECT_EQ(true, t1->isEmpty());
+    EXPECT_EQ(true, t1->is_empty());
     t1->set_title("t1");
-    EXPECT_EQ(false, t1->isEmpty());
+    EXPECT_EQ(false, t1->is_empty());
     t1->set_text("... t1 ...");
     auto t2 = s.emplace_back(new Tiddlerstore::Tiddler).get();
     t2->set_title("t2");
@@ -554,7 +554,6 @@ TEST_F(Tiddlerstore_Test, apply_filter)
                              {"ti":"ccTidCDE","v":1}
                              ])";
     Tiddlerstore::Store s1 = nlohmann::json::parse(store_json);
-    from_json(store_json, s1);
     EXPECT_EQ(3, s1.size());
     Tiddlerstore::Filter_Groups fg1;
     auto check_s1_fg1 = [&s1, &fg1](Tiddlerstore::Store_Indexes si) {
