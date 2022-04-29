@@ -93,7 +93,7 @@ std::string Tiddler::text() const
     return tiddler_text_history.empty() ? std::string() : tiddler_text_history.front();
 }
 
-std::deque<std::string> Tiddler::text_history() const
+std::vector<std::string> Tiddler::text_history() const
 {
     return tiddler_text_history;
 }
@@ -101,29 +101,18 @@ std::deque<std::string> Tiddler::text_history() const
 bool Tiddler::set_text(const std::string &text)
 {
     if (!text.empty()) {
-        auto sz = static_cast<int32_t>(tiddler_text_history.size());
-        if (sz == 0) {
-            tiddler_text_history.push_front(text);
-            return true;
-        }
-        if (text_history_size == 1) {
-            if (tiddler_text_history.front() != text) {
-                tiddler_text_history.front() = text;
-                return true;
-            }
-        } else {
-            auto it = std::find(tiddler_text_history.begin(), tiddler_text_history.end(), text);
-            if (it != tiddler_text_history.begin()) {
-                if (it == tiddler_text_history.end()) {
-                    if (sz == text_history_size) {
-                        tiddler_text_history.pop_back();
-                    }
-                    tiddler_text_history.push_front(text);
+        auto it = std::find(tiddler_text_history.begin(), tiddler_text_history.end(), text);
+        if (it != tiddler_text_history.begin() || tiddler_text_history.empty()) {
+            if (it == tiddler_text_history.end()) {
+                if (static_cast<std::int32_t>(tiddler_text_history.size()) == text_history_size) {
+                    tiddler_text_history.back() = text;
                 } else {
-                    std::rotate(tiddler_text_history.begin(), it, it + 1);
+                    tiddler_text_history.push_back(text);
                 }
-                return true;
+                it = tiddler_text_history.end() - 1;
             }
+            std::rotate(tiddler_text_history.begin(), it, it + 1);
+            return true;
         }
     }
     return false;

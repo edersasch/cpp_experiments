@@ -7,7 +7,6 @@
 
 #include <string>
 #include <vector>
-#include <deque>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -52,7 +51,7 @@ public:
      */
     bool set_history_size(std::int32_t new_history_size);
     std::string text() const;
-    std::deque<std::string> text_history() const;
+    std::vector<std::string> text_history() const;
 
     /**
      * @brief set_text set a new non-empty text, potentially altering the history
@@ -120,7 +119,7 @@ public:
 private:
     std::string tiddler_title {};
     std::int32_t text_history_size {default_text_history_size};
-    std::deque<std::string> tiddler_text_history {};
+    std::vector<std::string> tiddler_text_history {};
     std::vector<std::string> tiddler_tags {};
     std::unordered_map<std::string, std::string> tiddler_fields {};
     std::unordered_map<std::string, std::vector<std::string>> tiddler_lists {};

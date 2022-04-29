@@ -5,7 +5,6 @@
 #include <QLineEdit>
 #include <QStyle>
 #include <QToolButton>
-#include <QListView>
 #include <QStandardPaths>
 #include <QFileDialog>
 #include <QHBoxLayout>
@@ -395,6 +394,7 @@ void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Single_Group& single_g
 void Tiddlerstore_Handler::add_negate_button(Tiddlerstore::Filter_Data& filter_data, QLayout* layout)
 {
     auto negate_button = new QToolButton(this);
+    negate_button->setText("!");
     negate_button->setCheckable(true);
     negate_button->setChecked(filter_data.negate);
     connect(negate_button, &QToolButton::toggled, negate_button, [this, &filter_data](bool checked) {

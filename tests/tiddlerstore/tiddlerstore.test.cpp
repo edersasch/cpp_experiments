@@ -33,7 +33,7 @@ TEST_F(Tiddlerstore_Test, title)
 TEST_F(Tiddlerstore_Test, text_history)
 {
     Tiddlerstore::Tiddler t;
-    auto check_text = [&t](const std::deque<std::string>& expected_text_history, int expected_history_size) {
+    auto check_text = [&t](const std::vector<std::string>& expected_text_history, int expected_history_size) {
         EXPECT_EQ(expected_text_history, t.text_history());
         EXPECT_EQ(expected_history_size, t.history_size());
         Tiddlerstore::Tiddler copy(t);

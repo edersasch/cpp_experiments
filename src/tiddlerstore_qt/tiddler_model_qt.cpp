@@ -79,7 +79,7 @@ std::string Tiddler_Model::text() const
     return t.text();
 }
 
-std::deque<std::string> Tiddler_Model::text_history() const
+std::vector<std::string> Tiddler_Model::text_history() const
 {
     return t.text_history();
 }

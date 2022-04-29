@@ -35,6 +35,7 @@ public:
     explicit Flow_List_View(QWidget* parent = nullptr);
     virtual ~Flow_List_View() override = default;
     void doItemsLayout() override;
+protected:
     void mouseMoveEvent(QMouseEvent* event) override;
     void leaveEvent(QEvent* event) override;
 private:

@@ -5,7 +5,6 @@
 
 #include <QObject>
 
-#include <deque>
 #include <unordered_map>
 #include <memory>
 
@@ -53,7 +52,7 @@ public:
     std::int32_t history_size() const;
     bool request_set_history_size(std::int32_t new_history_size);
     std::string text() const;
-    std::deque<std::string> text_history() const;
+    std::vector<std::string> text_history() const;
     bool request_set_text(const std::string& text);
     std::vector<std::string> tags() const;
     bool has_tag(const std::string& tag) const;
