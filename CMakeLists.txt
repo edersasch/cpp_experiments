@@ -7,6 +7,7 @@ option(EXPERIMENTS_FS_HISTORY_QT                    "Filesystem History"        
 option(EXPERIMENTS_ELEMENTARY_MATH_QML              "Elementary Math"                                           ON)
 option(EXPERIMENTS_QTABLEVIEW_DEMO                  "QTableView Demo"                                           ON)
 option(EXPERIMENTS_TIDDLER_INSPECTOR_QT             "Tiddler Inspector"                                         ON)
+option(EXPERIMENTS_SDL                              "SDL playground"                                            ON)
 
 option(EXPERIMENTS_USE_EXTERNAL_JSON                "Use external nlohmann json library, download otherwise"    OFF)
 
@@ -64,6 +65,12 @@ if(EXPERIMENTS_TIDDLER_INSPECTOR_QT)
         endif()
         include_directories(${nlohmann_json_SOURCE_DIR})
     endif()
+endif()
+
+if(EXPERIMENTS_SDL)
+    include(FindPkgConfig)
+    pkg_search_module(SDL2 sdl2>=2.0.10)
+    pkg_search_module(SDL2IMAGE SDL2_image>=2.0.5)
 endif()
 
 include(GNUInstallDirs)

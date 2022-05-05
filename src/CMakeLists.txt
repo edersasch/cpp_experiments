@@ -44,3 +44,7 @@ endif()
 if(EXPERIMENTS_TIDDLER_INSPECTOR_QT)
     add_subdirectory(tiddler_inspector_qt)
 endif()
+
+if(EXPERIMENTS_SDL AND SDL2_FOUND AND SDL2IMAGE_FOUND)
+    add_subdirectory(sdl)
+endif()

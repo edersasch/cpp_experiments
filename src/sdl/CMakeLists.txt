@@ -1,0 +1,12 @@
+project(sdl)
+include(prjexe)
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+    ${SDL2_INCLUDE_DIRS}
+    ${SDL2IMAGE_INCLUDE_DIRS}
+)
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    ${SDL2_LIBRARIES}
+    ${SDL2IMAGE_LIBRARIES}
+)
