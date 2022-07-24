@@ -41,7 +41,7 @@ void Tiddler_Model::request_set_tiddler_data(const Tiddlerstore::Tiddler &other)
     }
 }
 
-void Tiddler_Model::request_set_tiddler_data(const Tiddler_Model&other)
+void Tiddler_Model::request_set_tiddler_data(const Tiddler_Model &other)
 {
     request_set_tiddler_data(other.t);
 }

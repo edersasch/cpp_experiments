@@ -84,7 +84,7 @@ public:
      * @brief set_field add / remove / modify a field
      * @param field_name if empty nothing will be done
      * @param field_value removes the field if empty
-     * @return @see Change
+     * @return @see Set_Field_List_Change
      */
     Set_Field_List_Change set_field(const std::string& field_name, const std::string& field_value);
 
@@ -102,7 +102,7 @@ public:
      * @brief add / remove / modify a list
      * @param list_name nothing will be done if list_name is empty.
      * @param values empty strings get removed, an empty parameter removes the list, duplicate entries in the values parameter are preserved
-     * @return @see Change
+     * @return @see Set_Field_List_Change
      */
     Set_Field_List_Change set_list(const std::string& list_name, std::vector<std::string> values);
 

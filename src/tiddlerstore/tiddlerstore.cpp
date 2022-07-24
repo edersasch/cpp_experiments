@@ -377,9 +377,10 @@ bool is_tiddler_in_store(const Tiddler& tiddler, const Store& store)
 Store_Filter::Store_Filter(const Store& all)
     : s(all)
 {
-    for (std::size_t i = 0; i < s.size(); i += 1) {
-        idx.push_back(i);
-    }
+    std::generate_n(
+      std::back_inserter(idx), s.size(), [n = 0]() mutable {
+        return n++;
+    });
 }
 
 Store_Filter& Store_Filter::title(const std::string& title_value)
@@ -585,9 +586,9 @@ Store_Filter& Store_Filter::n_list(const std::string& list_name, const std::vect
 Store_Filter& Store_Filter::intersect(const Store_Filter& other)
 {
     if (&s == &other.s) {
-        idx.erase(std::remove_if(idx.begin(), idx.end(), [other](const std::size_t& i) {
-            return std::find(other.idx.begin(), other.idx.end(), i) == other.idx.end();
-        }), idx.end());
+        decltype(idx) dest;
+        std::set_intersection(idx.begin(), idx.end(), other.idx.begin(), other.idx.end(), std::back_inserter(dest));
+        idx = std::move(dest);
     }
     return *this;
 }
@@ -595,11 +596,9 @@ Store_Filter& Store_Filter::intersect(const Store_Filter& other)
 Store_Filter& Store_Filter::join(const Store_Filter& other)
 {
     if (&s == &other.s) {
-        for (const auto& i : other.filtered_idx()) {
-            if (std::find(idx.begin(), idx.end(), i) == idx.end()) {
-                idx.push_back(i);
-            }
-        }
+        decltype(idx) dest;
+        std::set_union(idx.begin(), idx.end(), other.idx.begin(), other.idx.end(), std::back_inserter(dest));
+        idx = std::move(dest);
     }
     return *this;
 }
