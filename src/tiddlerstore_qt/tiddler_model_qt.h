@@ -43,30 +43,31 @@ signals:
 
 public:
     const Tiddlerstore::Tiddler& tiddler() const;
-    void request_set_tiddler_data(const Tiddlerstore::Tiddler& other);
-    void request_set_tiddler_data(const Tiddler_Model& other);
+    void set_tiddler_data(const Tiddlerstore::Tiddler& other);
+    void set_tiddler_data(const Tiddler_Model& other);
+    void request_remove() { emit remove_request(); }
 
-    /// Tiddler API, modifier methods are prefixed with "request_", because they check for change and eventually don't emit the corresponding signal
+    /// Tiddler API
     std::string title() const;
-    bool request_set_title(const std::string& new_title);
+    bool set_title(const std::string& new_title);
     std::int32_t history_size() const;
-    bool request_set_history_size(std::int32_t new_history_size);
+    bool set_history_size(std::int32_t new_history_size);
     std::string text() const;
     std::vector<std::string> text_history() const;
-    bool request_set_text(const std::string& text);
+    bool set_text(const std::string& text);
     std::vector<std::string> tags() const;
     bool has_tag(const std::string& tag) const;
-    bool request_set_tag(const std::string& tag);
-    bool request_remove_tag(const std::string& tag);
+    bool set_tag(const std::string& tag);
+    bool remove_tag(const std::string& tag);
     std::string field_value(const std::string& field_name) const;
     std::unordered_map<std::string, std::string> fields() const;
-    Tiddlerstore::Set_Field_List_Change request_set_field(const std::string& field_name, const std::string& field_val);
-    bool request_remove_field(const std::string& field_name);
+    Tiddlerstore::Set_Field_List_Change set_field(const std::string& field_name, const std::string& field_val);
+    bool remove_field(const std::string& field_name);
     std::vector<std::string> list(const std::string& list_name) const;
     std::unordered_map<std::string, std::vector<std::string>> lists() const;
-    Tiddlerstore::Set_Field_List_Change request_set_list(const std::string& list_name, const std::vector<std::string>& values);
-    bool request_remove_list(const std::string& list_name);
-    void request_remove() { emit remove_request(); }
+    Tiddlerstore::Set_Field_List_Change set_list(const std::string& list_name, const std::vector<std::string>& values);
+    bool remove_list(const std::string& list_name);
+    bool is_empty();
 
 private:
     Tiddlerstore::Tiddler& t;

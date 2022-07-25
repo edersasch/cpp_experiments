@@ -71,9 +71,9 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     connect(accept_button, &QToolButton::clicked, this, [this, discard_action] {
         if (tm) {
             if (current_dirty) {
-                tm->request_set_tiddler_data(work_tm);
-                tm->request_set_title(title_lineedit->text().toStdString());
-                tm->request_set_text(text_edit->toPlainText().toStdString());
+                tm->set_tiddler_data(work_tm);
+                tm->set_title(title_lineedit->text().toStdString());
+                tm->set_text(text_edit->toPlainText().toStdString());
                 emit accept_edit();
             } else {
                 discard_action->trigger();
@@ -113,7 +113,7 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     tags_layout->addWidget(tag_lineedit);
     auto tag_add_action = tag_lineedit->addAction(style()->standardIcon(QStyle::SP_DialogApplyButton), QLineEdit::LeadingPosition);
     connect(tag_add_action, &QAction::triggered, this, [this] {
-        work_tm.request_set_tag(tag_lineedit->text().toStdString());
+        work_tm.set_tag(tag_lineedit->text().toStdString());
     });
     connect(tag_lineedit, &QLineEdit::returnPressed, tag_add_action, &QAction::trigger);
 
@@ -133,7 +133,7 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     main_layout->addWidget(fields_group);
     connect(field_add_button, &QToolButton::clicked, this, [this] {
         if (!field_name_lineedit->text().isEmpty() && !field_value_lineedit->text().isEmpty()) {
-            work_tm.request_set_field(field_name_lineedit->text().toStdString(), field_value_lineedit->text().toStdString());
+            work_tm.set_field(field_name_lineedit->text().toStdString(), field_value_lineedit->text().toStdString());
             field_name_lineedit->setFocus();
         }
     });
@@ -156,7 +156,7 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     main_layout->addWidget(lists_group);
     connect(list_add_button, &QToolButton::clicked, this, [this] {
         if (!list_name_lineedit->text().isEmpty() && !list_value_lineedit->text().isEmpty()) {
-            work_tm.request_set_list(list_name_lineedit->text().toStdString(), {list_value_lineedit->text().toStdString()});
+            work_tm.set_list(list_name_lineedit->text().toStdString(), {list_value_lineedit->text().toStdString()});
             list_name_lineedit->setFocus();
         }
     });
@@ -176,7 +176,7 @@ Tiddler_Model* Tiddler_Pure_Edit::tiddler_model()
 void Tiddler_Pure_Edit::set_tiddler_model(Tiddler_Model* model)
 {
     tm = model;
-    work_tm.request_set_tiddler_data(tm ? tm->tiddler(): Tiddlerstore::Tiddler());
+    work_tm.set_tiddler_data(tm ? tm->tiddler(): Tiddlerstore::Tiddler());
     title_lineedit->setText(work_tm.title().c_str());
     text_edit->setText(work_tm.text().c_str());
     update_present_tags();
@@ -213,7 +213,7 @@ void Tiddler_Pure_Edit::update_present_tags()
     clear_layout(tags_layout);
     for (const auto& tag : work_tm.tags()) {
         connect(deletable_value(tag, tags_layout), &QToolButton::clicked, this, [this, tag] {
-            work_tm.request_remove_tag(tag);
+            work_tm.remove_tag(tag);
         });
     }
     tags_layout->addWidget(tag_lineedit);
@@ -236,7 +236,7 @@ void Tiddler_Pure_Edit::update_present_fields()
         l->addWidget(fieldvaluelabel, field_stretch_factor);
         present_fields_layout->addLayout(l);
         connect(del, &QToolButton::clicked, this, [this, field] {
-            work_tm.request_remove_field(field.first);
+            work_tm.remove_field(field.first);
         });
     }
     update_dirty();
@@ -266,13 +266,13 @@ void Tiddler_Pure_Edit::update_present_lists()
         update_present_list(list.first);
         present_lists_layout->addLayout(l);
         connect(del, &QToolButton::clicked, this, [this, list] {
-            work_tm.request_remove_list(list.first);
+            work_tm.remove_list(list.first);
         });
         connect(ladd_action, &QAction::triggered, this, [this, list, lval] {
             if (!lval->text().isEmpty()) {
                 auto values = work_tm.list(list.first);
                 values.push_back(lval->text().toStdString());
-                work_tm.request_set_list(list.first, values);
+                work_tm.set_list(list.first, values);
             }
         });
         connect(lval, &QLineEdit::returnPressed, ladd_action, &QAction::trigger);
@@ -299,7 +299,7 @@ void Tiddler_Pure_Edit::update_present_list(const std::string& list_name)
                 auto it = std::find(values.begin(), values.end(), lv);
                 if (it != values.end()) {
                     values.erase(it);
-                    work_tm.request_set_list(list_name, values);
+                    work_tm.set_list(list_name, values);
                 }
             });
         }

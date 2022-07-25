@@ -12,7 +12,7 @@ const Tiddlerstore::Tiddler& Tiddler_Model::tiddler() const
     return t;
 }
 
-void Tiddler_Model::request_set_tiddler_data(const Tiddlerstore::Tiddler &other)
+void Tiddler_Model::set_tiddler_data(const Tiddlerstore::Tiddler &other)
 {
     bool title_will_change          = t.title()        != other.title();
     bool history_size_will_change   = t.history_size() != other.history_size();
@@ -41,9 +41,9 @@ void Tiddler_Model::request_set_tiddler_data(const Tiddlerstore::Tiddler &other)
     }
 }
 
-void Tiddler_Model::request_set_tiddler_data(const Tiddler_Model &other)
+void Tiddler_Model::set_tiddler_data(const Tiddler_Model &other)
 {
-    request_set_tiddler_data(other.t);
+    set_tiddler_data(other.t);
 }
 
 std::string Tiddler_Model::title() const
@@ -51,7 +51,7 @@ std::string Tiddler_Model::title() const
     return t.title();
 }
 
-bool Tiddler_Model::request_set_title(const std::string& new_title)
+bool Tiddler_Model::set_title(const std::string& new_title)
 {
     if (t.set_title(new_title)) {
         emit title_changed();
@@ -65,7 +65,7 @@ std::int32_t Tiddler_Model::history_size() const
     return t.history_size();
 }
 
-bool Tiddler_Model::request_set_history_size(std::int32_t new_history_size)
+bool Tiddler_Model::set_history_size(std::int32_t new_history_size)
 {
     if (t.set_history_size(new_history_size)) {
         emit history_size_changed();
@@ -84,7 +84,7 @@ std::vector<std::string> Tiddler_Model::text_history() const
     return t.text_history();
 }
 
-bool Tiddler_Model::request_set_text(const std::string& text)
+bool Tiddler_Model::set_text(const std::string& text)
 {
     if (t.set_text(text)) {
         emit text_changed();
@@ -103,7 +103,7 @@ bool Tiddler_Model::has_tag(const std::string& tag) const
     return t.has_tag(tag);
 }
 
-bool Tiddler_Model::request_set_tag(const std::string& tag)
+bool Tiddler_Model::set_tag(const std::string& tag)
 {
     if (t.set_tag(tag)) {
         emit tags_changed();
@@ -112,7 +112,7 @@ bool Tiddler_Model::request_set_tag(const std::string& tag)
     return false;
 }
 
-bool Tiddler_Model::request_remove_tag(const std::string& tag)
+bool Tiddler_Model::remove_tag(const std::string& tag)
 {
     if (t.remove_tag(tag)) {
         emit tags_changed();
@@ -131,7 +131,7 @@ std::unordered_map<std::string, std::string> Tiddler_Model::fields() const
     return t.fields();
 }
 
-Tiddlerstore::Set_Field_List_Change Tiddler_Model::request_set_field(const std::string& field_name, const std::string& field_val)
+Tiddlerstore::Set_Field_List_Change Tiddler_Model::set_field(const std::string& field_name, const std::string& field_val)
 {
     switch(t.set_field(field_name, field_val)) {
     case Tiddlerstore::Set_Field_List_Change::Add:
@@ -149,7 +149,7 @@ Tiddlerstore::Set_Field_List_Change Tiddler_Model::request_set_field(const std::
     return Tiddlerstore::Set_Field_List_Change::None;
 }
 
-bool Tiddler_Model::request_remove_field(const std::string& field_name)
+bool Tiddler_Model::remove_field(const std::string& field_name)
 {
     if (t.remove_field(field_name)) {
         emit field_removed(field_name.c_str());
@@ -168,7 +168,7 @@ std::unordered_map<std::string, std::vector<std::string>> Tiddler_Model::lists()
     return t.lists();
 }
 
-Tiddlerstore::Set_Field_List_Change Tiddler_Model::request_set_list(const std::string& list_name, const std::vector<std::string>& values)
+Tiddlerstore::Set_Field_List_Change Tiddler_Model::set_list(const std::string& list_name, const std::vector<std::string>& values)
 {
     switch(t.set_list(list_name, values)) {
     case Tiddlerstore::Set_Field_List_Change::Add:
@@ -186,13 +186,18 @@ Tiddlerstore::Set_Field_List_Change Tiddler_Model::request_set_list(const std::s
     return Tiddlerstore::Set_Field_List_Change::None;
 }
 
-bool Tiddler_Model::request_remove_list(const std::string& list_name)
+bool Tiddler_Model::remove_list(const std::string& list_name)
 {
     if (t.remove_list(list_name)) {
         emit list_removed(list_name.c_str());
         return true;
     }
     return false;
+}
+
+bool Tiddler_Model::is_empty()
+{
+    return t.is_empty();
 }
 
 Tiddlerstore_Model::Tiddlerstore_Model(Tiddlerstore::Store& s, QObject* parent)

@@ -387,6 +387,7 @@ TEST_F(Tiddlerstore_Test, filter_title)
     Tiddlerstore::Store_Filter f1(s);
     f1.title_contains("c");
     EXPECT_EQ(f1.filtered_idx(), Tiddlerstore::Store_Indexes({2, 4, 5, 6}));
+    Tiddlerstore::Store_Filter f1_copy = f1;
     Tiddlerstore::Store_Filter f2(s);
     f2.title_contains("b", true);
     EXPECT_EQ(f2.filtered_idx(), Tiddlerstore::Store_Indexes({1, 3, 4, 5}));
@@ -396,6 +397,7 @@ TEST_F(Tiddlerstore_Test, filter_title)
     f3.title_contains("C", true);
     f1.intersect(f3);
     EXPECT_EQ(f1.filtered_idx(), Tiddlerstore::Store_Indexes({6}));
+    EXPECT_EQ(f1_copy.filtered_idx(), Tiddlerstore::Store_Indexes({2, 4, 5, 6}));
 }
 
 TEST_F(Tiddlerstore_Test, filter_text)
