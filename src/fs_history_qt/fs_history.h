@@ -8,7 +8,8 @@
 
 #include <algorithm>
 
-auto move_to_front = [](auto& sequence, std::int32_t pos) {
+template<typename T>
+void move_to_front(T& sequence, std::int32_t pos) {
     auto it = sequence.begin() + pos;
     std::rotate(sequence.begin(), it, it + 1);
 };
