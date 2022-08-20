@@ -86,9 +86,8 @@ public:
     Tiddler_Model* model_for_index(std::size_t index);
     Tiddler_Model* model_for_tiddler(const Tiddlerstore::Tiddler& t);
     Tiddlerstore::Store_Filter filter();
-    Tiddlerstore::Store_Filter apply_filter(const Tiddlerstore::Filter_Groups& filter_groups);
-    std::vector<Tiddler_Model*> filtered_models(const Tiddlerstore::Store_Filter& filter);
-    Tiddler_Model* first_filtered_model(const Tiddlerstore::Store_Filter& filter);
+    std::vector<Tiddler_Model*> filtered_models(Tiddlerstore::Store_Filter& filter);
+    Tiddler_Model* first_filtered_model(Tiddlerstore::Store_Filter& filter);
 
 signals:
     /// a tiddler with the corresponding index in the store was created with the @see add() method; @see model_created() will be emitted before

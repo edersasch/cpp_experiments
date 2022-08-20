@@ -12,6 +12,7 @@ class Tiddler;
 using Store = std::vector<std::unique_ptr<Tiddler>>;
 using Store_Indexes = std::vector<std::size_t>;
 class Store_Filter;
+class Filter_Group;
 
 enum class Set_Field_List_Change
 {
@@ -24,28 +25,31 @@ enum class Set_Field_List_Change
 enum class Filter_Type
 {
     Title,
+    Title_Contains,
     Text,
+    Text_Contains,
     Tag,
+    Tagged,
     Field,
     List
 };
 
-struct Filter_Data
+struct Filter_Element
 {
     Filter_Type filter_type {Filter_Type::Title};
     bool negate {false};
-    /// title, text, tag, field name, list name
+    /// for all types except Tagged
     std::string key {};
     /// for type Field
     std::string field_value {};
     /// for type List
     std::vector<std::string> list_value {};
-    /// for title, text
+    /// for types Title_Contains, Text_Contains
     bool case_sensitive {false};
 };
 
-using Single_Group = std::vector<std::unique_ptr<Filter_Data>>;
-using Filter_Groups = std::vector<std::unique_ptr<Single_Group>>;
+using Filter_Elements = std::vector<Filter_Element>;
+using Filter_Groups = std::vector<std::unique_ptr<Filter_Elements>>;
 
 }
 

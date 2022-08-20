@@ -26,8 +26,8 @@ TEST_F(Tiddlerstore_Test, title)
     std::string othertitle = "othertitle";
     check_title(testtitle);
     check_title(othertitle);
-    EXPECT_EQ(false, t.set_title(""));
-    EXPECT_EQ(othertitle, t.title());
+    EXPECT_EQ(false, t.set_title(othertitle));
+    check_title("");
 }
 
 TEST_F(Tiddlerstore_Test, text_history)
@@ -64,27 +64,27 @@ TEST_F(Tiddlerstore_Test, text_history)
     check_text({will_disappear_text}, 1);
     EXPECT_EQ(false, t.set_history_size(0)); // shall stay at 1
     check_text({will_disappear_text}, 1);
-    EXPECT_EQ(true, t.set_history_size(4));
+    EXPECT_EQ(true, t.set_history_size(5));
     EXPECT_EQ(true, t.set_text(a_text));
-    check_text({a_text, will_disappear_text}, 4);
+    check_text({a_text, will_disappear_text}, 5);
     EXPECT_EQ(false, t.set_text(a_text));
-    check_text({a_text, will_disappear_text}, 4);
-    EXPECT_EQ(false, t.set_text(""));
-    check_text({a_text, will_disappear_text}, 4);
+    check_text({a_text, will_disappear_text}, 5);
+    EXPECT_EQ(true, t.set_text(""));
+    check_text({"", a_text, will_disappear_text}, 5);
     EXPECT_EQ(true, t.set_text(b_text));
-    check_text({b_text, a_text, will_disappear_text}, 4);
+    check_text({b_text, "", a_text, will_disappear_text}, 5);
     EXPECT_EQ(true, t.set_text(c_text));
-    check_text({c_text, b_text, a_text, will_disappear_text}, 4);
+    check_text({c_text, b_text, "", a_text, will_disappear_text}, 5);
     EXPECT_EQ(true, t.set_text(a_text));
-    check_text({a_text, c_text, b_text, will_disappear_text}, 4);
+    check_text({a_text, c_text, b_text, "", will_disappear_text}, 5);
     EXPECT_EQ(true, t.set_history_size(3));
     check_text({a_text, c_text, b_text}, 3);
     EXPECT_EQ(true, t.set_text(b_text));
     check_text({b_text, a_text, c_text}, 3);
     EXPECT_EQ(true, t.set_text(d_text));
     check_text({d_text, b_text, a_text}, 3);
-    EXPECT_EQ(false, t.set_text(""));
-    check_text({d_text, b_text, a_text}, 3);
+    EXPECT_EQ(true, t.set_text(""));
+    check_text({"", d_text, b_text}, 3);
 }
 
 TEST_F(Tiddlerstore_Test, tags)
@@ -273,10 +273,14 @@ TEST_F(Tiddlerstore_Test, store)
     EXPECT_EQ(true, Tiddlerstore::save_store_to_file(s, tname)); // empty tiddler is not saved ...
     auto fclone2 = Tiddlerstore::open_store_from_file(tname); // ... but even if it was it would not be added to the store
     EXPECT_EQ(s.size() - 1, fclone2.size());
-    std::string store_json = R"([{"ti":"aa","v":1},{"ti":"bb","v":1},{"th":[""],"ti":"","v":1}])"; // last tiddler object is empty
+    std::string store_json = R"([{"ti":"aa","v":1},{"ti":"bb","v":1},{"th":[],"ti":"","v":1}])"; // last tiddler object is empty
     Tiddlerstore::Store s2 = nlohmann::json::parse(store_json);
     from_json(store_json, s2);
     EXPECT_EQ(2, s2.size());
+    store_json = R"([{"ti":"aa","v":1},{"ti":"bb","v":1},{"th":[""],"ti":"","v":1}])"; // last tiddler object has a valid text history, but is still considered empty
+    Tiddlerstore::Store s3 = nlohmann::json::parse(store_json);
+    from_json(store_json, s2);
+    EXPECT_EQ(2, s3.size());
 }
 
 TEST_F(Tiddlerstore_Test, store_tags)
@@ -353,6 +357,30 @@ TEST_F(Tiddlerstore_Test, store_pos_erase)
     EXPECT_EQ(2, s.size());
 }
 
+TEST_F(Tiddlerstore_Test, filter_invalidation)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t1->set_title("a");
+    auto t2 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t2->set_title("b");
+    auto t3 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t3->set_title("c");
+    auto f1 = Tiddlerstore::Store_Filter(s);
+    auto idx1 = f1.filtered_idx();
+    EXPECT_EQ(idx1.size(), 3); // filter without elements matches all
+    f1.append(Tiddlerstore::title_contains("a"));
+    auto idx2 = f1.filtered_idx();
+    EXPECT_EQ(idx2.size(), 1);
+    auto t4 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t4->set_title("aa");
+    auto idx3 = f1.filtered_idx();
+    EXPECT_EQ(idx2.size(), idx3.size()); // no change, filter does not know about store change
+    f1.invalidate();
+    auto idx4 = f1.filtered_idx();
+    EXPECT_EQ(idx4.size(), 2);
+}
+
 TEST_F(Tiddlerstore_Test, filter_title)
 {
     Tiddlerstore::Store s;
@@ -370,33 +398,35 @@ TEST_F(Tiddlerstore_Test, filter_title)
     t6->set_title("abc");
     auto t7 = s.emplace_back(new Tiddlerstore::Tiddler).get();
     t7->set_title("ABC");
-    auto r1 = Tiddlerstore::Store_Filter(s).title("a").filtered_idx();
+    auto r1 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::title("a")).filtered_idx();
     EXPECT_EQ(r1, Tiddlerstore::Store_Indexes{0});
-    auto r2 = Tiddlerstore::Store_Filter(s).title("b").filtered_idx();
+    auto r2 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::title("b")).filtered_idx();
     EXPECT_EQ(r2, Tiddlerstore::Store_Indexes{1});
-    auto r3 = Tiddlerstore::Store_Filter(s).n_title("a").filtered_idx();
+    auto r3 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_title("a")).filtered_idx();
     EXPECT_EQ(r3, Tiddlerstore::Store_Indexes({1, 2, 3, 4, 5, 6}));
-    auto r4 = Tiddlerstore::Store_Filter(s).title_contains("a").filtered_idx();
+    auto r4 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::title_contains("a")).filtered_idx();
     EXPECT_EQ(r4, Tiddlerstore::Store_Indexes({0, 3, 5, 6}));
-    auto r5 = Tiddlerstore::Store_Filter(s).n_title_contains("a").filtered_idx();
+    auto r5 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_title_contains("a")).filtered_idx();
     EXPECT_EQ(r5, Tiddlerstore::Store_Indexes({1, 2, 4}));
-    auto r6 = Tiddlerstore::Store_Filter(s).title_contains("A", true).filtered_idx();
+    auto r6 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::title_contains("A", true)).filtered_idx();
     EXPECT_EQ(r6, Tiddlerstore::Store_Indexes({6}));
-    auto r7 = Tiddlerstore::Store_Filter(s).n_title_contains("A", true).filtered_idx();
+    auto r7 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_title_contains("A", true)).filtered_idx();
     EXPECT_EQ(r7, Tiddlerstore::Store_Indexes({0, 1, 2, 3, 4, 5}));
-    Tiddlerstore::Store_Filter f1(s);
-    f1.title_contains("c");
+    Tiddlerstore::Filter_Group fg(s);
+    Tiddlerstore::Store_Filter& f1 = fg.append();
+    f1.append(Tiddlerstore::title_contains("c"));
     EXPECT_EQ(f1.filtered_idx(), Tiddlerstore::Store_Indexes({2, 4, 5, 6}));
     Tiddlerstore::Store_Filter f1_copy = f1;
-    Tiddlerstore::Store_Filter f2(s);
-    f2.title_contains("b", true);
+    Tiddlerstore::Store_Filter& f2 = fg.append();
+    f2.append(Tiddlerstore::title_contains("b", true));
     EXPECT_EQ(f2.filtered_idx(), Tiddlerstore::Store_Indexes({1, 3, 4, 5}));
-    f1.join(f2);
-    EXPECT_EQ(f1.filtered_idx(), Tiddlerstore::Store_Indexes({1, 2, 3, 4, 5, 6}));
-    Tiddlerstore::Store_Filter f3(s);
-    f3.title_contains("C", true);
-    f1.intersect(f3);
-    EXPECT_EQ(f1.filtered_idx(), Tiddlerstore::Store_Indexes({6}));
+    auto res = fg.filtered_tiddlers();
+    std::vector<Tiddlerstore::Tiddler*> exp;
+    for (auto i : {1, 2, 3, 4, 5, 6}) {
+        exp.push_back(s[i].get());
+    }
+    EXPECT_EQ(res, exp);
+    EXPECT_EQ(f1.filtered_idx(), Tiddlerstore::Store_Indexes({2, 4, 5, 6}));
     EXPECT_EQ(f1_copy.filtered_idx(), Tiddlerstore::Store_Indexes({2, 4, 5, 6}));
 }
 
@@ -417,32 +447,33 @@ TEST_F(Tiddlerstore_Test, filter_text)
     t6->set_text("abc");
     auto t7 = s.emplace_back(new Tiddlerstore::Tiddler).get();
     t7->set_text("ABC");
-    auto r1 = Tiddlerstore::Store_Filter(s).text("a").filtered_idx();
+    auto r1 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::text("a")).filtered_idx();
     EXPECT_EQ(r1, Tiddlerstore::Store_Indexes{0});
-    auto r2 = Tiddlerstore::Store_Filter(s).text("b").filtered_idx();
+    auto r2 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::text("b")).filtered_idx();
     EXPECT_EQ(r2, Tiddlerstore::Store_Indexes{1});
-    auto r3 = Tiddlerstore::Store_Filter(s).n_text("a").filtered_idx();
+    auto r3 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_text("a")).filtered_idx();
     EXPECT_EQ(r3, Tiddlerstore::Store_Indexes({1, 2, 3, 4, 5, 6}));
-    auto r4 = Tiddlerstore::Store_Filter(s).text_contains("a").filtered_idx();
+    auto r4 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::text_contains("a")).filtered_idx();
     EXPECT_EQ(r4, Tiddlerstore::Store_Indexes({0, 3, 5, 6}));
-    auto r5 = Tiddlerstore::Store_Filter(s).n_text_contains("a").filtered_idx();
+    auto r5 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_text_contains("a")).filtered_idx();
     EXPECT_EQ(r5, Tiddlerstore::Store_Indexes({1, 2, 4}));
-    auto r6 = Tiddlerstore::Store_Filter(s).text_contains("A", true).filtered_idx();
+    auto r6 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::text_contains("A", true)).filtered_idx();
     EXPECT_EQ(r6, Tiddlerstore::Store_Indexes({6}));
-    auto r7 = Tiddlerstore::Store_Filter(s).n_text_contains("A", true).filtered_idx();
+    auto r7 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_text_contains("A", true)).filtered_idx();
     EXPECT_EQ(r7, Tiddlerstore::Store_Indexes({0, 1, 2, 3, 4, 5}));
-    Tiddlerstore::Store_Filter f1(s);
-    f1.text_contains("c");
+    Tiddlerstore::Filter_Group fg(s);
+    Tiddlerstore::Store_Filter& f1 = fg.append();
+    f1.append(Tiddlerstore::text_contains("c"));
     EXPECT_EQ(f1.filtered_idx(), Tiddlerstore::Store_Indexes({2, 4, 5, 6}));
-    Tiddlerstore::Store_Filter f2(s);
-    f2.text_contains("b", true);
+    Tiddlerstore::Store_Filter& f2 = fg.append();
+    f2.append(Tiddlerstore::text_contains("b", true));
     EXPECT_EQ(f2.filtered_idx(), Tiddlerstore::Store_Indexes({1, 3, 4, 5}));
-    f1.join(f2);
-    EXPECT_EQ(f1.filtered_idx(), Tiddlerstore::Store_Indexes({1, 2, 3, 4, 5, 6}));
-    Tiddlerstore::Store_Filter f3(s);
-    f3.text_contains("C", true);
-    f1.intersect(f3);
-    EXPECT_EQ(f1.filtered_idx(), Tiddlerstore::Store_Indexes({6}));
+    auto res = fg.filtered_tiddlers();
+    std::vector<Tiddlerstore::Tiddler*> exp;
+    for (auto i : {1, 2, 3, 4, 5, 6}) {
+        exp.push_back(s[i].get());
+    }
+    EXPECT_EQ(res, exp);
 }
 
 TEST_F(Tiddlerstore_Test, filter_tags)
@@ -460,24 +491,24 @@ TEST_F(Tiddlerstore_Test, filter_tags)
     t3->set_tag("c");
     t3->set_tag("d");
     t3->set_tag("e");
-    auto r1 = Tiddlerstore::Store_Filter(s).tag("a").filtered_idx();
+    auto r1 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::tag("a")).filtered_idx();
     EXPECT_EQ(1, r1.size());
-    auto r2 = Tiddlerstore::Store_Filter(s).tag("b").filtered_idx();
+    auto r2 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::tag("b")).filtered_idx();
     EXPECT_EQ(2, r2.size());
-    auto r3 = Tiddlerstore::Store_Filter(s).tag("c").filtered_idx();
+    auto r3 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::tag("c")).filtered_idx();
     EXPECT_EQ(3, r3.size());
-    auto r4 = Tiddlerstore::Store_Filter(s).tag("d").filtered_idx();
+    auto r4 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::tag("d")).filtered_idx();
     EXPECT_EQ(2, r4.size());
-    auto r5 = Tiddlerstore::Store_Filter(s).n_tag("d").filtered_idx();
+    auto r5 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_tag("d")).filtered_idx();
     EXPECT_EQ(1, r5.size());
-    auto r6 = Tiddlerstore::Store_Filter(s).n_tag("e").filtered_idx();
+    auto r6 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_tag("e")).filtered_idx();
     EXPECT_EQ(2, r6.size());
-    auto r7 = Tiddlerstore::Store_Filter(s).n_tagged().filtered_idx();
+    auto r7 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_tagged()).filtered_idx();
     EXPECT_EQ(0, r7.size());
     s.emplace_back(new Tiddlerstore::Tiddler).get();
-    auto r8 = Tiddlerstore::Store_Filter(s).n_tagged().filtered_idx();
+    auto r8 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_tagged()).filtered_idx();
     EXPECT_EQ(1, r8.size());
-    auto r9 = Tiddlerstore::Store_Filter(s).tagged().filtered_idx();
+    auto r9 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::tagged()).filtered_idx();
     EXPECT_EQ(3, r9.size());
 }
 
@@ -496,21 +527,21 @@ TEST_F(Tiddlerstore_Test, filter_fields)
     t3->set_field("c", "c_field");
     t3->set_field("d", "d_field3");
     t3->set_field("e", "e_field");
-    auto r1 = Tiddlerstore::Store_Filter(s).field("a").filtered_idx();
+    auto r1 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::field("a")).filtered_idx();
     EXPECT_EQ(1, r1.size());
-    auto r2 = Tiddlerstore::Store_Filter(s).field("b").filtered_idx();
+    auto r2 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::field("b")).filtered_idx();
     EXPECT_EQ(2, r2.size());
-    auto r3 = Tiddlerstore::Store_Filter(s).field("c").filtered_idx();
+    auto r3 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::field("c")).filtered_idx();
     EXPECT_EQ(3, r3.size());
-    auto r4 = Tiddlerstore::Store_Filter(s).field("d").filtered_idx();
+    auto r4 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::field("d")).filtered_idx();
     EXPECT_EQ(2, r4.size());
-    auto r5 = Tiddlerstore::Store_Filter(s).n_field("d").filtered_idx();
+    auto r5 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_field("d")).filtered_idx();
     EXPECT_EQ(1, r5.size());
-    auto r6 = Tiddlerstore::Store_Filter(s).n_field("e").filtered_idx();
+    auto r6 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_field("e")).filtered_idx();
     EXPECT_EQ(2, r6.size());
-    auto r7 = Tiddlerstore::Store_Filter(s).field("d", "d_field2").filtered_idx();
+    auto r7 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::field("d", "d_field2")).filtered_idx();
     EXPECT_EQ(1, r7.size());
-    auto r8 = Tiddlerstore::Store_Filter(s).field("d", "not there").filtered_idx();
+    auto r8 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::field("d", "not there")).filtered_idx();
     EXPECT_EQ(0, r8.size());
 }
 
@@ -529,25 +560,25 @@ TEST_F(Tiddlerstore_Test, filter_lists)
     t3->set_list("c", {"c3_1", "c3_2", "c3_3"});
     t3->set_list("d", {"d3_1", "d3_2", "d3_3"});
     t3->set_list("e", {"e3_1", "e3_2", "e3_3"});
-    auto r1 = Tiddlerstore::Store_Filter(s).list("a").filtered_idx();
+    auto r1 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::list("a")).filtered_idx();
     EXPECT_EQ(1, r1.size());
-    auto r2 = Tiddlerstore::Store_Filter(s).list("b").filtered_idx();
+    auto r2 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::list("b")).filtered_idx();
     EXPECT_EQ(2, r2.size());
-    auto r3 = Tiddlerstore::Store_Filter(s).list("c").filtered_idx();
+    auto r3 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::list("c")).filtered_idx();
     EXPECT_EQ(3, r3.size());
-    auto r4 = Tiddlerstore::Store_Filter(s).list("d").filtered_idx();
+    auto r4 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::list("d")).filtered_idx();
     EXPECT_EQ(2, r4.size());
-    auto r5 = Tiddlerstore::Store_Filter(s).n_list("d").filtered_idx();
+    auto r5 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_list("d")).filtered_idx();
     EXPECT_EQ(1, r5.size());
-    auto r6 = Tiddlerstore::Store_Filter(s).n_list("e").filtered_idx();
+    auto r6 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::n_list("e")).filtered_idx();
     EXPECT_EQ(2, r6.size());
-    auto r7 = Tiddlerstore::Store_Filter(s).list("d", {"d2_1", "d2_3"}).filtered_idx();
+    auto r7 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::list("d", {"d2_1", "d2_3"})).filtered_idx();
     EXPECT_EQ(1, r7.size());
-    auto r8 = Tiddlerstore::Store_Filter(s).list("d", {"d3_2", "not there"}).filtered_idx();
+    auto r8 = Tiddlerstore::Store_Filter(s).append(Tiddlerstore::list("d", {"d3_2", "not there"})).filtered_idx();
     EXPECT_EQ(0, r8.size());
 }
 
-TEST_F(Tiddlerstore_Test, apply_filter)
+TEST_F(Tiddlerstore_Test, filter_copy_join)
 {
     std::string store_json = R"(
                              [
@@ -557,39 +588,93 @@ TEST_F(Tiddlerstore_Test, apply_filter)
                              ])";
     Tiddlerstore::Store s1 = nlohmann::json::parse(store_json);
     EXPECT_EQ(3, s1.size());
-    Tiddlerstore::Filter_Groups fg1;
-    auto check_s1_fg1 = [&s1, &fg1](Tiddlerstore::Store_Indexes si) {
-        EXPECT_EQ(si, Tiddlerstore::apply_filter(s1, fg1).filtered_idx());
+    Tiddlerstore::Filter_Group fg(s1);
+    Tiddlerstore::Store_Filter& sf1 = fg.append();
+    auto check_s1_sf1 = [&s1, &sf1](Tiddlerstore::Store_Indexes si) {
+        EXPECT_EQ(si, sf1.filtered_idx());
         std::vector<Tiddlerstore::Tiddler*> st;
         for (const auto& i : si) {
             st.push_back(s1[i].get());
         }
-        EXPECT_EQ(st, Tiddlerstore::apply_filter(s1, fg1).filtered_tiddlers());
-        EXPECT_EQ(st[0], Tiddlerstore::apply_filter(s1, fg1).first_filtered_tiddler());
+        EXPECT_EQ(st, sf1.filtered_tiddlers());
+        if (!st.empty()) {
+            EXPECT_EQ(st[0], sf1.first_filtered_tiddler());
+        }
     };
-    check_s1_fg1({0, 1, 2});
-    auto sg1 = fg1.emplace_back(new Tiddlerstore::Single_Group).get();
-    check_s1_fg1({0, 1, 2});
-    auto fd1_1 = sg1->emplace_back(new Tiddlerstore::Filter_Data).get();
-    check_s1_fg1({0, 1, 2});
-    fd1_1->key = "c";
-    check_s1_fg1({0, 1, 2});
-    fd1_1->case_sensitive = true;
-    check_s1_fg1({2});
-    fd1_1->negate = true;
-    check_s1_fg1({0, 1});
-    auto sg2 = fg1.emplace_back(new Tiddlerstore::Single_Group).get();
-    check_s1_fg1({0, 1});
-    auto fd2_1 = sg2->emplace_back(new Tiddlerstore::Filter_Data).get();
-    check_s1_fg1({0, 1});
-    fd2_1->key = "CC";
-    check_s1_fg1({0, 1, 2});
-    auto fd1_2 = sg1->emplace_back(new Tiddlerstore::Filter_Data).get();
-    check_s1_fg1({0, 1, 2});
-    fd1_2->filter_type = Tiddlerstore::Filter_Type::Tag;
-    check_s1_fg1({0, 1, 2});
-    fd1_2->key = "bbT1";
-    check_s1_fg1({1, 2});
-    fd1_2->negate = true;
-    check_s1_fg1({0, 2});
+    check_s1_sf1({0, 1, 2});
+    auto sf1_copy = sf1;
+    sf1.append(Tiddlerstore::title("c"));
+    check_s1_sf1({});
+    sf1.assign(sf1_copy);
+    check_s1_sf1({0, 1, 2});
+    sf1.append(Tiddlerstore::title_contains("c"));
+    check_s1_sf1({0, 1, 2});
+    sf1.assign(sf1_copy);
+    sf1.append(Tiddlerstore::title_contains("c", true));
+    check_s1_sf1({2});
+    sf1.assign(sf1_copy);
+    check_s1_sf1({0, 1, 2});
+    sf1.append(Tiddlerstore::n_title_contains("c", true));
+    check_s1_sf1({0, 1});
+    sf1_copy.assign(sf1);
+    sf1.append(Tiddlerstore::tag("bbT1"));
+    check_s1_sf1({1});
+    sf1.assign(sf1_copy);
+    sf1.append(Tiddlerstore::n_tag("bbT1"));
+    check_s1_sf1({0});
+    Tiddlerstore::Store_Filter& sf2 = fg.append();
+    sf2.append(Tiddlerstore::title_contains("CC"));
+    auto res = fg.filtered_tiddlers();
+    std::vector<Tiddlerstore::Tiddler*> exp;
+    for (auto i : {0, 2}) {
+        exp.push_back(s1[i].get());
+    }
+    EXPECT_EQ(res, exp);
+}
+
+TEST_F(Tiddlerstore_Test, filter_group)
+{
+    Tiddlerstore::Store s;
+    auto t1 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t1->set_text("a");
+    auto t2 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t2->set_text("ab");
+    auto t3 = s.emplace_back(new Tiddlerstore::Tiddler).get();
+    t3->set_text("c");
+
+    Tiddlerstore::Filter_Group fg(s);
+    std::vector<Tiddlerstore::Tiddler*> expected_tiddlers_none;
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_none); // filter group without filters returns nothing
+    auto& f1 = fg.append();
+    std::vector<Tiddlerstore::Tiddler*> expected_tiddlers_first;
+    expected_tiddlers_first.push_back(s[0].get());
+    std::vector<Tiddlerstore::Tiddler*> expected_tiddlers_first_two = expected_tiddlers_first;
+    expected_tiddlers_first_two.push_back(s[1].get());
+    auto expected_tiddlers_all = expected_tiddlers_first_two;
+    expected_tiddlers_all.push_back(s[2].get());
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_all); // f1 has no element, no filtering, matches all
+    f1.append(Tiddlerstore::Filter_Element());
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_all); // title is empty everythwere, matches all
+    f1.set_element(0, Tiddlerstore::Filter_Element{Tiddlerstore::Filter_Type::Text}); // text is not empty, matches nothing
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_none);
+    f1.set_element(0, Tiddlerstore::Filter_Element{Tiddlerstore::Filter_Type::Text_Contains}); // empty text is contained everywhere, matches all
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_all);
+    f1.set_element(0, Tiddlerstore::text_contains("a"));
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_first_two);
+    f1.append(Tiddlerstore::text("a"));
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_first);
+    f1.remove(1);
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_first_two);
+    auto& f2 = fg.append();
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_all); // f2 has no element, no filtering, matches all
+    f2.append(Tiddlerstore::Filter_Element());
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_all); // title is empty everythwere, matches all
+    f2.set_element(0, Tiddlerstore::Filter_Element{Tiddlerstore::Filter_Type::Text});
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_first_two); // text is not empty, matches nothing ORed with f1 result
+    f2.set_element(0, Tiddlerstore::Filter_Element{Tiddlerstore::Filter_Type::Text_Contains});
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_all); // empty text is contained everywhere, matches all
+    f2.set_element(0, Tiddlerstore::text("a"));
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_first_two);
+    f2.set_element(0, Tiddlerstore::text("c"));
+    EXPECT_EQ(fg.filtered_tiddlers(), expected_tiddlers_all);
 }

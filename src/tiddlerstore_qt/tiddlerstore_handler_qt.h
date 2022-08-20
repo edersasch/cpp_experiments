@@ -7,7 +7,6 @@
 #include <QWidget>
 #include <QStringListModel>
 #include <QStandardItemModel>
-#include <QSortFilterProxyModel>
 #include <QListView>
 
 #include <unordered_map>
@@ -74,17 +73,16 @@ private:
     QHBoxLayout* setup_toolbar();
     void setup_load_button();
     QToolButton* setup_save_button();
-    void setup_tiddler_list_view();
     void setup_main_title_filter();
     void setup_filter();
-    void add_single_group(Tiddlerstore::Single_Group& single_group);
-    void add_negate_button(Tiddlerstore::Filter_Data& filter_data, QLayout* layout);
+    void add_single_group(Tiddlerstore::Store_Filter& filter);
+    void add_negate_button(Tiddlerstore::Store_Filter& filter, std::size_t pos, QLayout* layout);
     QToolButton* add_label_del_row(const QString& text, QLayout* single_filter_functions, QFormLayout* filter_form_layout);
-    QToolButton* add_title_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout);
-    QToolButton* add_text_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout);
-    QToolButton* add_tag_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout);
-    QToolButton* add_field_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout);
-    QToolButton* add_list_filter(Tiddlerstore::Filter_Data& filter_data, QFormLayout* filter_form_layout);
+    QToolButton* add_title_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
+    QToolButton* add_text_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
+    QToolButton* add_tag_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
+    QToolButton* add_field_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
+    QToolButton* add_list_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
     void connect_model(Tiddler_Model* model);
     void apply_filter();
     void set_dirty() { adjust_dirty(true); }
@@ -92,14 +90,12 @@ private:
     void open_store(const QString& path);
     void save_store(const QString& path);
     void prepare_open(Tiddlerstore::Tiddler& t);
-    int source_row(int filter_row);
 
     Tiddlerstore::Store store {};
     Tiddlerstore_Model store_model {store};
     QStringListModel title_model {};
-    QSortFilterProxyModel title_sort_model {};
     FS_History tiddlerstore_history;
-    QListView* tiddler_list_view;
+    QString currently_loaded_store;
     QToolButton* load_button;
     QMenu* load_safety_menu {nullptr};
     QMenu* load_history_menu;
@@ -112,7 +108,8 @@ private:
     std::unordered_set<std::string> present_fields;
     std::unordered_set<std::string> present_lists;
     bool is_dirty {false};
-    Tiddlerstore::Filter_Groups filter_groups;
+    std::unique_ptr<Tiddlerstore::Filter_Group> filter_group;
+    std::unique_ptr<Tiddlerstore::Store_Filter> always_empty_filter;
 };
 
 #endif // SRC_TIDDLERSTORE_QT_TIDDLERSTORE_HANDLER_QT

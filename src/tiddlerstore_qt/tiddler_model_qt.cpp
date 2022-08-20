@@ -262,12 +262,7 @@ Tiddlerstore::Store_Filter Tiddlerstore_Model::filter()
     return Tiddlerstore::Store_Filter(data);
 }
 
-Tiddlerstore::Store_Filter Tiddlerstore_Model::apply_filter(const Tiddlerstore::Filter_Groups& filter_groups)
-{
-    return Tiddlerstore::apply_filter(data, filter_groups);
-}
-
-std::vector<Tiddler_Model*> Tiddlerstore_Model::filtered_models(const Tiddlerstore::Store_Filter& filter)
+std::vector<Tiddler_Model*> Tiddlerstore_Model::filtered_models(Tiddlerstore::Store_Filter& filter)
 {
     std::vector<Tiddler_Model*> ret;
     for (const auto& i : filter.filtered_idx()) {
@@ -279,7 +274,7 @@ std::vector<Tiddler_Model*> Tiddlerstore_Model::filtered_models(const Tiddlersto
     return ret;
 }
 
-Tiddler_Model* Tiddlerstore_Model::first_filtered_model(const Tiddlerstore::Store_Filter& filter)
+Tiddler_Model* Tiddlerstore_Model::first_filtered_model(Tiddlerstore::Store_Filter& filter)
 {
     auto idx = filter.filtered_idx();
     return idx.empty() ? nullptr : model_for_index(idx.front());

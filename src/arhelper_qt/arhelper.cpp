@@ -19,7 +19,7 @@ void Arhelper::ls(const QString& archive_path)
         return;
     }
     connect(sz, &QProcess::readyReadStandardOutput, this, [this, sz] {
-        QRegularExpression re(R"(^\d+-\d+-\d+\s+\d+:\d+:\d+\s+\S+\s+\d*\s+\d+\s+(.*)$)");
+        static QRegularExpression re(R"(^\d+-\d+-\d+\s+\d+:\d+:\d+\s+\S+\s+\d*\s+\d+\s+(.*)$)");
         QFileIconProvider fip;
         QFileInfo fi;
         while (sz->canReadLine()) {
