@@ -155,73 +155,134 @@ void erase_tiddler_from_store(const Tiddler& tiddler, Store& store);
 /// returns true if a tiddler is in the store
 bool is_tiddler_in_store(const Tiddler& tiddler, const Store& store);
 
+/// create a Filter_Element to filter for title with the given title_value. If title_value is empty it will match all empty titles.
 Filter_Element title(const std::string& title_value);
+
+/// create a Filter_Element to filter for title where the given title_value does not match. If title_value is empty it will match all non-empty titles.
 Filter_Element n_title(const std::string& title_value);
+
+/// create a Filter_Element to filter for title that contains the given title_value. If title_value is empty it will match all titles.
 Filter_Element title_contains(const std::string& title_value, bool case_sensitive = false);
+
+/// create a Filter_Element to filter for title that does not contain the given title_value. If title_value is empty it will match nothing.
 Filter_Element n_title_contains(const std::string& title_value, bool case_sensitive = false);
+
+/// create a Filter_Element to filter for text with the given text_value. If text_value is empty it will match all empty texts.
 Filter_Element text(const std::string& text_value);
+
+/// create a Filter_Element to filter for text where the given text_value does not match. If text_value is empty it will match all non-empty titles.
 Filter_Element n_text(const std::string& text_value);
+
+/// create a Filter_Element to filter for text that contains the given text_value. If text_value is empty it will match all texts.
 Filter_Element text_contains(const std::string& text_value, bool case_sensitive = false);
+
+/// create a Filter_Element to filter for text that does not contain the given text_value. If text_value is empty it will match nothing.
 Filter_Element n_text_contains(const std::string& text_value, bool case_sensitive = false);
+
+/// create a Filter_Element to filter for the given tag_value. If tag_value is empty it will match nothing.
 Filter_Element tag(const std::string& tag_value);
+
+/// create a Filter_Element to filter for tiddlers not having the given tag_value. If tag_value is empty it will match everything.
 Filter_Element n_tag(const std::string& tag_value);
+
+/// create a Filter_Element to filter for tiddlers that have at least one tag
 Filter_Element tagged();
+
+/// create a Filter_Element to filter for tiddlers that have no tags
 Filter_Element n_tagged();
+
+/// create a Filter_Element to filter for the field given in field_name, optionally checking for matching value. If field_name is empty it will match nothing.
 Filter_Element field(const std::string& field_name, const std::string& value = {});
+
+/// create a Filter_Element to filter for tiddlers that do not have the field given in field_name, or if not empty do not have the matching value. If field_name is empty it will match everything.
 Filter_Element n_field(const std::string& field_name, const std::string& value = {});
+
+/// create a Filter_Element to filter for the list given in list_name, optionally checking for matching entries in contains. If list_name is empty it will match nothing.
 Filter_Element list(const std::string& list_name, const std::vector<std::string>& contains = {});
+
+/// create a Filter_Element to filter for tiddlers that do not have the list given in list_name, or if not empty do not have the mathing entries in contains. If list_name is empty it will match everything.
 Filter_Element n_list(const std::string& list_name, const std::vector<std::string>& contains = {});
 
-/// a Store_Filter without a Filter_Element matches all tiddlers in a store
-class Store_Filter
+/// a Filter without a Filter_Element matches all tiddlers in a store
+class Filter
 {
 public:
-    explicit Store_Filter(const Store& all);
-    Store_Filter(const Store_Filter& other);
-    virtual ~Store_Filter() = default;
-    Store_Filter& operator=(const Store_Filter& other) = delete;
+    /// a Filter is always connected to a Ftore
+    explicit Filter(const Store& store);
+    Filter(const Filter& other);
+    virtual ~Filter() = default;
+    Filter& operator=(const Filter& other) = delete;
 
-    bool assign(const Store_Filter& other); // no operator=, returns false if Store s is different
+    /// no operator=, returns false if Store s is different
+    bool assign(const Filter& other);
+
+    /// clear filter elements
     void clear();
-    Store_Filter& append(const Filter_Element& element);
+
+    /// append a Filter_Element
+    Filter& append(const Filter_Element& element);
+
+    /// replace the content of a Filter_Element, invalidates the filter, no bounds checking
     void set_element(std::size_t pos, const Filter_Element& element);
+
+    /// remove a Filter_Element, invalidates the filter, no bounds checking
     void remove(std::size_t pos);
-    Filter_Elements elements();
+
+    /// returns a copy of the present filter elements
+    std::vector<Filter_Element> elements();
+
+    /// Filter deletes its cached result, to be called if store data has changed
     void invalidate();
-    Store_Indexes filtered_idx();
+
+    /// returns store indexes where the underlying tiddler matches every Filter_Element
+    std::vector<std::size_t> filtered_idx();
+
+    /// returns tiddlers that match every Filter_Element
     std::vector<Tiddler*> filtered_tiddlers();
 
-    /// If you are only inerested in one entry, returns nullptr if there is none
+    /// if you are only inerested in one entry, returns nullptr if there is none
     Tiddler* first_filtered_tiddler();
 
 private:
     void apply();
 
     const Store& s;
-    Store_Indexes idx;
-    Filter_Elements fe;
+    std::vector<std::size_t> idx;
+    std::vector<Filter_Element> fe;
     std::size_t filter_steps_done {std::numeric_limits<std::size_t>::max()};
 };
 
 class Filter_Group
 {
 public:
+    /// a Filter_Group is always connected to a Store
     Filter_Group(Store& store);
     virtual ~Filter_Group() = default;
 
-    Store_Filter& prepend();
-    Store_Filter& append();
-    Store_Filter& insert(const Store_Filter& insert_before);
-    void remove(const Store_Filter& to_remove);
+    /// append a Filter for the same Store as the Filter_Group
+    Filter& append();
+
+    /// remove the Filter given in to_remove if it is part of the Filter_Group
+    void remove(const Filter& to_remove);
+
+    /// returns the Filter at the position given in pos, no bounds checking
+    Filter& at(std::size_t pos);
+
+    /// returns the current filters
+    std::vector<Filter*> filters();
+
+    /// all filters delete their cached result, to be called if store data has changed
     void invalidate();
-    Store_Filter& at(std::size_t pos);
-    std::vector<Store_Filter*> filters();
+
+    /// returns tiddlers that match any, not every, Filter
     std::vector<Tiddler*> filtered_tiddlers();
+
+    /// if you are only inerested in one entry, returns nullptr if there is none
     Tiddler* first_filtered_tiddler();
 
 private:
     const Store& s;
-    std::vector<std::unique_ptr<Store_Filter>> f;
+    std::vector<std::unique_ptr<Filter>> f;
 };
 
 }

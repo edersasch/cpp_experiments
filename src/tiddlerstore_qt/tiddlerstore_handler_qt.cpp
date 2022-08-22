@@ -123,7 +123,7 @@ Tiddlerstore_Handler::Tiddlerstore_Handler(const QStringList& tiddlerstore_list,
     , load_button(new QToolButton(this))
     , load_history_menu(new QMenu(tr("Attention! Unsaved Changes"), this))
     , filter_layout(new QVBoxLayout)
-    , always_empty_filter(new Tiddlerstore::Store_Filter(store))
+    , always_empty_filter(new Tiddlerstore::Filter(store))
 {
     connect(&store_model, &Tiddlerstore_Model::model_created, this, &Tiddlerstore_Handler::connect_model);
     connect(&store_model, &Tiddlerstore_Model::removed, this, &Tiddlerstore_Handler::set_dirty);
@@ -274,7 +274,7 @@ void Tiddlerstore_Handler::setup_filter()
     add_single_group(*always_empty_filter.get());
 }
 
-void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Store_Filter& filter)
+void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Filter& filter)
 {
     auto group_box = new QGroupBox(this);
     group_box->setContentsMargins(0, 0, 0, 0);
@@ -379,7 +379,7 @@ void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Store_Filter& filter)
     filter_layout->addWidget(group_box);
 }
 
-void Tiddlerstore_Handler::add_negate_button(Tiddlerstore::Store_Filter& filter, std::size_t pos, QLayout* layout)
+void Tiddlerstore_Handler::add_negate_button(Tiddlerstore::Filter& filter, std::size_t pos, QLayout* layout)
 {
     auto filter_data = filter.elements()[pos];
     auto negate_button = new QToolButton(this);
@@ -405,7 +405,7 @@ QToolButton* Tiddlerstore_Handler::add_label_del_row(const QString& text, QLayou
     return delete_button;
 }
 
-QToolButton* Tiddlerstore_Handler::add_title_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
+QToolButton* Tiddlerstore_Handler::add_title_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
 {
     auto filter_data = filter.elements()[pos];
     auto single_filter_functions = new QHBoxLayout;
@@ -421,7 +421,7 @@ QToolButton* Tiddlerstore_Handler::add_title_filter(Tiddlerstore::Store_Filter& 
     return add_label_del_row(tr("Title"), single_filter_functions, filter_form_layout);
 }
 
-QToolButton* Tiddlerstore_Handler::add_text_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
+QToolButton* Tiddlerstore_Handler::add_text_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
 {
     auto filter_data = filter.elements()[pos];
     auto single_filter_functions = new QHBoxLayout;
@@ -437,7 +437,7 @@ QToolButton* Tiddlerstore_Handler::add_text_filter(Tiddlerstore::Store_Filter& f
     return add_label_del_row(tr("Text"), single_filter_functions, filter_form_layout);
 }
 
-QToolButton* Tiddlerstore_Handler::add_tag_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
+QToolButton* Tiddlerstore_Handler::add_tag_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
 {
     auto filter_data = filter.elements()[pos];
     auto single_filter_functions = new QHBoxLayout;
@@ -448,7 +448,7 @@ QToolButton* Tiddlerstore_Handler::add_tag_filter(Tiddlerstore::Store_Filter& fi
     return add_label_del_row(tr("Tag"), single_filter_functions, filter_form_layout);
 }
 
-QToolButton* Tiddlerstore_Handler::add_field_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
+QToolButton* Tiddlerstore_Handler::add_field_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
 {
     auto filter_data = filter.elements()[pos];
     auto single_filter_functions = new QHBoxLayout;
@@ -464,7 +464,7 @@ QToolButton* Tiddlerstore_Handler::add_field_filter(Tiddlerstore::Store_Filter& 
     return add_label_del_row(tr("Field: ") + filter_data.key.c_str(), single_filter_functions, filter_form_layout);
 }
 
-QToolButton* Tiddlerstore_Handler::add_list_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
+QToolButton* Tiddlerstore_Handler::add_list_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
 {
     auto filter_data = filter.elements()[pos];
     auto single_filter_functions = new QHBoxLayout;

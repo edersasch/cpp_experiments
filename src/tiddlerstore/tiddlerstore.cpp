@@ -473,18 +473,18 @@ Filter_Element n_list(const std::string& list_name, const std::vector<std::strin
     return list_n_list(list_name, contains, true);
 }
 
-Store_Filter::Store_Filter(const Store& all)
-    : s(all)
+Filter::Filter(const Store& store)
+    : s(store)
 {
 }
 
-Store_Filter::Store_Filter(const Store_Filter& other)
+Filter::Filter(const Filter& other)
     : s(other.s)
 {
     assign(other);
 }
 
-bool Store_Filter::assign(const Store_Filter& other)
+bool Filter::assign(const Filter& other)
 {
     if (&s == &other.s) {
         idx = other.idx;
@@ -495,47 +495,47 @@ bool Store_Filter::assign(const Store_Filter& other)
     return false;
 }
 
-void Store_Filter::clear()
+void Filter::clear()
 {
-    assign(Store_Filter(s));
+    assign(Filter(s));
 }
 
-Store_Filter& Store_Filter::append(const Filter_Element& element)
+Filter& Filter::append(const Filter_Element& element)
 {
     fe.emplace_back(element);
     return *this;
 }
 
-void Store_Filter::set_element(std::size_t pos, const Filter_Element& element)
+void Filter::set_element(std::size_t pos, const Filter_Element& element)
 {
     fe[pos] = element;
     invalidate();
 }
 
-void Store_Filter::remove(std::size_t pos)
+void Filter::remove(std::size_t pos)
 {
     fe.erase(fe.begin() + pos);
     invalidate();
 }
 
-Filter_Elements Store_Filter::elements()
+std::vector<Filter_Element> Filter::elements()
 {
     return fe;
 }
 
-void Store_Filter::invalidate()
+void Filter::invalidate()
 {
     filter_steps_done = std::numeric_limits<std::size_t>::max();
     idx.clear();
 }
 
-Store_Indexes Store_Filter::filtered_idx()
+std::vector<std::size_t> Filter::filtered_idx()
 {
     apply();
     return idx;
 }
 
-std::vector<Tiddler*> Store_Filter::filtered_tiddlers()
+std::vector<Tiddler*> Filter::filtered_tiddlers()
 {
     std::vector<Tiddler*> ret;
     for (const auto& i : filtered_idx()) {
@@ -544,7 +544,7 @@ std::vector<Tiddler*> Store_Filter::filtered_tiddlers()
     return ret;
 }
 
-Tiddler* Store_Filter::first_filtered_tiddler()
+Tiddler* Filter::first_filtered_tiddler()
 {
     apply();
     return idx.empty() ? nullptr : s[idx.front()].get();
@@ -552,7 +552,7 @@ Tiddler* Store_Filter::first_filtered_tiddler()
 
 // private
 
-void Store_Filter::apply()
+void Filter::apply()
 {
     if (filter_steps_done == std::numeric_limits<std::size_t>::max()) {
         std::generate_n(std::back_inserter(idx), s.size(), [n = 0]() mutable {
@@ -637,26 +637,12 @@ Filter_Group::Filter_Group(Store& store)
 {
 }
 
-Store_Filter& Filter_Group::prepend()
+Filter& Filter_Group::append()
 {
-    return f.empty() ? append() : insert(*f.front());
+    return *f.emplace_back(new Filter(s)).get();
 }
 
-Store_Filter& Filter_Group::append()
-{
-    return *f.emplace_back(new Store_Filter(s)).get();
-}
-
-Store_Filter& Filter_Group::insert(const Store_Filter& insert_before)
-{
-    auto it = std::find_if(f.begin(), f.end(), [&insert_before](const auto& filter) {
-        return filter.get() == &insert_before;
-    });
-    it = f.emplace(it, new Store_Filter(s));
-    return *(it->get());
-}
-
-void Filter_Group::remove(const Store_Filter& to_remove)
+void Filter_Group::remove(const Filter& to_remove)
 {
     auto it = std::find_if(f.begin(), f.end(), [&to_remove](const auto& filter) {
         return filter.get() == &to_remove;
@@ -666,6 +652,20 @@ void Filter_Group::remove(const Store_Filter& to_remove)
     }
 }
 
+Filter& Filter_Group::at(std::size_t pos)
+{
+    return *f[pos].get();
+}
+
+std::vector<Filter*> Filter_Group::filters()
+{
+    std::vector<Filter*> ret;
+    for (const auto& filter : f) {
+        ret.push_back(filter.get());
+    }
+    return ret;
+}
+
 void Filter_Group::invalidate()
 {
     for (auto& filter : f) {
@@ -673,25 +673,11 @@ void Filter_Group::invalidate()
     }
 }
 
-Store_Filter& Filter_Group::at(std::size_t pos)
-{
-    return *f[pos].get();
-}
-
-std::vector<Store_Filter*> Filter_Group::filters()
-{
-    std::vector<Store_Filter*> ret;
-    for (const auto& filter : f) {
-        ret.push_back(filter.get());
-    }
-    return ret;
-}
-
 std::vector<Tiddler*> Filter_Group::filtered_tiddlers()
 {
-    Store_Indexes dest;
+    std::vector<std::size_t> dest;
     for (auto& filter : f) {
-        Store_Indexes idx;
+        std::vector<std::size_t> idx;
         idx.swap(dest);
         auto fidx = filter->filtered_idx();
         std::set_union(idx.begin(), idx.end(), fidx.begin(), fidx.end(), std::back_inserter(dest));

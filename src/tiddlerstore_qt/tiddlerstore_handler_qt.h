@@ -75,14 +75,14 @@ private:
     QToolButton* setup_save_button();
     void setup_main_title_filter();
     void setup_filter();
-    void add_single_group(Tiddlerstore::Store_Filter& filter);
-    void add_negate_button(Tiddlerstore::Store_Filter& filter, std::size_t pos, QLayout* layout);
+    void add_single_group(Tiddlerstore::Filter& filter);
+    void add_negate_button(Tiddlerstore::Filter& filter, std::size_t pos, QLayout* layout);
     QToolButton* add_label_del_row(const QString& text, QLayout* single_filter_functions, QFormLayout* filter_form_layout);
-    QToolButton* add_title_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
-    QToolButton* add_text_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
-    QToolButton* add_tag_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
-    QToolButton* add_field_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
-    QToolButton* add_list_filter(Tiddlerstore::Store_Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
+    QToolButton* add_title_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
+    QToolButton* add_text_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
+    QToolButton* add_tag_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
+    QToolButton* add_field_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
+    QToolButton* add_list_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout);
     void connect_model(Tiddler_Model* model);
     void apply_filter();
     void set_dirty() { adjust_dirty(true); }
@@ -109,7 +109,7 @@ private:
     std::unordered_set<std::string> present_lists;
     bool is_dirty {false};
     std::unique_ptr<Tiddlerstore::Filter_Group> filter_group;
-    std::unique_ptr<Tiddlerstore::Store_Filter> always_empty_filter;
+    std::unique_ptr<Tiddlerstore::Filter> always_empty_filter;
 };
 
 #endif // SRC_TIDDLERSTORE_QT_TIDDLERSTORE_HANDLER_QT

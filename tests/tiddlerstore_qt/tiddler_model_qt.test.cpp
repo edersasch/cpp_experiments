@@ -372,8 +372,8 @@ TEST_F(Tiddlerstore_Model_Test, filter)
     ts = nlohmann::json::parse(store_json);
     EXPECT_EQ(3, ts.size());
     Tiddlerstore::Filter_Group fg(ts);
-    Tiddlerstore::Store_Filter& sf1 = fg.append();
-    auto check_sf1 = [this, &sf1](Tiddlerstore::Store_Indexes si) {
+    Tiddlerstore::Filter& sf1 = fg.append();
+    auto check_sf1 = [this, &sf1](std::vector<std::size_t> si) {
         EXPECT_EQ(si, sf1.filtered_idx());
         std::vector<Tiddler_Model*> expected_models;
         for (const auto& i : si) {
@@ -406,7 +406,7 @@ TEST_F(Tiddlerstore_Model_Test, filter)
     sf1.assign(sf1_copy);
     sf1.append(Tiddlerstore::n_tag("bbT1"));
     check_sf1({0});
-    Tiddlerstore::Store_Filter& sf2 = fg.append();
+    Tiddlerstore::Filter& sf2 = fg.append();
     sf2.append(Tiddlerstore::title_contains("CC"));
     auto res = fg.filtered_tiddlers();
     std::vector<Tiddlerstore::Tiddler*> exp;

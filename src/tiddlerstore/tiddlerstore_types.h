@@ -10,8 +10,7 @@ namespace Tiddlerstore
 
 class Tiddler;
 using Store = std::vector<std::unique_ptr<Tiddler>>;
-using Store_Indexes = std::vector<std::size_t>;
-class Store_Filter;
+class Filter;
 class Filter_Group;
 
 enum class Set_Field_List_Change
@@ -47,9 +46,6 @@ struct Filter_Element
     /// for types Title_Contains, Text_Contains
     bool case_sensitive {false};
 };
-
-using Filter_Elements = std::vector<Filter_Element>;
-using Filter_Groups = std::vector<std::unique_ptr<Filter_Elements>>;
 
 }
 
