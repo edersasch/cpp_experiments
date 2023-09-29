@@ -259,8 +259,8 @@ TEST_F(Tiddlerstore_Test, store)
     EXPECT_EQ(s[0]->text(), clone[0]->text());
     EXPECT_EQ(s[1]->title(), clone[1]->title());
     EXPECT_EQ(s[1]->text(), clone[1]->text());
-    char tname[] = "Tidderstore_Test_storeXXXXXX";
-    ::mkstemp(tname);
+    std::string tname = "Tidderstore_Test_storeXXXXXX";
+    ::mkstemp(tname.data());
     EXPECT_EQ(true, Tiddlerstore::save_store_to_file(s, tname));
     auto fclone = Tiddlerstore::open_store_from_file(tname);
     EXPECT_EQ(s.size(), fclone.size());
@@ -430,7 +430,7 @@ TEST_F(Tiddlerstore_Test, filter_title)
     EXPECT_EQ(f2.filtered_idx(), std::vector<std::size_t>({1, 3, 4, 5}));
     auto res = fg.filtered_tiddlers();
     std::vector<Tiddlerstore::Tiddler*> exp;
-    for (auto i : {1, 2, 3, 4, 5, 6}) {
+    for (auto i : {1u, 2u, 3u, 4u, 5u, 6u}) {
         exp.push_back(s[i].get());
     }
     EXPECT_EQ(res, exp);
@@ -486,7 +486,7 @@ TEST_F(Tiddlerstore_Test, filter_text)
     EXPECT_EQ(f2.filtered_idx(), std::vector<std::size_t>({1, 3, 4, 5}));
     auto res = fg.filtered_tiddlers();
     std::vector<Tiddlerstore::Tiddler*> exp;
-    for (auto i : {1, 2, 3, 4, 5, 6}) {
+    for (auto i : {1u, 2u, 3u, 4u, 5u, 6u}) {
         exp.push_back(s[i].get());
     }
     EXPECT_EQ(res, exp);
@@ -622,9 +622,10 @@ TEST_F(Tiddlerstore_Test, filter_copy_join)
     EXPECT_EQ(3, s1.size());
     Tiddlerstore::Filter_Group fg(s1);
     Tiddlerstore::Filter& sf1 = fg.append();
-    auto check_s1_sf1 = [&s1, &sf1](std::vector<std::size_t> si) {
+    auto check_s1_sf1 = [&s1, &sf1](const std::vector<std::size_t>& si) {
         EXPECT_EQ(si, sf1.filtered_idx());
         std::vector<Tiddlerstore::Tiddler*> st;
+        st.reserve(si.size());
         for (const auto& i : si) {
             st.push_back(s1[i].get());
         }
@@ -658,7 +659,7 @@ TEST_F(Tiddlerstore_Test, filter_copy_join)
     sf2.append(Tiddlerstore::title_contains("CC"));
     auto res = fg.filtered_tiddlers();
     std::vector<Tiddlerstore::Tiddler*> exp;
-    for (auto i : {0, 2}) {
+    for (auto i : {0u, 2u}) {
         exp.push_back(s1[i].get());
     }
     EXPECT_EQ(res, exp);

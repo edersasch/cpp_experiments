@@ -180,7 +180,7 @@ Set_Field_List_Change Tiddler::set_field(const std::string& field_name, const st
     return set_map_value(tiddler_fields, field_name, value);
 }
 
-bool  Tiddler::remove_field(const std::string& field_name)
+bool Tiddler::remove_field(const std::string& field_name)
 {
     return tiddler_fields.erase(field_name);
 }
@@ -514,7 +514,7 @@ void Filter::set_element(std::size_t pos, const Filter_Element& element)
 
 void Filter::remove(std::size_t pos)
 {
-    fe.erase(fe.begin() + pos);
+    fe.erase(fe.begin() + static_cast<decltype(fe)::difference_type>(pos));
     invalidate();
 }
 
@@ -538,6 +538,7 @@ std::vector<std::size_t> Filter::filtered_idx()
 std::vector<Tiddler*> Filter::filtered_tiddlers()
 {
     std::vector<Tiddler*> ret;
+    ret.resize(filtered_idx().size());
     for (const auto& i : filtered_idx()) {
         ret.push_back(s[i].get());
     }
@@ -660,6 +661,7 @@ Filter& Filter_Group::at(std::size_t pos)
 std::vector<Filter*> Filter_Group::filters()
 {
     std::vector<Filter*> ret;
+    ret.reserve(f.size());
     for (const auto& filter : f) {
         ret.push_back(filter.get());
     }
@@ -683,6 +685,7 @@ std::vector<Tiddler*> Filter_Group::filtered_tiddlers()
         std::set_union(idx.begin(), idx.end(), fidx.begin(), fidx.end(), std::back_inserter(dest));
     }
     std::vector<Tiddler*> ret;
+    ret.reserve(dest.size());
     for (auto i : dest) {
         ret.push_back(s[i].get());
     }

@@ -22,6 +22,7 @@ public:
     /// Create empty tiddler
     Tiddler() = default;
     Tiddler(const Tiddler& other) = default;
+    Tiddler(Tiddler&& other) = default;
     Tiddler& operator=(const Tiddlerstore::Tiddler& rhs) = default;
     virtual ~Tiddler() = default;
 
