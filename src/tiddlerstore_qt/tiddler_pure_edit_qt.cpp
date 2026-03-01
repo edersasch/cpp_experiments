@@ -316,7 +316,7 @@ QToolButton* Tiddler_Pure_Edit::deletable_value(const std::string& text, QLayout
     auto del(new QToolButton(this));
     auto label(new QLabel(text.c_str(), this));
     l->setSpacing(0);
-    l->setMargin(0);
+    l->setContentsMargins(0, 0, 0, 0);
     del->setIcon(style()->standardIcon(QStyle::SP_TitleBarCloseButton));
     label->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     label->setLineWidth(1);

@@ -32,6 +32,7 @@ protected:
     QTemporaryDir root_dir {};
     FS_Filter fsf;
     QTreeView& fsf_view;
+    QSortFilterProxyModel* fsf_proxy;
     QFileSystemModel* fsf_model;
     QDir hierarchy {root_dir.path()};
     QSet<QString> fsset;

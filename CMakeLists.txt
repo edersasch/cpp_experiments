@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11.0)
+cmake_minimum_required(VERSION 3.16.0)
 project(experiments VERSION 0.1.0)
 
 option(EXPERIMENTS_ARHELPER_QT                      "Archvie Helper"                                            ON)

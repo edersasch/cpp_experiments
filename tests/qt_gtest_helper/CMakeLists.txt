@@ -6,5 +6,5 @@ target_link_libraries(${PROJECT_NAME}
     gtest
     gmock
     PRIVATE
-    Qt5::Widgets
+    Qt6::Widgets
 )

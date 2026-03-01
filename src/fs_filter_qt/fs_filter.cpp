@@ -1,9 +1,9 @@
 #include "fs_filter.h"
 
-#include <QVBoxLayout>
-#include <QHeaderView>
 #include <QDesktopServices>
+#include <QHeaderView>
 #include <QUrl>
+#include <QVBoxLayout>
 
 FS_Filter::FS_Filter(const QString& root_path, QWidget* parent)
     : QWidget(parent)
@@ -13,22 +13,26 @@ FS_Filter::FS_Filter(const QString& root_path, QWidget* parent)
 
     search_text_edit.setClearButtonEnabled(true);
     auto idx = fs_model.setRootPath(root_path);
-    fs_view.setModel(&fs_model);
-    fs_view.setRootIndex(idx);
+    fs_model.setNameFilterDisables(false);
+    hide_empty_parents_proxy_model.setSourceModel(&fs_model);
+    fs_view.setModel(&hide_empty_parents_proxy_model);
+    fs_view.setRootIndex(hide_empty_parents_proxy_model.mapFromSource(idx));
     fs_view.setDragEnabled(true);
     fs_view.setExpandsOnDoubleClick(false);
     fs_view.setSelectionMode(QAbstractItemView::ExtendedSelection);
-    filter_pattern.setPatternOptions(QRegularExpression::CaseInsensitiveOption);
     h->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     main_layout->addWidget(&search_text_edit);
     main_layout->addWidget(&fs_view);
 
     connect(&search_text_edit, &QLineEdit::textChanged, this, [this] {
+        hide_empty_parents_proxy_model.setHideEmptyDirs(hide_empty_dirs && !search_text_edit.text().isEmpty());
         if (search_text_edit.text().isEmpty()) {
-            filter_pattern.setPattern(QString());
+            fs_model.setNameFilters({});
+            hide_empty_parents_proxy_model.setNameFilter({});
         } else {
-            filter_pattern.setPattern(QRegularExpression::wildcardToRegularExpression("*" + search_text_edit.text() + "*"));
+            fs_model.setNameFilters({"*" + search_text_edit.text() + "*"});
+            hide_empty_parents_proxy_model.setNameFilter(search_text_edit.text());
         }
         hide_expand();
     });
@@ -39,7 +43,7 @@ FS_Filter::FS_Filter(const QString& root_path, QWidget* parent)
         }
     });
     connect(&fs_view, &QTreeView::doubleClicked, this, [this](const QModelIndex& index) {
-        auto url = QUrl::fromLocalFile(fs_model.filePath(index));
+        auto url = QUrl::fromLocalFile(fs_model.filePath(hide_empty_parents_proxy_model.mapToSource(index)));
         QDesktopServices::openUrl(url);
     });
 }
@@ -56,6 +60,7 @@ void FS_Filter::set_hide_empty_dirs(bool do_hide)
 {
     if (do_hide != hide_empty_dirs) {
         hide_empty_dirs = do_hide;
+        hide_empty_parents_proxy_model.setHideEmptyDirs(hide_empty_dirs && !search_text_edit.text().isEmpty());
         hide_expand();
     }
 }

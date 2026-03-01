@@ -3,8 +3,8 @@ include(prjqt)
 include(prjexe)
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-    Qt5::Gui
-    Qt5::Widgets
+    Qt6::Gui
+    Qt6::Widgets
     fs_history_qt
     fs_filter_qt
     qt_utilities

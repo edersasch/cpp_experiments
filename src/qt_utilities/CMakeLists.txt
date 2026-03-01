@@ -3,5 +3,5 @@ include(prjqt)
 include(prjlib)
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-    Qt5::Widgets
+    Qt6::Widgets
 )

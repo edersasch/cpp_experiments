@@ -6,7 +6,7 @@ target_link_libraries(${PROJECT_NAME}
     qt_gtest_helper
     fs_history_qt
     qt_utilities
-    Qt5::Gui
-    Qt5::Widgets
+    Qt6::Gui
+    Qt6::Widgets
 )
 add_test(${PROJECT_NAME} ${PROJECT_NAME})

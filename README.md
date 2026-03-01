@@ -27,8 +27,8 @@ Concepts, solved problems and examples, available under [MIT license](LICENSE)
 # Build Requirements
 
 * C++ 17 toolchain (e.g. [gcc](https://gcc.gnu.org/) >= 7.3.0)
-* [CMake](https://cmake.org) >= 3.11.0
-* [Qt](https://qt.io) >= 5.12.0
+* [CMake](https://cmake.org) >= 3.16.0
+* [Qt](https://qt.io) >= 6.8.0
 * [nlohmann/json](https://github.com/nlohmann/json/) >= 3.4.0 for [tiddlerstore](#tiddlerstore), downloaded automatically if option `EXPERIMENTS_USE_EXTERNAL_JSON` is `OFF` (license: [MIT](https://github.com/nlohmann/json/blob/v3.4.0/LICENSE.MIT))
 
 

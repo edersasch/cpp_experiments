@@ -3,7 +3,7 @@ include(prjqt)
 include(prjexe)
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-    Qt5::Quick
+    Qt6::Quick
     elementary_math
 )
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

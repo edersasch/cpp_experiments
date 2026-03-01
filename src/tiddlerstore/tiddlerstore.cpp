@@ -538,8 +538,9 @@ std::vector<std::size_t> Filter::filtered_idx()
 std::vector<Tiddler*> Filter::filtered_tiddlers()
 {
     std::vector<Tiddler*> ret;
-    ret.resize(filtered_idx().size());
-    for (const auto& i : filtered_idx()) {
+    ret.reserve(filtered_idx().size());
+    const auto fidx = filtered_idx();
+    for (const auto& i : fidx) {
         ret.push_back(s[i].get());
     }
     return ret;

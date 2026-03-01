@@ -5,7 +5,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
     qt_gtest_helper
     elementary_math
-    Qt5::Quick
+    Qt6::Quick
 )
 
 add_test(${PROJECT_NAME} ${PROJECT_NAME})

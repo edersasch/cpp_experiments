@@ -3,7 +3,7 @@ include(prjqt)
 include(prjexe)
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-    Qt5::Gui
-    Qt5::Widgets
+    Qt6::Gui
+    Qt6::Widgets
     tiddlerstore_qt
 )

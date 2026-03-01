@@ -26,9 +26,10 @@ public:
     QTreeView& get_view() { return fs_view; }
 
 private:
-    void hide_expand() { Qt_Utilities::treeview_hide_expand(&fs_view, fs_model.index(fs_model.rootPath()), filter_pattern, hide_empty_dirs, auto_expand, &wait_for_dirs); }
+    void hide_expand() { Qt_Utilities::treeview_hide_expand(&fs_view, hide_empty_parents_proxy_model.mapFromSource(fs_model.index(fs_model.rootPath())), filter_pattern, hide_empty_dirs, auto_expand, &wait_for_dirs); }
 
     QFileSystemModel fs_model;
+    Qt_Utilities::HideEmptyParentsProxyModel hide_empty_parents_proxy_model;
     QLineEdit search_text_edit;
     QTreeView fs_view;
 
