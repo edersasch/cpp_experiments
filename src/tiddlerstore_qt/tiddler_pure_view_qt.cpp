@@ -14,9 +14,9 @@ Tiddler_Pure_View::Tiddler_Pure_View(QWidget* parent)
     , text_browser(new QTextBrowser(this))
     , edit_button(new QToolButton(this))
 {
-    auto main_layout = new QVBoxLayout(this);
+    auto* main_layout = new QVBoxLayout(this);
 
-    auto title_layout(new QHBoxLayout);
+    auto* title_layout(new QHBoxLayout);
     title_layout->addWidget(title_label);
     edit_button->setIcon(style()->standardIcon(QStyle::SP_FileDialogDetailedView));
     title_layout->addWidget(edit_button);
@@ -35,7 +35,7 @@ Tiddler_Model* Tiddler_Pure_View::tiddler_model()
 void Tiddler_Pure_View::set_tiddler_model(Tiddler_Model* model)
 {
     if (tm != model) {
-        if (tm) {
+        if (tm != nullptr) {
             disconnect(tm);
         }
         tm = model;

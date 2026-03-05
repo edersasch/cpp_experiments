@@ -16,44 +16,44 @@ Vis_1000::Vis_1000(QQmlEngine* engine, QQuickItem* parentItem)
 
 void Vis_1000::change()
 {
-    auto fi = QQmlProperty(vis.get(), "first_index").read().toInt();
-    auto li = QQmlProperty(vis.get(), "last_index").read().toInt();
+    auto firstIndex = QQmlProperty(vis.get(), "first_index").read().toInt();
+    auto lastIndex = QQmlProperty(vis.get(), "last_index").read().toInt();
     auto step = QQmlProperty(vis.get(), "step").read().toInt();
-    auto op = QQmlProperty(vis.get(), "operation_id").read().toInt();
+    auto oerationId = QQmlProperty(vis.get(), "operation_id").read().toInt();
     auto offs = QQmlProperty(vis.get(), "index_to_value_offset").read().toInt();
-    for (int i = 0; i <= li; i += 1) {
+    for (int i = 0; i <= lastIndex; i += 1) {
         set_color(i, "white");
     }
-    if (op == QQmlProperty(vis.get(), "plus_id").read().toInt()) {
-        auto color = set_limits("plus_color", li - 1, fi >= li, li - fi, step > li -fi);
-        while (!color.isEmpty() && fi <= li && step > 0) {
-            set_color(fi, color);
-            fi += step;
+    if (oerationId == QQmlProperty(vis.get(), "plus_id").read().toInt()) {
+        auto color = set_limits("plus_color", lastIndex - 1, firstIndex >= lastIndex, lastIndex - firstIndex, step > lastIndex -firstIndex);
+        while (!color.isEmpty() && firstIndex <= lastIndex && step > 0) {
+            set_color(firstIndex, color);
+            firstIndex += step;
         }
-    } else if (op == QQmlProperty(vis.get(), "minus_id").read().toInt()) {
-        auto color = set_limits("minus_color", li, fi > li, fi, step > fi);
-        while (!color.isEmpty() && fi >= 0 && step > 0) {
-            set_color(fi, color);
-            fi -= step;
+    } else if (oerationId == QQmlProperty(vis.get(), "minus_id").read().toInt()) {
+        auto color = set_limits("minus_color", lastIndex, firstIndex > lastIndex, firstIndex, step > firstIndex);
+        while (!color.isEmpty() && firstIndex >= 0 && step > 0) {
+            set_color(firstIndex, color);
+            firstIndex -= step;
         }
     } else { // multiply
-        auto step_max = li;
-        if (fi > 0) {
-            step_max /= fi;
+        auto step_max = lastIndex;
+        if (firstIndex > 0) {
+            step_max /= firstIndex;
         }
-        auto mcolor = set_limits("multiply_color", li / 2, fi > li / 2, step_max, step > step_max);
+        auto mcolor = set_limits("multiply_color", lastIndex / 2, firstIndex > lastIndex / 2, step_max, step > step_max);
         auto pcolor = QQmlProperty(vis.get(), "plus_color").read().toString();
-        auto i = fi;
+        auto currentIndex = firstIndex;
         int last = 0;
-        while (!mcolor.isEmpty() && i <= li && step > 0) {
-            if ((i + offs - last) / step == fi + offs && (i + offs - last) % step == 0) {
-                last = i + offs;
-                set_color(i, mcolor);
+        while (!mcolor.isEmpty() && currentIndex <= lastIndex && step > 0) {
+            if ((currentIndex + offs - last) / step == firstIndex + offs && (currentIndex + offs - last) % step == 0) {
+                last = currentIndex + offs;
+                set_color(currentIndex, mcolor);
             } else {
-                set_color(i, pcolor);
+                set_color(currentIndex, pcolor);
             }
-            i += fi + offs;
-            if (i == 0) {
+            currentIndex += firstIndex + offs;
+            if (currentIndex == 0) {
                 break;
             }
         }
@@ -77,9 +77,9 @@ QString Vis_1000::set_limits(const QString &color_to_get, int first_max, bool fi
 
 void Vis_1000::set_color(int item_pos, const QString& color)
 {
-    auto repeater = QQmlProperty(vis.get(), "number_repeater").read().value<QQuickItem*>();
+    auto* repeater = QQmlProperty(vis.get(), "number_repeater").read().value<QQuickItem*>();
     QQuickItem* item = nullptr;
     QMetaObject::invokeMethod(repeater, "itemAt", Q_RETURN_ARG(QQuickItem*, item), Q_ARG(int, item_pos));
-    auto bgrect = QQmlProperty(item, "background").read().value<QQuickItem*>();
+    auto* bgrect = QQmlProperty(item, "background").read().value<QQuickItem*>();
     QQmlProperty(bgrect, "color").write(color);
 }

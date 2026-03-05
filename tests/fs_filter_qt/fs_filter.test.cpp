@@ -92,9 +92,9 @@ TEST_F(FS_Filter_Test, hide_empty)
     EXPECT_TRUE(expected.remove(hierarchy.absolutePath() + "/2/2_2/f2_2.4"));
     compare_selection(expected);
     fsf.set_search_text("");
-    processEvents();
+    processEvents(processEvent_repetitions);
     fsf.set_search_text("3");
-    processEvents();
+    processEvents(processEvent_repetitions);
     expected.clear();
     expected.insert(hierarchy.absolutePath() + "/2");
     expected.insert(hierarchy.absolutePath() + "/2/2_2");

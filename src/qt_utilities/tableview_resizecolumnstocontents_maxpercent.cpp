@@ -31,7 +31,7 @@ void tableview_resizecolumnstocontents_maxpercent(QTableView* view, int maxperce
     maxpercent = std::clamp(maxpercent, 1, hundred_percent);
     view->resizeColumnsToContents();
     int column_area_width_rest = view->viewport()->width();
-    int max_column_width = std::max(column_area_width_rest / number_of_visible_columns,
+    const int max_column_width = std::max(column_area_width_rest / number_of_visible_columns,
                                     (column_area_width_rest * maxpercent) / hundred_percent);
     for (int i = startcolumn; i < endcolumn; i += 1) {
         if (!view->isColumnHidden(i)) {
@@ -44,12 +44,12 @@ void tableview_resizecolumnstocontents_maxpercent(QTableView* view, int maxperce
     if (column_area_width_rest > 0) {
         for (int i = endcolumn - 1; i >= 0; i -= 1) {
             if (!view->isColumnHidden(i)) {
-                auto w = view->columnWidth(i);
-                if (w == max_column_width) {
+                auto width = view->columnWidth(i);
+                if (width == max_column_width) {
                     view->resizeColumnToContents(i);
-                    int diff = view->columnWidth(i) - w;
+                    const int diff = view->columnWidth(i) - width;
                     if (diff > column_area_width_rest) {
-                        view->setColumnWidth(i, w + column_area_width_rest);
+                        view->setColumnWidth(i, width + column_area_width_rest);
                         break;
                     }
                     column_area_width_rest -= diff;

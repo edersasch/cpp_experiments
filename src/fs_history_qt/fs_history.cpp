@@ -66,14 +66,14 @@ void FS_History::cleanup(bool changed)
 
 bool FS_History::is_valid(const QString& element) const
 {
-    QFileInfo i(element);
+    const QFileInfo fileInfo(element);
     bool ret = false;
     switch (opmode) {
     case Operation_Mode::OP_FILE:
-        ret = i.isFile();
+        ret = fileInfo.isFile();
         break;
     case Operation_Mode::OP_DIR:
-        ret = i.isDir();
+        ret = fileInfo.isDir();
         break;
     }
     return ret;

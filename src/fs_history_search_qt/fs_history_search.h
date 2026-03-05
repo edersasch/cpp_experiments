@@ -25,7 +25,7 @@ public:
 
 private:
     FS_History_UI dir_ui;
-    std::unique_ptr<FS_Filter> fs_filter {nullptr};
+    std::unique_ptr<FsFilter> fs_filter {nullptr};
 };
 
 #endif // SRC_FS_HSEARCH_QT_FS_HSEARCH

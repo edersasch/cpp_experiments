@@ -20,8 +20,8 @@ void clear_layout(QLayout* l)
     QLayoutItem* child;
     while ((child = l->takeAt(0) ) != nullptr) {
         delete child->widget();
-        auto cl = child->layout();
-        if (cl) {
+        auto* cl = child->layout();
+        if (cl != nullptr) {
             clear_layout(cl);
         }
         delete child;
@@ -55,9 +55,9 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     connect(&work_tm, &Tiddler_Model::list_added, this, &Tiddler_Pure_Edit::update_present_lists);
     connect(&work_tm, &Tiddler_Model::list_removed, this, &Tiddler_Pure_Edit::update_present_lists);
 
-    auto main_layout = new QVBoxLayout(this);
+    auto* main_layout = new QVBoxLayout(this);
 
-    auto title_layout(new QHBoxLayout);
+    auto* title_layout(new QHBoxLayout);
     title_lineedit->setPlaceholderText("Title");
     title_layout->addWidget(title_lineedit);
     accept_button->setIcon(style()->standardIcon(QStyle::SP_DialogApplyButton));
@@ -65,7 +65,7 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     title_layout->addWidget(discard_button);
     discard_button->setIcon(style()->standardIcon(QStyle::SP_DialogCloseButton));
     discard_button->setPopupMode(QToolButton::InstantPopup);
-    auto discard_action = discard_menu->addAction(style()->standardIcon(QStyle::SP_DialogCloseButton), tr("really discard?"));
+    auto* discard_action = discard_menu->addAction(style()->standardIcon(QStyle::SP_DialogCloseButton), tr("really discard?"));
     main_layout->addLayout(title_layout);
     connect(title_lineedit, &QLineEdit::textChanged, this, &Tiddler_Pure_Edit::update_dirty);
     connect(accept_button, &QToolButton::clicked, this, [this, discard_action] {
@@ -87,9 +87,9 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     });
     connect(discard_action, &QAction::triggered, this, &Tiddler_Pure_Edit::discard_edit);
 
-    auto remove_button(new QToolButton);
-    auto remove_menu(new QMenu);
-    auto remove_action = remove_menu->addAction(style()->standardIcon(QStyle::SP_MessageBoxCritical), tr("remove"));
+    auto* remove_button(new QToolButton);
+    auto* remove_menu(new QMenu);
+    auto* remove_action = remove_menu->addAction(style()->standardIcon(QStyle::SP_MessageBoxCritical), tr("remove"));
     remove_button->setIcon(style()->standardIcon(QStyle::SP_MessageBoxCritical));
     remove_button->setMenu(remove_menu);
     remove_button->setPopupMode(QToolButton::InstantPopup);
@@ -106,21 +106,21 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
         update_dirty();
     });
 
-    auto tags_group(new QGroupBox("Tags"));
+    auto* tags_group(new QGroupBox("Tags"));
     tags_group->setLayout(tags_layout);
     main_layout->addWidget(tags_group);
     tag_lineedit->setPlaceholderText("Tag name");
     tags_layout->addWidget(tag_lineedit);
-    auto tag_add_action = tag_lineedit->addAction(style()->standardIcon(QStyle::SP_DialogApplyButton), QLineEdit::LeadingPosition);
+    auto* tag_add_action = tag_lineedit->addAction(style()->standardIcon(QStyle::SP_DialogApplyButton), QLineEdit::LeadingPosition);
     connect(tag_add_action, &QAction::triggered, this, [this] {
         work_tm.set_tag(tag_lineedit->text().toStdString());
     });
     connect(tag_lineedit, &QLineEdit::returnPressed, tag_add_action, &QAction::trigger);
 
-    auto add_field_layout(new QHBoxLayout);
-    auto fields_group(new QGroupBox("Fields"));
-    auto fields_layout(new QVBoxLayout(fields_group));
-    auto field_add_button(new QToolButton);
+    auto* add_field_layout(new QHBoxLayout);
+    auto* fields_group(new QGroupBox("Fields"));
+    auto* fields_layout(new QVBoxLayout(fields_group));
+    auto* field_add_button(new QToolButton);
     add_field_layout->addWidget(field_add_button);
     field_name_lineedit->setPlaceholderText("Field name");
     add_field_layout->addWidget(field_name_lineedit);
@@ -140,10 +140,10 @@ Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     connect(field_name_lineedit, &QLineEdit::returnPressed, field_add_button, &QToolButton::click);
     connect(field_value_lineedit, &QLineEdit::returnPressed, field_add_button, &QToolButton::click);
 
-    auto add_list_layout(new QHBoxLayout);
-    auto lists_group(new QGroupBox("Lists"));
-    auto lists_layout(new QVBoxLayout(lists_group));
-    auto list_add_button(new QToolButton);
+    auto* add_list_layout(new QHBoxLayout);
+    auto* lists_group(new QGroupBox("Lists"));
+    auto* lists_layout(new QVBoxLayout(lists_group));
+    auto* list_add_button(new QToolButton);
     list_add_button->setIcon(style()->standardIcon(QStyle::SP_DialogApplyButton));
     list_name_lineedit->setPlaceholderText("List name");
     list_value_lineedit->setPlaceholderText("First list value");
@@ -176,14 +176,14 @@ Tiddler_Model* Tiddler_Pure_Edit::tiddler_model()
 void Tiddler_Pure_Edit::set_tiddler_model(Tiddler_Model* model)
 {
     tm = model;
-    work_tm.set_tiddler_data(tm ? tm->tiddler(): Tiddlerstore::Tiddler());
+    work_tm.set_tiddler_data(tm != nullptr ? tm->tiddler(): Tiddlerstore::Tiddler());
     title_lineedit->setText(work_tm.title().c_str());
     text_edit->setText(work_tm.text().c_str());
     update_present_tags();
     update_present_fields();
     update_present_lists();
     present_accept_button();
-    if (tm) {
+    if (tm != nullptr) {
         connect(tm, &Tiddler_Model::destroyed, this, [this]{
             set_tiddler_model(nullptr);
         });
@@ -194,11 +194,11 @@ void Tiddler_Pure_Edit::set_tiddler_model(Tiddler_Model* model)
 
 void Tiddler_Pure_Edit::update_dirty()
 {
-    bool dirty = (tm && title_lineedit->text().toStdString() != tm->title());
-    dirty |= (tm && text_edit->toPlainText().toStdString() != tm->text());
-    dirty |= (tm && work_tm.tags() != tm->tags());
-    dirty |= (tm && work_tm.fields() != tm->fields());
-    dirty |= (tm && work_tm.lists() != tm->lists());
+    bool dirty = (tm != nullptr && title_lineedit->text().toStdString() != tm->title());
+    dirty |= (tm != nullptr && text_edit->toPlainText().toStdString() != tm->text());
+    dirty |= (tm != nullptr && work_tm.tags() != tm->tags());
+    dirty |= (tm != nullptr && work_tm.fields() != tm->fields());
+    dirty |= (tm != nullptr && work_tm.lists() != tm->lists());
     discard_button->setMenu(dirty ? discard_menu : nullptr);
     if (current_dirty != dirty) {
         current_dirty = dirty;
@@ -226,10 +226,10 @@ void Tiddler_Pure_Edit::update_present_fields()
     field_value_lineedit->clear();
     clear_layout(present_fields_layout);
     for (const auto& field : work_tm.fields()) {
-        auto l(new QHBoxLayout);
-        auto del(new QToolButton);
-        auto fieldnamelabel(new QLabel(QString(field.first.c_str()) + ": "));
-        auto fieldvaluelabel(new QLabel(QString(field.second.c_str())));
+        auto* l(new QHBoxLayout);
+        auto* del(new QToolButton);
+        auto* fieldnamelabel(new QLabel(QString(field.first.c_str()) + ": "));
+        auto* fieldvaluelabel(new QLabel(QString(field.second.c_str())));
         del->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
         l->addWidget(del);
         l->addWidget(fieldnamelabel);
@@ -249,15 +249,15 @@ void Tiddler_Pure_Edit::update_present_lists()
     clear_layout(present_lists_layout);
     single_list_elements.clear();
     for (const auto& list : work_tm.lists()) {
-        auto l(new QHBoxLayout);
-        auto present_values_layout(new FlowLayout);
-        auto del(new QToolButton);
-        auto listnamelabel(new QLabel(QString(list.first.c_str()) + ": "));
+        auto* l(new QHBoxLayout);
+        auto* present_values_layout(new FlowLayout);
+        auto* del(new QToolButton);
+        auto* listnamelabel(new QLabel(QString(list.first.c_str()) + ": "));
         auto listvalues = list.second;
-        auto lval(new QLineEdit);
+        auto* lval(new QLineEdit);
         del->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
         lval->setPlaceholderText("add ...");
-        auto ladd_action = lval->addAction(style()->standardIcon(QStyle::SP_DialogApplyButton), QLineEdit::LeadingPosition);
+        auto* ladd_action = lval->addAction(style()->standardIcon(QStyle::SP_DialogApplyButton), QLineEdit::LeadingPosition);
         l->addWidget(del);
         l->addWidget(listnamelabel);
         present_values_layout->addWidget(lval);
@@ -311,10 +311,10 @@ void Tiddler_Pure_Edit::update_present_list(const std::string& list_name)
 
 QToolButton* Tiddler_Pure_Edit::deletable_value(const std::string& text, QLayout* parent_layout, bool button_after_label)
 {
-    auto w(new QWidget(this));
-    auto l(new QHBoxLayout(w));
-    auto del(new QToolButton(this));
-    auto label(new QLabel(text.c_str(), this));
+    auto* w(new QWidget(this));
+    auto* l(new QHBoxLayout(w));
+    auto* del(new QToolButton(this));
+    auto* label(new QLabel(text.c_str(), this));
     l->setSpacing(0);
     l->setContentsMargins(0, 0, 0, 0);
     del->setIcon(style()->standardIcon(QStyle::SP_TitleBarCloseButton));
@@ -328,5 +328,5 @@ QToolButton* Tiddler_Pure_Edit::deletable_value(const std::string& text, QLayout
 
 void Tiddler_Pure_Edit::present_accept_button()
 {
-    tm ? accept_button->show() : accept_button->hide();
+    tm != nullptr ? accept_button->show() : accept_button->hide();
 }

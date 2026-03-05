@@ -36,7 +36,7 @@ void Flow_List_View::doItemsLayout()
 
 void Flow_List_View::mouseMoveEvent(QMouseEvent* event)
 {
-    QModelIndex index = indexAt(event->pos());
+    const QModelIndex index = indexAt(event->pos());
     if (index.row() != hoverRow || state() != QAbstractItemView::NoState) {
         delete_del_button();
         if (index.row() != -1 && state() == QAbstractItemView::NoState) {
@@ -66,7 +66,7 @@ void Flow_List_View::leaveEvent(QEvent* event)
 
 void Flow_List_View::delete_del_button()
 {
-    if (del_button) {
+    if (del_button != nullptr) {
         del_button->deleteLater();
     }
     del_button = nullptr;
@@ -107,7 +107,7 @@ void clear_layout(QLayout* l)
         if (child->widget()) {
             child->widget()->deleteLater();
         }
-        auto cl = child->layout();
+        auto* cl = child->layout();
         if (cl) {
             clear_layout(cl);
         }
@@ -131,18 +131,18 @@ Tiddlerstore_Handler::Tiddlerstore_Handler(const QStringList& tiddlerstore_list,
     auto elems = tiddlerstore_history.get_elements();
     open_store(elems.isEmpty() ? QString() : elems.first());
 
-    auto title_sort_model = new QSortFilterProxyModel(this);
+    auto* title_sort_model = new QSortFilterProxyModel(this);
     title_sort_model->setSourceModel(&title_model);
     title_sort_model->sort(0);
 
-    auto tiddler_list_view = new QListView(this);
+    auto* tiddler_list_view = new QListView(this);
     tiddler_list_view->setModel(title_sort_model);
     tiddler_list_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     connect(tiddler_list_view, &QListView::clicked, tiddler_list_view, [this, title_sort_model](const QModelIndex& index) {
         prepare_open(*filter_group->filtered_tiddlers()[title_sort_model->mapToSource(index).row()]);
     });
 
-    auto main_layout(new QVBoxLayout(this));
+    auto* main_layout(new QVBoxLayout(this));
     main_layout->addLayout(setup_toolbar());
     main_layout->addLayout(filter_layout);
     main_layout->addWidget(tiddler_list_view);
@@ -169,13 +169,13 @@ void Tiddlerstore_Handler::setup_load_button()
         auto default_location = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
         load_history_menu->clear();
         for (auto it = elems.begin(); it != elems.end(); it += 1) {
-            auto path = *it;
-            auto load = load_history_menu->addAction(path);
+            const auto& path = *it;
+            auto* load = load_history_menu->addAction(path);
             connect(load, &QAction::triggered, this, [this, path] {
                 open_store(path);
             });
         }
-        auto load_other = load_history_menu->addAction("...");
+        auto* load_other = load_history_menu->addAction("...");
         connect(load_other, &QAction::triggered, this, [this, default_location] {
             auto path = QFileDialog::getOpenFileName(nullptr, tr("Select Tiddlerstore"), default_location);
             if (!path.isEmpty()) {
@@ -190,7 +190,7 @@ void Tiddlerstore_Handler::setup_load_button()
 
 QToolButton* Tiddlerstore_Handler::setup_save_button()
 {
-    auto save_menu(new QMenu(this));
+    auto* save_menu(new QMenu(this));
     connect(save_menu, &QMenu::aboutToShow, save_menu, [this, save_menu] {
         auto elems = tiddlerstore_history.get_elements();
         auto default_location = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
@@ -200,10 +200,10 @@ QToolButton* Tiddlerstore_Handler::setup_save_button()
             connect(save_current, &QAction::triggered, this, [this, save_current]{
                 save_store(save_current->text());
             });
-            QFileInfo fi(elems.first());
+            const QFileInfo fi(elems.first());
             default_location = fi.path();
         }
-        auto save_other = save_menu->addAction("...");
+        auto* save_other = save_menu->addAction("...");
         connect(save_other, &QAction::triggered, save_other, [this, default_location] {
             auto other_name = QFileDialog::getSaveFileName(nullptr, tr("Where do you want to save?"), default_location);
             if (!other_name.isEmpty()) {
@@ -211,7 +211,7 @@ QToolButton* Tiddlerstore_Handler::setup_save_button()
             }
         });
     });
-    auto save_button(new QToolButton(this));
+    auto* save_button(new QToolButton(this));
     save_button->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
     save_button->setPopupMode(QToolButton::InstantPopup);
     save_button->setMenu(save_menu);
@@ -220,7 +220,7 @@ QToolButton* Tiddlerstore_Handler::setup_save_button()
 
 void Tiddlerstore_Handler::setup_main_title_filter()
 {
-    if (!main_title_filter_edit) {
+    if (main_title_filter_edit == nullptr) {
         main_title_filter_edit = new QLineEdit(this);
         main_title_filter_edit->setClearButtonEnabled(true);
         main_title_filter_open_action = main_title_filter_edit->addAction(style()->standardIcon(QStyle::SP_DirOpenIcon), QLineEdit::LeadingPosition);
@@ -271,18 +271,18 @@ void Tiddlerstore_Handler::setup_filter()
     for (auto it = filters.begin() + 1; it != filters.end(); it += 1) {
         add_single_group(**it);
     }
-    add_single_group(*always_empty_filter.get());
+    add_single_group(*always_empty_filter);
 }
 
 void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Filter& filter)
 {
-    auto group_box = new QGroupBox(this);
+    auto* group_box = new QGroupBox(this);
     group_box->setContentsMargins(0, 0, 0, 0);
     //group_box->setFlat(true);
-    auto group_layout = new QVBoxLayout(group_box);
-    auto filter_form_layout = new QFormLayout;
-    QStringList title_opt {"title"};
-    QStringList text_opt {"text"};
+    auto* group_layout = new QVBoxLayout(group_box);
+    auto* filter_form_layout = new QFormLayout;
+    const QStringList title_opt {"title"};
+    const QStringList text_opt {"text"};
     QStringList tag_opts;
     QStringList field_opts;
     QStringList list_opts;
@@ -326,7 +326,7 @@ void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Filter& filter)
             del = add_list_filter(filter, i, filter_form_layout);
             break;
         }
-        if (del) {
+        if (del != nullptr) {
             connect(del, &QToolButton::clicked, del, [this, &filter, i] {
                 filter.remove(i);
                 if (filter.elements().empty()) {
@@ -349,7 +349,7 @@ void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Filter& filter)
     for (const auto& o : list_opts) {
         remaining_opts.append(QString("list: ") + o);
     }
-    auto box = new QComboBox(this);
+    auto* box = new QComboBox(this);
     box->insertItems(0, remaining_opts);
     box->setEditable(true);
     box->setInsertPolicy(QComboBox::NoInsert);
@@ -359,7 +359,7 @@ void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Filter& filter)
     box->completer()->setCaseSensitivity(Qt::CaseInsensitive);
     box->completer()->setCompletionMode(QCompleter::PopupCompletion);
     connect(box, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), box, [this, title_opt, text_opt, tag_opts, field_opts, list_opts, &filter](int index) {
-        auto add_to_group = [this, &index, &filter](const QStringList& opts, Tiddlerstore::Filter_Element filter_data) {
+        auto add_to_group = [this, &index, &filter](const QStringList& opts, const Tiddlerstore::Filter_Element & filter_data) {
             if (index < opts.size()) {
                 &filter == always_empty_filter.get() ? filter_group->append().append(filter_data) : filter.append(filter_data);
                 setup_filter();
@@ -382,7 +382,7 @@ void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Filter& filter)
 void Tiddlerstore_Handler::add_negate_button(Tiddlerstore::Filter& filter, std::size_t pos, QLayout* layout)
 {
     auto filter_data = filter.elements()[pos];
-    auto negate_button = new QToolButton(this);
+    auto* negate_button = new QToolButton(this);
     negate_button->setText("!");
     negate_button->setCheckable(true);
     negate_button->setChecked(filter_data.negate);
@@ -397,8 +397,8 @@ void Tiddlerstore_Handler::add_negate_button(Tiddlerstore::Filter& filter, std::
 
 QToolButton* Tiddlerstore_Handler::add_label_del_row(const QString& text, QLayout* single_filter_functions, QFormLayout* filter_form_layout)
 {
-    auto label = new QLabel(text, this);
-    auto delete_button = new QToolButton(this);
+    auto* label = new QLabel(text, this);
+    auto* delete_button = new QToolButton(this);
     delete_button->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
     single_filter_functions->addWidget(delete_button);
     filter_form_layout->addRow(label, single_filter_functions);
@@ -408,9 +408,9 @@ QToolButton* Tiddlerstore_Handler::add_label_del_row(const QString& text, QLayou
 QToolButton* Tiddlerstore_Handler::add_title_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
 {
     auto filter_data = filter.elements()[pos];
-    auto single_filter_functions = new QHBoxLayout;
+    auto* single_filter_functions = new QHBoxLayout;
     add_negate_button(filter, pos, single_filter_functions);
-    auto line_edit = new QLineEdit(this);
+    auto* line_edit = new QLineEdit(this);
     line_edit->setText(filter_data.key.c_str());
     connect(line_edit, &QLineEdit::textChanged, line_edit, [this, &filter, pos](const QString& text) {
         filter.set_element(pos, Tiddlerstore::title_contains(text.toStdString()));
@@ -424,9 +424,9 @@ QToolButton* Tiddlerstore_Handler::add_title_filter(Tiddlerstore::Filter& filter
 QToolButton* Tiddlerstore_Handler::add_text_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
 {
     auto filter_data = filter.elements()[pos];
-    auto single_filter_functions = new QHBoxLayout;
+    auto* single_filter_functions = new QHBoxLayout;
     add_negate_button(filter, pos, single_filter_functions);
-    auto line_edit = new QLineEdit(this);
+    auto* line_edit = new QLineEdit(this);
     line_edit->setText(filter_data.key.c_str());
     connect(line_edit, &QLineEdit::textChanged, line_edit, [this, &filter, pos](const QString& text) {
         filter.set_element(pos, Tiddlerstore::text_contains(text.toStdString()));
@@ -440,9 +440,9 @@ QToolButton* Tiddlerstore_Handler::add_text_filter(Tiddlerstore::Filter& filter,
 QToolButton* Tiddlerstore_Handler::add_tag_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
 {
     auto filter_data = filter.elements()[pos];
-    auto single_filter_functions = new QHBoxLayout;
+    auto* single_filter_functions = new QHBoxLayout;
     add_negate_button(filter, pos, single_filter_functions);
-    auto tag_value = new QLabel(filter_data.key.c_str(), this);
+    auto* tag_value = new QLabel(filter_data.key.c_str(), this);
     single_filter_functions->addWidget(tag_value);
     single_filter_functions->addStretch();
     return add_label_del_row(tr("Tag"), single_filter_functions, filter_form_layout);
@@ -451,9 +451,9 @@ QToolButton* Tiddlerstore_Handler::add_tag_filter(Tiddlerstore::Filter& filter, 
 QToolButton* Tiddlerstore_Handler::add_field_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
 {
     auto filter_data = filter.elements()[pos];
-    auto single_filter_functions = new QHBoxLayout;
+    auto* single_filter_functions = new QHBoxLayout;
     add_negate_button(filter, pos, single_filter_functions);
-    auto line_edit = new QLineEdit(this);
+    auto* line_edit = new QLineEdit(this);
     line_edit->setText(filter_data.field_value.c_str());
     connect(line_edit, &QLineEdit::textChanged, line_edit, [this, &filter, filter_data, pos](const QString& text) {
         filter.set_element(pos, Tiddlerstore::field(filter_data.key, text.toStdString()));
@@ -467,22 +467,22 @@ QToolButton* Tiddlerstore_Handler::add_field_filter(Tiddlerstore::Filter& filter
 QToolButton* Tiddlerstore_Handler::add_list_filter(Tiddlerstore::Filter& filter, std::size_t pos, QFormLayout* filter_form_layout)
 {
     auto filter_data = filter.elements()[pos];
-    auto single_filter_functions = new QHBoxLayout;
+    auto* single_filter_functions = new QHBoxLayout;
     add_negate_button(filter, pos, single_filter_functions);
-    auto list_view = new Flow_List_View(this);
+    auto* list_view = new Flow_List_View(this);
     list_view->setDropIndicatorShown(true);
     list_view->setDragDropMode(QAbstractItemView::InternalMove);
     list_view->setMouseTracking(true);
-    auto list_model = new Move_Only_StandardItemModel;
+    auto* list_model = new Move_Only_StandardItemModel;
     list_view->setModel(list_model);
-    auto list_handler = new QWidget(this);
-    auto list_handler_layout = new QVBoxLayout(list_handler);
+    auto* list_handler = new QWidget(this);
+    auto* list_handler_layout = new QVBoxLayout(list_handler);
     list_handler_layout->addWidget(list_view);
-    auto entry_enter_edit = new QLineEdit(this);
+    auto* entry_enter_edit = new QLineEdit(this);
     entry_enter_edit->setClearButtonEnabled(true);
     entry_enter_edit->addAction(style()->standardIcon(QStyle::SP_DialogApplyButton), QLineEdit::LeadingPosition);
     auto add_to_list_model = [this, list_model, list_view](const std::string& text) {
-        auto item = new QStandardItem(text.c_str());
+        auto* item = new QStandardItem(text.c_str());
         list_model->appendRow(item);
         auto rect = list_view->visualRect(item->index());
         if (list_view->iconSize().height() > rect.height()) {
@@ -535,7 +535,7 @@ QToolButton* Tiddlerstore_Handler::add_list_filter(Tiddlerstore::Filter& filter,
     connect(list_model, &QStandardItemModel::rowsInserted, list_model, [&filter, pos, list_model](const QModelIndex&, int first, int last) {
         auto rows_inserted_filter_data = filter.elements().at(pos);
         for (int i = first; i <= last; i += 1) {
-            auto item = list_model->item(i);
+            auto* item = list_model->item(i);
             rows_inserted_filter_data.list_value.insert(rows_inserted_filter_data.list_value.begin() + i, item ? list_model->item(i)->text().toStdString() : std::string());
         }
         filter.set_element(pos, rows_inserted_filter_data);
@@ -567,8 +567,8 @@ void Tiddlerstore_Handler::apply_filter()
         titles << t->title().c_str();
     }
     title_model.setStringList(titles);
-    bool show_open = tiddlers.size() == 1;
-    bool show_add = tiddlers.empty();
+    const bool show_open = tiddlers.size() == 1;
+    const bool show_add = tiddlers.empty();
     main_title_filter_open_action->setVisible(show_open);
     main_title_filter_add_action->setVisible(show_add);
     main_title_filter_placeholder_action->setVisible(!(show_open || show_add));
@@ -579,7 +579,7 @@ void Tiddlerstore_Handler::adjust_dirty(bool dirty_value)
     if (dirty_value != is_dirty) {
         is_dirty = dirty_value;
         if (is_dirty) {
-            if (!load_safety_menu) {
+            if (load_safety_menu == nullptr) {
                 load_safety_menu = new QMenu;
             }
             load_button->setMenu(load_safety_menu);
@@ -620,8 +620,8 @@ void Tiddlerstore_Handler::save_store(const QString& path)
 
 void Tiddlerstore_Handler::prepare_open(Tiddlerstore::Tiddler& t)
 {
-    auto model = store_model.model_for_tiddler(t);
-    if (model) {
+    auto* model = store_model.model_for_tiddler(t);
+    if (model != nullptr) {
         emit open_tiddler_model(model);
     }
 }

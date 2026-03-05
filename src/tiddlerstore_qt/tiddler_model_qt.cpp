@@ -14,12 +14,12 @@ const Tiddlerstore::Tiddler& Tiddler_Model::tiddler() const
 
 void Tiddler_Model::set_tiddler_data(const Tiddlerstore::Tiddler &other)
 {
-    bool title_will_change          = t.title()        != other.title();
-    bool history_size_will_change   = t.history_size() != other.history_size();
-    bool text_will_change           = t.text_history() != other.text_history();
-    bool tags_will_change           = t.tags()         != other.tags();
-    bool fields_will_change         = t.fields()       != other.fields();
-    bool lists_will_change          = t.lists()        != other.lists();
+    const bool title_will_change          = t.title()        != other.title();
+    const bool history_size_will_change   = t.history_size() != other.history_size();
+    const bool text_will_change           = t.text_history() != other.text_history();
+    const bool tags_will_change           = t.tags()         != other.tags();
+    const bool fields_will_change         = t.fields()       != other.fields();
+    const bool lists_will_change          = t.lists()        != other.lists();
     t = other;
     if (title_will_change) {
         emit title_changed();
@@ -209,7 +209,7 @@ Tiddlerstore_Model::Tiddlerstore_Model(Tiddlerstore::Store& s, QObject* parent)
 Tiddler_Model& Tiddlerstore_Model::add()
 {
     auto& t = *data.emplace_back(new Tiddlerstore::Tiddler);
-    auto tm = model_for_tiddler(t);
+    auto* tm = model_for_tiddler(t);
     emit added(data.size() - 1);
     return *tm;
 }
@@ -217,7 +217,7 @@ Tiddler_Model& Tiddlerstore_Model::add()
 Tiddler_Model* Tiddlerstore_Model::model_for_index(std::size_t index)
 {
     if (index < data.size()) {
-        return model_for_tiddler(*data[static_cast<std::size_t>(index)]);
+        return model_for_tiddler(*data[index]);
     }
     return nullptr;
 }
@@ -228,9 +228,9 @@ Tiddler_Model* Tiddlerstore_Model::model_for_tiddler(const Tiddlerstore::Tiddler
     if (it == active_models.end()) {
         auto store_it = Tiddlerstore::tiddler_pos_in_store(t, data);
         if (store_it != data.end()) {
-            auto tiddler = store_it->get();
+            auto* tiddler = store_it->get();
             it = active_models.insert({tiddler, std::make_unique<Tiddler_Model>(*tiddler)}).first;
-            auto tm = it->second.get();
+            auto* tm = it->second.get();
             connect(tm, &Tiddler_Model::title_changed,          tm, [this, tm]                          { emit title_changed(tm); });
             connect(tm, &Tiddler_Model::text_changed,           tm, [this, tm]                          { emit text_changed(tm); });
             connect(tm, &Tiddler_Model::history_size_changed,   tm, [this, tm]                          { emit history_size_changed(tm); });
@@ -266,8 +266,8 @@ std::vector<Tiddler_Model*> Tiddlerstore_Model::filtered_models(Tiddlerstore::Fi
 {
     std::vector<Tiddler_Model*> ret;
     for (const auto& i : filter.filtered_idx()) {
-        auto model = model_for_index(i);
-        if (model) {
+        auto* model = model_for_index(i);
+        if (model != nullptr) {
             ret.push_back(model);
         }
     }

@@ -15,13 +15,13 @@
 QTableView_Demo::QTableView_Demo(QWidget* parent)
     : QWidget(parent)
 {
-    auto l = new QVBoxLayout(this);
+    auto* layout = new QVBoxLayout(this);
 
     horizontal_scroll();
     column_size_max_percent();
     hide_lines();
 
-    l->addWidget(&tb);
+    layout->addWidget(&tb);
 
     connect(&tb, &QToolBox::currentChanged, this, [this](int index) {
         if (index == 1) {
@@ -34,59 +34,59 @@ QTableView_Demo::QTableView_Demo(QWidget* parent)
 
 void QTableView_Demo::horizontal_scroll()
 {
-    auto w = new QWidget(this);
-    auto l = new QVBoxLayout(w);
-    auto text = new QTextBrowser(this);
-    auto cb = new QCheckBox(tr("use scroll by pixel"), this);
-    auto sim = new QStandardItemModel(this);
-    auto tv = new QTableView(this);
+    auto* widget = new QWidget(this);
+    auto* layout = new QVBoxLayout(widget);
+    auto* textBrowser = new QTextBrowser(this);
+    auto* checkBox = new QCheckBox(tr("use scroll by pixel"), this);
+    auto* sim = new QStandardItemModel(this);
+    auto* tableView = new QTableView(this);
 
-    QString text_before_docanchor(tr("The"));
-    QString docanchor_start("<a href=\"https://doc.qt.io/qt-5/qabstractitemview.html#horizontalScrollMode-prop\">");
-    QString docanchor_text(tr("horizontal scroll mode"));
-    QString docanchor_end("</a>");
-    QString docanchor(docanchor_start + docanchor_text + docanchor_end);
-    QString text_after_docanchor(tr("can move the table by item or by pixel. "
+    const QString text_before_docanchor(tr("The"));
+    const QString docanchor_start("<a href=\"https://doc.qt.io/qt-5/qabstractitemview.html#horizontalScrollMode-prop\">");
+    const QString docanchor_text(tr("horizontal scroll mode"));
+    const QString docanchor_end("</a>");
+    const QString docanchor(docanchor_start + docanchor_text + docanchor_end);
+    const QString text_after_docanchor(tr("can move the table by item or by pixel. "
                                     "Clicking the long cell with scrolling by item makes the table jump to "
                                     "the end of the cell, which might not be desired. Scrolling by pixel "
                                     "jumps to the start of the cell."));
-    text->setOpenExternalLinks(true);
-    text->setText(text_before_docanchor + " " + docanchor + " " + text_after_docanchor);
-    text->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContentsOnFirstShow);
+    textBrowser->setOpenExternalLinks(true);
+    textBrowser->setText(text_before_docanchor + " " + docanchor + " " + text_after_docanchor);
+    textBrowser->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContentsOnFirstShow);
     sim->setItem(0, 0, new QStandardItem(tr("short")));
     sim->setItem(0, 1, new QStandardItem(tr("incredibly long, causing a horizontal scrollbar after the column is resized to fit the content and if you click on this item it will make a jump to the right, with your hands on your hips you bring your knees in tight")));
-    tv->setModel(sim);
-    tv->resizeColumnsToContents();
-    tv->setHorizontalScrollMode(QAbstractItemView::ScrollPerItem);
-    tv->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    tv->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContentsOnFirstShow);
+    tableView->setModel(sim);
+    tableView->resizeColumnsToContents();
+    tableView->setHorizontalScrollMode(QAbstractItemView::ScrollPerItem);
+    tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tableView->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContentsOnFirstShow);
 
-    l->addWidget(text);
-    l->addWidget(cb);
-    l->addWidget(tv);
+    layout->addWidget(textBrowser);
+    layout->addWidget(checkBox);
+    layout->addWidget(tableView);
 
-    connect(cb, &QCheckBox::clicked, this, [tv](bool checked) {
-        tv->setHorizontalScrollMode(checked ? QAbstractItemView::ScrollPerPixel : QAbstractItemView::ScrollPerItem);
+    connect(checkBox, &QCheckBox::clicked, this, [tableView](bool checked) {
+        tableView->setHorizontalScrollMode(checked ? QAbstractItemView::ScrollPerPixel : QAbstractItemView::ScrollPerItem);
     });
 
-    tb.addItem(w, tr("Horizontal scrolling for long cell"));
+    tb.addItem(widget, tr("Horizontal scrolling for long cell"));
 }
 
 void QTableView_Demo::column_size_max_percent()
 {
     static constexpr int hundred_percent = 100;
     static constexpr int start_percent = 33;
-    auto w = new QWidget(this);
-    auto l = new QVBoxLayout(w);
-    auto text = new QTextBrowser(this);
-    auto sim = new QStandardItemModel(this);
-    auto sb_layout = new QHBoxLayout;
-    auto sb_label_pre = new QLabel(tr("maximum width for each column in % of table width"), this);
-    auto sb_label_post = new QLabel(tr("%"), this);
+    auto* widget = new QWidget(this);
+    auto* layout = new QVBoxLayout(widget);
+    auto* textBrowser = new QTextBrowser(this);
+    auto* sim = new QStandardItemModel(this);
+    auto* sb_layout = new QHBoxLayout;
+    auto* sb_label_pre = new QLabel(tr("maximum width for each column in % of table width"), this);
+    auto* sb_label_post = new QLabel(tr("%"), this);
     column_size_max_percent_sb = new QSpinBox(this);
     column_size_max_percent_tv = new QTableView(this);
 
-    QString description(tr("The available space of the table is distributed among the columns. "
+    const QString description(tr("The available space of the table is distributed among the columns. "
                            "If a column's content is wider and the given maximum percent allow "
                            "to use more space, the column will get it. If space is left, the columns "
                            "staring from the last one will get as much as needed until no space is "
@@ -94,8 +94,8 @@ void QTableView_Demo::column_size_max_percent()
                            "The sizes are set once, so there is no adaption if "
                            "the table gets resized. Nothing is fixed, the user can still adjust "
                            "all columns. You can edit the cells by double clicking."));
-    text->setText(description);
-    text->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContentsOnFirstShow);
+    textBrowser->setText(description);
+    textBrowser->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContentsOnFirstShow);
     sim->setItem(0, 0, new QStandardItem("a b c d e f g end"));
     sim->setItem(0, 1, new QStandardItem("a b c d e f g h i j k l m end"));
     sim->setItem(0, 2, new QStandardItem("a b c d e f g h i j k l m n o p q r s t end"));
@@ -112,15 +112,15 @@ void QTableView_Demo::column_size_max_percent()
     sb_layout->addWidget(column_size_max_percent_sb);
     sb_layout->addWidget(sb_label_post);
     sb_layout->addStretch();
-    l->addWidget(text);
-    l->addLayout(sb_layout);
-    l->addWidget(column_size_max_percent_tv);
+    layout->addWidget(textBrowser);
+    layout->addLayout(sb_layout);
+    layout->addWidget(column_size_max_percent_tv);
 
     connect(column_size_max_percent_sb, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this](int value) {
         Qt_Utilities::tableview_resizecolumnstocontents_maxpercent(column_size_max_percent_tv, value);
     });
 
-    tb.addItem(w, tr("Set column sizes up to a maximum"));
+    tb.addItem(widget, tr("Set column sizes up to a maximum"));
 }
 
 void QTableView_Demo::hide_lines()
@@ -128,22 +128,22 @@ void QTableView_Demo::hide_lines()
     static constexpr int number_of_rows = 5;
     static constexpr int number_of_columns = 6;
     static constexpr int last_column_index = 5;
-    auto w = new QWidget(this);
-    auto l = new QVBoxLayout(w);
-    auto text = new QTextBrowser(this);
-    auto sim = new QStandardItemModel(this);
-    auto table_layout = new QHBoxLayout;
-    auto tv = new QTableView(this);
-    auto gb = new QGroupBox(tr("visible columns"), this);
-    auto gb_layout = new QVBoxLayout(gb);
-    auto config_layout = new QHBoxLayout;
-    auto start_label = new QLabel(tr("ignore front columns, including: "));
-    auto start_sb = new QSpinBox(this);
-    auto ignore_icon_cb = new QCheckBox(tr("ignore icon"), this);
-    auto ignore_bg_cb = new QCheckBox(tr("ignore background"), this);
-    auto ignore_disabled_cb = new QCheckBox(tr("ignore disabled cells"), this);
+    auto* widget = new QWidget(this);
+    auto* layout = new QVBoxLayout(widget);
+    auto* text = new QTextBrowser(this);
+    auto* sim = new QStandardItemModel(this);
+    auto* table_layout = new QHBoxLayout;
+    auto* tableView = new QTableView(this);
+    auto* groupBox = new QGroupBox(tr("visible columns"), this);
+    auto* gb_layout = new QVBoxLayout(groupBox);
+    auto* config_layout = new QHBoxLayout;
+    auto* start_label = new QLabel(tr("ignore front columns, including: "));
+    auto* start_sb = new QSpinBox(this);
+    auto* ignore_icon_cb = new QCheckBox(tr("ignore icon"), this);
+    auto* ignore_bg_cb = new QCheckBox(tr("ignore background"), this);
+    auto* ignore_disabled_cb = new QCheckBox(tr("ignore disabled cells"), this);
 
-    QString description(tr("If you hide columns in sparsely populated tables, "
+    const QString description(tr("If you hide columns in sparsely populated tables, "
                            "only irrelevant data or empty rows might be left. "
                            "Icons without text can keep the row in view. "
                            "You can edit the cells by double clicking. After "
@@ -157,13 +157,13 @@ void QTableView_Demo::hide_lines()
             sim->setItem(row, column, new QStandardItem);
         }
         if (column > 0) {
-            auto cb = new QCheckBox(QString::number(column + 1), this);
-            cb->setChecked(true);
-            connect(cb, &QCheckBox::clicked, this, [this, tv, column, start_sb](bool checked) {
-                tv->setColumnHidden(column, !checked);
-                Qt_Utilities::tableview_adjust_row_visibility(tv, rv_checks, start_sb->value());
+            auto* checkBox = new QCheckBox(QString::number(column + 1), this);
+            checkBox->setChecked(true);
+            connect(checkBox, &QCheckBox::clicked, this, [this, tableView, column, start_sb](bool checked) {
+                tableView->setColumnHidden(column, !checked);
+                Qt_Utilities::tableview_adjust_row_visibility(tableView, rv_checks, start_sb->value());
             });
-            gb_layout->addWidget(cb);
+            gb_layout->addWidget(checkBox);
         }
     }
     sim->item(0, 0)->setText("Animals with \"A\"");
@@ -185,32 +185,32 @@ void QTableView_Demo::hide_lines()
     sim->item(3, 4)->setIcon(style()->standardIcon(QStyle::SP_DirHomeIcon));
     sim->item(4, 2)->setIcon(style()->standardIcon(QStyle::SP_DirHomeIcon));
     sim->item(4, last_column_index)->setText("Elephant");
-    tv->verticalHeader()->hide();
-    tv->setModel(sim);
-    tv->resizeColumnsToContents();
-    tv->setHorizontalScrollMode(QAbstractItemView::ScrollPerItem);
-    tv->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContentsOnFirstShow);
-    start_sb->setRange(0, tv->model()->columnCount());
+    tableView->verticalHeader()->hide();
+    tableView->setModel(sim);
+    tableView->resizeColumnsToContents();
+    tableView->setHorizontalScrollMode(QAbstractItemView::ScrollPerItem);
+    tableView->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContentsOnFirstShow);
+    start_sb->setRange(0, tableView->model()->columnCount());
     start_sb->setValue(1);
     ignore_icon_cb->setChecked(true);
     ignore_bg_cb->setChecked(true);
     ignore_disabled_cb->setChecked(true);
     rv_checks.setFlag(Qt_Utilities::Row_Visiblility_Check::Disabled_Allows_Hiding);
 
-    connect(start_sb, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this, tv](int value) {
-        Qt_Utilities::tableview_adjust_row_visibility(tv, rv_checks, value);
+    connect(start_sb, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this, tableView](int value) {
+        Qt_Utilities::tableview_adjust_row_visibility(tableView, rv_checks, value);
     });
-    connect(ignore_icon_cb, &QCheckBox::clicked, this, [this, tv, start_sb] (bool checked) {
+    connect(ignore_icon_cb, &QCheckBox::clicked, this, [this, tableView, start_sb] (bool checked) {
         rv_checks.setFlag(Qt_Utilities::Row_Visiblility_Check::Decoration_Keeps_In_View, !checked);
-        Qt_Utilities::tableview_adjust_row_visibility(tv, rv_checks, start_sb->value());
+        Qt_Utilities::tableview_adjust_row_visibility(tableView, rv_checks, start_sb->value());
     });
-    connect(ignore_bg_cb, &QCheckBox::clicked, this, [this, tv, start_sb] (bool checked) {
+    connect(ignore_bg_cb, &QCheckBox::clicked, this, [this, tableView, start_sb] (bool checked) {
         rv_checks.setFlag(Qt_Utilities::Row_Visiblility_Check::Background_Keeps_in_View, !checked);
-        Qt_Utilities::tableview_adjust_row_visibility(tv, rv_checks, start_sb->value());
+        Qt_Utilities::tableview_adjust_row_visibility(tableView, rv_checks, start_sb->value());
     });
-    connect(ignore_disabled_cb, &QCheckBox::clicked, this, [this, tv, start_sb] (bool checked) {
+    connect(ignore_disabled_cb, &QCheckBox::clicked, this, [this, tableView, start_sb] (bool checked) {
         rv_checks.setFlag(Qt_Utilities::Row_Visiblility_Check::Disabled_Allows_Hiding, checked); // this "checked" must not be inverted
-        Qt_Utilities::tableview_adjust_row_visibility(tv, rv_checks, start_sb->value());
+        Qt_Utilities::tableview_adjust_row_visibility(tableView, rv_checks, start_sb->value());
     });
 
     gb_layout->addStretch();
@@ -220,11 +220,11 @@ void QTableView_Demo::hide_lines()
     config_layout->addWidget(ignore_bg_cb);
     config_layout->addWidget(ignore_disabled_cb);
     config_layout->addStretch();
-    table_layout->addWidget(tv);
-    table_layout->addWidget(gb);
-    l->addWidget(text);
-    l->addLayout(config_layout);
-    l->addLayout(table_layout);
+    table_layout->addWidget(tableView);
+    table_layout->addWidget(groupBox);
+    layout->addWidget(text);
+    layout->addLayout(config_layout);
+    layout->addLayout(table_layout);
 
-    tb.addItem(w, tr("Hide lines in sparse tables"));
+    tb.addItem(widget, tr("Hide lines in sparse tables"));
 }

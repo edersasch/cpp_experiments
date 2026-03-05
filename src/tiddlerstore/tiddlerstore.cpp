@@ -6,13 +6,13 @@
 namespace
 {
 
-auto map_value = [](const auto& map, const auto& key)
+const auto map_value = [](const auto& map, const auto& key)
 {
-    auto it = map.find(key);
-    return it == map.end() ? typename std::decay_t<decltype(map)>::mapped_type() : it->second;
+    auto itr = map.find(key);
+    return itr == map.end() ? typename std::decay_t<decltype(map)>::mapped_type() : itr->second;
 };
 
-auto set_map_value = [](auto& map, const auto& key, const auto& value)
+const auto set_map_value = [](auto& map, const auto& key, const auto& value)
 {
     if (!key.empty()) {
         if (value.empty()) {
@@ -31,7 +31,7 @@ auto set_map_value = [](auto& map, const auto& key, const auto& value)
     return Tiddlerstore::Set_Field_List_Change::None;
 };
 
-auto extract_map_keys = [](const auto& src, auto& dest)
+const auto extract_map_keys = [](const auto& src, auto& dest)
 {
     for (const auto& elem : src) {
         dest.insert(elem.first);
@@ -40,10 +40,10 @@ auto extract_map_keys = [](const auto& src, auto& dest)
 
 bool string_find_case_insensitive(const std::string& haystack, const std::string& needle)
 {
-    auto it = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), [](char c1, char c2) {
-        return std::tolower(c1) == std::tolower(c2);
+    auto itr = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), [](char ch1, char ch2) {
+        return std::tolower(ch1) == std::tolower(ch2);
     });
-    return it != haystack.end();
+    return itr != haystack.end();
 }
 
 Tiddlerstore::Filter_Element title_text(Tiddlerstore::Filter_Type type, const std::string& key, bool negate = false, bool case_sensitive = false)
@@ -94,9 +94,7 @@ bool Tiddler::set_history_size(std::int32_t new_history_size)
 {
     if (new_history_size > 0) {
         static constexpr int max_history_size = 100;
-        if (new_history_size > max_history_size) {
-            new_history_size = max_history_size;
-        }
+        new_history_size = std::min(new_history_size, max_history_size);
         if (new_history_size != text_history_size) {
             text_history_size = new_history_size > max_history_size ? max_history_size : new_history_size;
             if (static_cast<std::size_t>(text_history_size) < tiddler_text_history.size()) {
@@ -120,17 +118,17 @@ std::vector<std::string> Tiddler::text_history() const
 
 bool Tiddler::set_text(const std::string &text)
 {
-    auto it = std::find(tiddler_text_history.begin(), tiddler_text_history.end(), text);
-    if (it != tiddler_text_history.begin() || tiddler_text_history.empty()) {
-        if (it == tiddler_text_history.end()) {
+    auto itr = std::find(tiddler_text_history.begin(), tiddler_text_history.end(), text);
+    if (itr != tiddler_text_history.begin() || tiddler_text_history.empty()) {
+        if (itr == tiddler_text_history.end()) {
             if (static_cast<std::int32_t>(tiddler_text_history.size()) == text_history_size) {
                 tiddler_text_history.back() = text;
             } else {
                 tiddler_text_history.push_back(text);
             }
-            it = tiddler_text_history.end() - 1;
+            itr = tiddler_text_history.end() - 1;
         }
-        std::rotate(tiddler_text_history.begin(), it, it + 1);
+        std::rotate(tiddler_text_history.begin(), itr, itr + 1);
         return true;
     }
     return false;
@@ -157,9 +155,9 @@ bool Tiddler::set_tag(const std::string& tag)
 
 bool Tiddler::remove_tag(const std::string& tag)
 {
-    auto it = std::find(tiddler_tags.begin(), tiddler_tags.end(), tag);
-    if (it != tiddler_tags.end()) {
-        tiddler_tags.erase(it);
+    auto itr = std::find(tiddler_tags.begin(), tiddler_tags.end(), tag);
+    if (itr != tiddler_tags.end()) {
+        tiddler_tags.erase(itr);
         return true;
     }
     return false;
@@ -218,78 +216,78 @@ bool Tiddler::is_empty()
             tiddler_lists.empty();
 }
 
-void to_json(nlohmann::json& j, const Tiddler& t)
+void to_json(nlohmann::json& json, const Tiddler& tiddler)
 {
-    j = nlohmann::json {{ version_key, version_value }};
-    auto push_optional = [&j](const std::string& key, const auto& value) {
+    json = nlohmann::json {{ version_key, version_value }};
+    auto push_optional = [&json](const std::string& key, const auto& value) {
         if (!value.empty()) {
-            j.push_back({key, value});
+            json.push_back({key, value});
         }
     };
-    if (t.history_size() != Tiddler::default_text_history_size) {
-        j.push_back({ Tiddler::history_size_key, t.history_size() });
+    if (tiddler.history_size() != Tiddler::default_text_history_size) {
+        json.push_back({ Tiddler::history_size_key, tiddler.history_size() });
     }
-    push_optional(Tiddler::title_key, t.title());
-    push_optional(Tiddler::text_history_key, t.text_history());
-    push_optional(Tiddler::tags_key, t.tags());
-    push_optional(Tiddler::fields_key, t.fields());
-    push_optional(Tiddler::lists_key, t.lists());
+    push_optional(Tiddler::title_key, tiddler.title());
+    push_optional(Tiddler::text_history_key, tiddler.text_history());
+    push_optional(Tiddler::tags_key, tiddler.tags());
+    push_optional(Tiddler::fields_key, tiddler.fields());
+    push_optional(Tiddler::lists_key, tiddler.lists());
 }
 
-void from_json(const nlohmann::json& j, Tiddler& t)
+void from_json(const nlohmann::json& json, Tiddler& tiddler)
 {
-    auto title_v1 = [&j, &t] {
+    auto title_v1 = [&json, &tiddler] {
         try {
-            t.set_title(j.at(Tiddler::title_key).get<std::string>());
+            tiddler.set_title(json.at(Tiddler::title_key).get<std::string>());
         } catch (const nlohmann::json::exception&) {
         }
     };
-    auto history_size_v1 = [&j, &t] {
+    auto history_size_v1 = [&json, &tiddler] {
         try {
-            t.set_history_size(j.at(Tiddler::history_size_key).get<int>());
+            tiddler.set_history_size(json.at(Tiddler::history_size_key).get<int>());
         } catch (const nlohmann::json::exception&) {
         }
     };
-    auto text_history_v1 = [&j, &t] {
+    auto text_history_v1 = [&json, &tiddler] {
         try {
-            auto jtext_history = j.at(Tiddler::text_history_key).get<std::vector<std::string>>();
+            auto jtext_history = json.at(Tiddler::text_history_key).get<std::vector<std::string>>();
             auto textit = jtext_history.rbegin();
             while (textit != jtext_history.rend()) {
-                t.set_text(*textit);
+                tiddler.set_text(*textit);
                 textit += 1;
             }
         } catch (const nlohmann::json::exception&) {
         }
     };
-    auto tags_v1 = [&j, &t] {
+    auto tags_v1 = [&json, &tiddler] {
         try {
-            auto jtags = j.at(Tiddler::tags_key).get<std::vector<std::string>>();
+            auto jtags = json.at(Tiddler::tags_key).get<std::vector<std::string>>();
             for (const auto& jtag : jtags) {
-                t.set_tag(jtag);
+                tiddler.set_tag(jtag);
             }
         } catch (const nlohmann::json::exception&) {
         }
     };
-    auto fields_v1 = [&j, &t] {
+    auto fields_v1 = [&json, &tiddler] {
         try {
-            auto jfields = j.at(Tiddler::fields_key).get<std::unordered_map<std::string, std::string>>();
+            auto jfields = json.at(Tiddler::fields_key).get<std::unordered_map<std::string, std::string>>();
             for (const auto& jfield : jfields) {
-                t.set_field(jfield.first, jfield.second);
+                tiddler.set_field(jfield.first, jfield.second);
             }
         } catch (const nlohmann::json::exception&) {
         }
     };
-    auto lists_v1 = [&j, &t] {
+    auto lists_v1 = [&json, &tiddler] {
         try {
-            auto jlists = j.at(Tiddler::lists_key).get<std::unordered_map<std::string, std::vector<std::string>>>();
+            auto jlists = json.at(Tiddler::lists_key).get<std::unordered_map<std::string, std::vector<std::string>>>();
             for (const auto& jlist : jlists) {
-                t.set_list(jlist.first, jlist.second);
+                tiddler.set_list(jlist.first, jlist.second);
             }
         } catch (const nlohmann::json::exception&) {
         }
     };
     try {
-        switch(j.at(version_key).get<int>()) {
+        switch(json.at(version_key).get<int>()) {
         case 1:
             title_v1();
             history_size_v1();
@@ -305,49 +303,49 @@ void from_json(const nlohmann::json& j, Tiddler& t)
     }
 }
 
-void to_json(nlohmann::json& j, const Store& s)
+void to_json(nlohmann::json& json, const Store& store)
 {
-    for (const auto& t : s) {
-        if (!t->is_empty()) {
-            j.push_back(*t);
+    for (const auto& tiddler : store) {
+        if (!tiddler->is_empty()) {
+            json.push_back(*tiddler);
         }
     }
 }
 
-void from_json(const nlohmann::json& j, Store& s)
+void from_json(const nlohmann::json& json, Store& store)
 {
-    for (const auto& elem : j) {
-        auto t = s.emplace_back(new Tiddler).get();
-        from_json(elem, *t);
-        if (t->is_empty()) {
-            s.pop_back();
+    for (const auto& elem : json) {
+        auto* tiddler = store.emplace_back(new Tiddler).get();
+        from_json(elem, *tiddler);
+        if (tiddler->is_empty()) {
+            store.pop_back();
         }
     }
 }
 
 Store open_store_from_file(const std::string& path)
 {
-    nlohmann::json j;
-    std::ifstream in(path);
-    Store s;
-    in >> j;
-    from_json(j, s);
-    return s;
+    nlohmann::json json;
+    std::ifstream ifStream(path);
+    Store store;
+    ifStream >> json;
+    from_json(json, store);
+    return store;
 }
 
 bool save_store_to_file(const Store& store, const std::string& path)
 {
     std::ofstream out(path);
-    nlohmann::json j(store);
-    out << j.dump();
+    nlohmann::json json(store);
+    out << json.dump();
     return out.good();
 }
 
 std::unordered_set<std::string> store_tags(const Store& store)
 {
     std::unordered_set<std::string> ret;
-    for (const auto& t : store) {
-        auto taglist = t->tags();
+    for (const auto& tiddler : store) {
+        auto taglist = tiddler->tags();
         ret.insert(taglist.begin(), taglist.end());
     }
     return ret;
@@ -356,8 +354,8 @@ std::unordered_set<std::string> store_tags(const Store& store)
 std::unordered_set<std::string> store_fields(const Store& store)
 {
     std::unordered_set<std::string> ret;
-    for (const auto& t : store) {
-        extract_map_keys(t->fields(), ret);
+    for (const auto& tiddler : store) {
+        extract_map_keys(tiddler->fields(), ret);
     }
     return ret;
 }
@@ -365,8 +363,8 @@ std::unordered_set<std::string> store_fields(const Store& store)
 std::unordered_set<std::string> store_lists(const Store& store)
 {
     std::unordered_set<std::string> ret;
-    for (const auto& t : store) {
-        extract_map_keys(t->lists(), ret);
+    for (const auto& tiddler : store) {
+        extract_map_keys(tiddler->lists(), ret);
     }
     return ret;
 }
@@ -374,17 +372,17 @@ std::unordered_set<std::string> store_lists(const Store& store)
 auto tiddler_pos_in_store(const Tiddler& tiddler, const Store& store) -> decltype(store.begin())
 {
     return std::find_if(store.begin(), store.end(), [&tiddler](const auto& tref) {
-        auto taddr = &tiddler;
-        auto trefaddr = tref.get();
+        const auto* taddr = &tiddler;
+        auto* trefaddr = tref.get();
         return taddr == trefaddr;
     });
 }
 
 void erase_tiddler_from_store(const Tiddler& tiddler, Store& store)
 {
-    auto it = tiddler_pos_in_store(tiddler, store);
-    if (it != store.end()) {
-        store.erase(it);
+    auto itr = tiddler_pos_in_store(tiddler, store);
+    if (itr != store.end()) {
+        store.erase(itr);
     }
 }
 

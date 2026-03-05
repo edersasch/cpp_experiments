@@ -12,8 +12,8 @@ AR_History_Search::AR_History_Search(const QStringList& start_archives, int hist
     : QWidget(parent)
     , ar_ui(history_size, start_archives)
 {
-    auto main_layout(new QVBoxLayout(this));
-    auto dir_layout = new QHBoxLayout;
+    auto* main_layout(new QVBoxLayout(this));
+    auto* dir_layout = new QHBoxLayout;
     ar_ui.combobox()->setStyle(new Combobox_Label_Elide_Left_Proxy_Style);
     search_text_edit.setClearButtonEnabled(true);
     dir_tree.setDragEnabled(true);
@@ -35,10 +35,10 @@ AR_History_Search::AR_History_Search(const QStringList& start_archives, int hist
         } else {
             filter_pattern.setPattern(QRegularExpression::wildcardToRegularExpression("*" + search_text_edit.text() + "*"));
         }
-        Qt_Utilities::treeview_hide_expand(&dir_tree, dir_tree.model()->index(0, 0), filter_pattern, true, true);
+        QtUtilities::treeview_hide_expand(&dir_tree, dir_tree.model()->index(0, 0), filter_pattern, true, true);
     });
     connect(dir_tree.model(), &QAbstractItemModel::rowsInserted, this, [this](const QModelIndex& index) {
-        Qt_Utilities::treeview_hide_expand(&dir_tree, index, filter_pattern, true, true);
+        QtUtilities::treeview_hide_expand(&dir_tree, index, filter_pattern, true, true);
     });
     connect(&dir_tree, &QTreeView::doubleClicked, this, [this](const QModelIndex& index) {
         arhelper.open_path(index, archive);

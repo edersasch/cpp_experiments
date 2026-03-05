@@ -1,48 +1,45 @@
 #ifndef SRC_FS_FILTER_QT_FS_FILTER
 #define SRC_FS_FILTER_QT_FS_FILTER
 
+#include "qt_utilities/caching_file_icon_provider.hpp"
 #include "qt_utilities/treeview_hide_expand.h"
 
 #include <QWidget>
 #include <QFileSystemModel>
 #include <QLineEdit>
+#include <QTimer>
 #include <QTreeView>
 #include <QRegularExpression>
 
-class FS_Filter
+class FsFilter
         : public QWidget
 {
     Q_OBJECT
 
 public:
-    FS_Filter(const QString& root_path, QWidget* parent = nullptr);
-    virtual ~FS_Filter() override = default;
+    FsFilter(const QString& rootPath, QWidget* parent = nullptr);
+    virtual ~FsFilter() override = default;
 
     void set_auto_expand(bool do_auto_expand);
     void set_hide_empty_dirs(bool do_hide);
-    void set_focus() { search_text_edit.setFocus(); }
-    QString get_search_text() const { return search_text_edit.text(); }
-    void set_search_text(const QString& search_text) { search_text_edit.setText(search_text); }
-    QTreeView& get_view() { return fs_view; }
+    void set_focus() { mSearchTextEdit.setFocus(); }
+    QString get_search_text() const { return mSearchTextEdit.text(); }
+    void set_search_text(const QString& search_text) { mSearchTextEdit.setText(search_text); }
+    QTreeView& get_view() { return mFsView; }
 
 private:
-    void hide_expand() { Qt_Utilities::treeview_hide_expand(&fs_view, hide_empty_parents_proxy_model.mapFromSource(fs_model.index(fs_model.rootPath())), filter_pattern, hide_empty_dirs, auto_expand, &wait_for_dirs); }
+    void loadPath();
+    void hide_expand(const QModelIndex& index);
+    void updateUi();
 
-    QFileSystemModel fs_model;
-    Qt_Utilities::HideEmptyParentsProxyModel hide_empty_parents_proxy_model;
-    QLineEdit search_text_edit;
-    QTreeView fs_view;
-
-    /**
-      Prevent left over empty dirs
-
-      If fs_model.canFetchMore(index) is true, but directory is empty, no fs_model.layoutChanged() is
-      emitted after expand() and an empty dir could stay in view.
-      */
-    QSet<QPersistentModelIndex> wait_for_dirs {};
-    bool auto_expand {false};
-    bool hide_empty_dirs {false};
-    QRegularExpression filter_pattern;
+    QFileSystemModel mFsModel;
+    QtUtilities::HideEmptyParentsProxyModel mFsFilterModel;
+    QLineEdit mSearchTextEdit;
+    QTreeView mFsView;
+    bool mAutoExpand {false};
+    QRegularExpression mFilterPattern;
+    QtUtilities::CachingFileIconProvider mIconProvider;
+    QTimer mUiDelayTimer;
 };
 
 #endif // SRC_FS_FILTER_QT_FS_FILTER

@@ -22,7 +22,7 @@ public:
     FS_Filter_Test();
     virtual ~FS_Filter_Test() = default;
 
-    static constexpr int processEvent_repetitions = 10;
+    static constexpr int processEvent_repetitions = 20;
 
 protected:
     void mkfile(const QString& path);
@@ -30,7 +30,7 @@ protected:
     void compare_selection(const QSet<QString>& expected) const;
 
     QTemporaryDir root_dir {};
-    FS_Filter fsf;
+    FsFilter fsf;
     QTreeView& fsf_view;
     QSortFilterProxyModel* fsf_proxy;
     QFileSystemModel* fsf_model;

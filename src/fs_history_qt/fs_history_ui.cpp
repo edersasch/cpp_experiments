@@ -39,7 +39,7 @@ FS_History_UI::FS_History_UI(const QString& fallback_dir, std::int32_t history_s
 
 QComboBox* FS_History_UI::combobox()
 {
-    if (!chooser) {
+    if (chooser == nullptr) {
         chooser = new QComboBox;
         chooser->setModel(&model);
         connect(chooser, &QComboBox::currentTextChanged, &history, &FS_History::set_current_element);
@@ -49,7 +49,7 @@ QComboBox* FS_History_UI::combobox()
 
 QAction* FS_History_UI::browse_action(const QString& action_text, const QString& dialog_caption, const QString& file_filter)
 {
-    if (!file_dialog_action) {
+    if (file_dialog_action == nullptr) {
         file_dialog_action = new QAction(action_text);
         connect(file_dialog_action, &QAction::triggered, this, [this, dialog_caption, file_filter] {
             auto location = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
@@ -72,7 +72,7 @@ QAction* FS_History_UI::browse_action(const QString& action_text, const QString&
 
 QToolButton* FS_History_UI::browse_button(const QString& action_text, const QString& dialog_caption, const QString& file_filter)
 {
-    if (!file_dialog_button) {
+    if (file_dialog_button == nullptr) {
         file_dialog_button = new QToolButton;
         file_dialog_button->setDefaultAction(browse_action(action_text, dialog_caption, file_filter));
     }
@@ -81,11 +81,11 @@ QToolButton* FS_History_UI::browse_button(const QString& action_text, const QStr
 
 QMenu* FS_History_UI::menu(bool use_hotkey, const QString& name, bool append_browse_action, const QString& action_text, const QString& dialog_caption, const QString& file_filter)
 {
-    if (!fs_menu) {
+    if (fs_menu == nullptr) {
         fs_menu = new QMenu(name);
         menu_uses_hotkey = use_hotkey;
         menu_appends_browse_action = append_browse_action;
-        if (menu_appends_browse_action && !file_dialog_action) {
+        if (menu_appends_browse_action && file_dialog_action == nullptr) {
             browse_action(action_text, dialog_caption, file_filter);
         }
         update_menu();
@@ -99,16 +99,16 @@ void FS_History_UI::update_menu()
 {
     fs_menu->clear();
     auto elms = history.get_elements();
-    bool prepend_hotkey = elms.size() <= FS_History::default_history_size;
+    const bool prepend_hotkey = elms.size() <= FS_History::default_history_size;
     std::int32_t hotkey = 1;
     for (auto element : elms) {
-        auto a = fs_menu->addAction(element);
-        connect(a, &QAction::triggered, this, [this, element] {
+        auto* action = fs_menu->addAction(element);
+        connect(action, &QAction::triggered, this, [this, element] {
             history.set_current_element(element);
         });
         if (prepend_hotkey && menu_uses_hotkey) {
             element.prepend("&" + QString::number(hotkey) + " ");
-            a->setText(element);
+            action->setText(element);
             hotkey += 1;
         }
     }

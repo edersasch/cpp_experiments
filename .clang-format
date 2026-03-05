@@ -4,5 +4,6 @@ BasedOnStyle: WebKit
 Standard: c++17
 
 BreakBeforeBraces: Linux
+ColumnLimit: 120
 ConstructorInitializerIndentWidth: 0
 ...

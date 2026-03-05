@@ -78,7 +78,7 @@ public:
 
 private:
     int doLayout(const QRect& rect, bool testOnly) const;
-    int smartSpacing(QStyle::PixelMetric pm) const;
+    int smartSpacing(QStyle::PixelMetric pixelMetric) const;
 
     QList<QLayoutItem*> itemList;
     int m_hSpace;
