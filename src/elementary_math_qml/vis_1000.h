@@ -22,7 +22,8 @@ private slots:
     void change();
 
 private:
-    QString set_limits(const QString& color_to_get, int first_max, bool first_limit_reached, int step_max, int step_limit_reaced);
+    QString set_limits(
+        const QString& color_to_get, int first_max, bool first_limit_reached, int step_max, bool step_limit_reached);
     void set_color(int item_pos, const QString& color);
 
     QQmlComponent vis_component;

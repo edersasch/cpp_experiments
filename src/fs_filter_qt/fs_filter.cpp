@@ -85,17 +85,12 @@ void FsFilter::loadPath()
     for (const auto& dir : dirlist) {
         const auto dirIndex = mFsModel.index(dir.filePath());
         if (dirIndex.isValid()) {
-            hide_expand(dirIndex);
+            if (mFsModel.canFetchMore(dirIndex)) {
+                mFsModel.fetchMore(dirIndex);
+            } else {
+                mUiDelayTimer.start();
+            }
         }
-    }
-}
-
-void FsFilter::hide_expand(const QModelIndex& index)
-{
-    if (mFsModel.canFetchMore(index)) {
-        mFsModel.fetchMore(index);
-    } else {
-        mUiDelayTimer.start();
     }
 }
 

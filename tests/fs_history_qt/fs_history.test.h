@@ -6,14 +6,13 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include <QTemporaryFile>
 #include <QTemporaryDir>
+#include <QTemporaryFile>
 
-#include <vector>
 #include <memory>
+#include <vector>
 
-class FS_History_Test_Slots
-        : public QObject
+class FS_History_Test_Slots : public QObject
 {
     Q_OBJECT
 
@@ -24,9 +23,7 @@ public:
     MOCK_METHOD(void, elements_changed, (const QStringList&));
 };
 
-class File_History_Test
-        : public QObject
-        , public ::testing::Test
+class File_History_Test : public QObject, public ::testing::Test
 {
     Q_OBJECT
 
@@ -35,15 +32,13 @@ public:
     virtual ~File_History_Test() = default;
 
 protected:
-    static constexpr int history_size {5};
+    static constexpr int history_size { 5 };
     std::vector<std::unique_ptr<QTemporaryFile>> fill(std::size_t amount);
-    FS_History file_history;
-    ::testing::StrictMock<FS_History_Test_Slots> history_slots;
+    FsHistory mFileHistory;
+    ::testing::StrictMock<FS_History_Test_Slots> mHistorySlots;
 };
 
-class Dir_History_Test
-        : public QObject
-        , public ::testing::Test
+class Dir_History_Test : public QObject, public ::testing::Test
 {
     Q_OBJECT
 
@@ -52,10 +47,10 @@ public:
     virtual ~Dir_History_Test() = default;
 
 protected:
-    static constexpr int history_size {5};
-    QTemporaryDir fallback;
-    FS_History dir_history;
-    ::testing::StrictMock<FS_History_Test_Slots> history_slots;
+    static constexpr int history_size { 5 };
+    QTemporaryDir mFallback;
+    FsHistory mDirHistory;
+    ::testing::StrictMock<FS_History_Test_Slots> mHistorySlots;
 };
 
 #endif // TESTS_FS_HISTORY_QT_FS_HISTORY_TEST

@@ -29,7 +29,6 @@ public:
 
 private:
     void loadPath();
-    void hide_expand(const QModelIndex& index);
     void updateUi();
 
     QFileSystemModel mFsModel;

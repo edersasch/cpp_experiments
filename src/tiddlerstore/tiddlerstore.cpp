@@ -180,10 +180,10 @@ Set_Field_List_Change Tiddler::set_field(const std::string& field_name, const st
 
 bool Tiddler::remove_field(const std::string& field_name)
 {
-    return tiddler_fields.erase(field_name);
+    return tiddler_fields.erase(field_name) > 0;
 }
 
-std::vector<std::string> Tiddler::list(const std::string &list_name) const
+std::vector<std::string> Tiddler::list(const std::string& list_name) const
 {
     return map_value(tiddler_lists, list_name);
 }
@@ -193,7 +193,7 @@ std::unordered_map<std::string, std::vector<std::string>> Tiddler::lists() const
     return tiddler_lists;
 }
 
-Set_Field_List_Change Tiddler::set_list(const std::string &list_name, std::vector<std::string> values)
+Set_Field_List_Change Tiddler::set_list(const std::string& list_name, std::vector<std::string> values)
 {
     values.erase(std::remove_if(values.begin(), values.end(), [](const std::string& element) {
         return element.empty();
@@ -201,9 +201,9 @@ Set_Field_List_Change Tiddler::set_list(const std::string &list_name, std::vecto
     return set_map_value(tiddler_lists, list_name, values);
 }
 
-bool  Tiddler::remove_list(const std::string &list_name)
+bool Tiddler::remove_list(const std::string& list_name)
 {
-    return tiddler_lists.erase(list_name);
+    return tiddler_lists.erase(list_name) > 0;
 }
 
 bool Tiddler::is_empty()
@@ -336,7 +336,7 @@ Store open_store_from_file(const std::string& path)
 bool save_store_to_file(const Store& store, const std::string& path)
 {
     std::ofstream out(path);
-    nlohmann::json json(store);
+    const nlohmann::json json(store);
     out << json.dump();
     return out.good();
 }
@@ -538,8 +538,8 @@ std::vector<Tiddler*> Filter::filtered_tiddlers()
     std::vector<Tiddler*> ret;
     ret.reserve(filtered_idx().size());
     const auto fidx = filtered_idx();
-    for (const auto& i : fidx) {
-        ret.push_back(s[i].get());
+    for (const auto& curridx : fidx) {
+        ret.push_back(s[curridx].get());
     }
     return ret;
 }

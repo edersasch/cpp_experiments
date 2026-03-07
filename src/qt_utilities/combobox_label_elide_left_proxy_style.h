@@ -5,6 +5,8 @@
 
 class Combobox_Label_Elide_Left_Proxy_Style : public QProxyStyle
 {
+    Q_OBJECT
+
 public:
     virtual void drawControl(QStyle::ControlElement element, const QStyleOption* combobox_option, QPainter* painter, const QWidget* widget = nullptr) const override;
 };

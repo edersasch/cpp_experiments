@@ -1,5 +1,6 @@
 #include "tiddlerstore_handler_qt.h"
 #include "tiddlerstore/tiddlerstore.h"
+#include "qt_utilities/clear_layout.hpp"
 
 #include <QMenu>
 #include <QLineEdit>
@@ -17,6 +18,7 @@
 #include <QMouseEvent>
 #include <QSortFilterProxyModel>
 
+#include <memory>
 #include <utility>
 
 Flow_List_View::Flow_List_View(QWidget* parent)
@@ -97,26 +99,6 @@ bool Move_Only_StandardItemModel::dropMimeData(const QMimeData* data, Qt::DropAc
     return QStandardItemModel::dropMimeData(data, action, row, column, parent);
 }
 
-namespace
-{
-
-void clear_layout(QLayout* l)
-{
-    QLayoutItem* child;
-    while ((child = l->takeAt(0) ) != nullptr) {
-        if (child->widget()) {
-            child->widget()->deleteLater();
-        }
-        auto* cl = child->layout();
-        if (cl) {
-            clear_layout(cl);
-        }
-        delete child;
-    }
-}
-
-}
-
 Tiddlerstore_Handler::Tiddlerstore_Handler(const QStringList& tiddlerstore_list, QWidget* parent)
     : QWidget(parent)
     , tiddlerstore_history(tiddlerstore_list)
@@ -154,7 +136,7 @@ Tiddlerstore_Handler::~Tiddlerstore_Handler() = default;
 
 QHBoxLayout* Tiddlerstore_Handler::setup_toolbar()
 {
-    auto layout = new QHBoxLayout;
+    auto* layout = new QHBoxLayout;
     setup_load_button();
     layout->addWidget(load_button);
     layout->addWidget(setup_save_button());
@@ -196,7 +178,7 @@ QToolButton* Tiddlerstore_Handler::setup_save_button()
         auto default_location = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
         save_menu->clear();
         if (!elems.isEmpty()) {
-            auto save_current = save_menu->addAction(elems.first());
+            auto* save_current = save_menu->addAction(elems.first());
             connect(save_current, &QAction::triggered, this, [this, save_current]{
                 save_store(save_current->text());
             });
@@ -266,7 +248,7 @@ void Tiddlerstore_Handler::setup_filter()
         main_title_filter_edit->parentWidget()->layout()->removeWidget(main_title_filter_edit);
         main_title_filter_edit->setParent(this);
     }
-    clear_layout(filter_layout);
+    Qt_Utilities::clearLayout(filter_layout);
     auto filters = filter_group->filters();
     for (auto it = filters.begin() + 1; it != filters.end(); it += 1) {
         add_single_group(**it);
@@ -286,14 +268,17 @@ void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Filter& filter)
     QStringList tag_opts;
     QStringList field_opts;
     QStringList list_opts;
-    for (const auto& t : present_tags) {
-        tag_opts.append(t.c_str());
+    tag_opts.reserve(present_tags.size());
+    for (const auto& tag : present_tags) {
+        tag_opts.append(tag.c_str());
     }
-    for (const auto& t : present_fields) {
-        field_opts.append(t.c_str());
+    field_opts.reserve(present_fields.size());
+    for (const auto& field : present_fields) {
+        field_opts.append(field.c_str());
     }
-    for (const auto& t : present_lists) {
-        list_opts.append(t.c_str());
+    list_opts.reserve(present_lists.size());
+    for (const auto& list : present_lists) {
+        list_opts.append(list.c_str());
     }
     if (filter_layout->count() == 0) {
         group_layout->addWidget(main_title_filter_edit);
@@ -338,16 +323,17 @@ void Tiddlerstore_Handler::add_single_group(Tiddlerstore::Filter& filter)
         }
     }
     QStringList remaining_opts;
+    remaining_opts.reserve(title_opt.size() + text_opt.size() + tag_opts.size() + field_opts.size() + list_opts.size());
     remaining_opts << title_opt;
     remaining_opts << text_opt;
-    for (const auto& o : tag_opts) {
-        remaining_opts.append(QString("tag: ") + o);
+    for (const auto& opt : tag_opts) {
+        remaining_opts.append(QString("tag: ") + opt);
     }
-    for (const auto& o : field_opts) {
-        remaining_opts.append(QString("field: ") + o);
+    for (const auto& opt : field_opts) {
+        remaining_opts.append(QString("field: ") + opt);
     }
-    for (const auto& o : list_opts) {
-        remaining_opts.append(QString("list: ") + o);
+    for (const auto& opt : list_opts) {
+        remaining_opts.append(QString("list: ") + opt);
     }
     auto* box = new QComboBox(this);
     box->insertItems(0, remaining_opts);
@@ -563,8 +549,9 @@ void Tiddlerstore_Handler::apply_filter()
 {
     QStringList titles;
     const auto& tiddlers = filter_group->filtered_tiddlers();
-    for (const auto& t : tiddlers) {
-        titles << t->title().c_str();
+    titles.reserve(tiddlers.size());
+    for (const auto& tid : tiddlers) {
+        titles << tid->title().c_str();
     }
     title_model.setStringList(titles);
     const bool show_open = tiddlers.size() == 1;
@@ -605,7 +592,7 @@ void Tiddlerstore_Handler::open_store(const QString& path)
         if (!path.isEmpty()) {
             store = Tiddlerstore::open_store_from_file(path.toStdString());
         }
-        filter_group.reset(new Tiddlerstore::Filter_Group(store));
+        filter_group = std::make_unique<Tiddlerstore::Filter_Group>(store);
         adjust_dirty(false);
     }
 }

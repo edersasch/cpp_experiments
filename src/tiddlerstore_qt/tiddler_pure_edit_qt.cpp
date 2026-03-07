@@ -1,5 +1,6 @@
 #include "tiddler_pure_edit_qt.h"
 #include "tiddlerstore/tiddlerstore.h"
+#include "qt_utilities/clear_layout.hpp"
 #include "qt_utilities/flowlayout.h"
 
 #include <QVBoxLayout>
@@ -11,24 +12,6 @@
 #include <QMenu>
 #include <QGroupBox>
 #include <QLabel>
-
-namespace
-{
-
-void clear_layout(QLayout* l)
-{
-    QLayoutItem* child;
-    while ((child = l->takeAt(0) ) != nullptr) {
-        delete child->widget();
-        auto* cl = child->layout();
-        if (cl != nullptr) {
-            clear_layout(cl);
-        }
-        delete child;
-    }
-}
-
-}
 
 Tiddler_Pure_Edit::Tiddler_Pure_Edit(QWidget* parent)
     : QWidget(parent)
@@ -210,7 +193,7 @@ void Tiddler_Pure_Edit::update_present_tags()
 {
     tags_layout->removeWidget(tag_lineedit);
     tag_lineedit->clear();
-    clear_layout(tags_layout);
+    Qt_Utilities::clearLayout(tags_layout);
     for (const auto& tag : work_tm.tags()) {
         connect(deletable_value(tag, tags_layout), &QToolButton::clicked, this, [this, tag] {
             work_tm.remove_tag(tag);
@@ -224,7 +207,7 @@ void Tiddler_Pure_Edit::update_present_fields()
 {
     field_name_lineedit->clear();
     field_value_lineedit->clear();
-    clear_layout(present_fields_layout);
+    Qt_Utilities::clearLayout(present_fields_layout);
     for (const auto& field : work_tm.fields()) {
         auto* l(new QHBoxLayout);
         auto* del(new QToolButton);
@@ -246,7 +229,7 @@ void Tiddler_Pure_Edit::update_present_lists()
 {
     list_name_lineedit->clear();
     list_value_lineedit->clear();
-    clear_layout(present_lists_layout);
+    Qt_Utilities::clearLayout(present_lists_layout);
     single_list_elements.clear();
     for (const auto& list : work_tm.lists()) {
         auto* l(new QHBoxLayout);
@@ -284,11 +267,11 @@ void Tiddler_Pure_Edit::update_present_list(const std::string& list_name)
 {
     auto listvalues = work_tm.list(list_name);
     auto lui = single_list_elements[list_name];
-    if (!lui.l || !lui.val) {
+    if ((lui.l == nullptr) || (lui.val == nullptr)) {
         return;
     }
     lui.l->removeWidget(lui.val);
-    clear_layout(lui.l);
+    Qt_Utilities::clearLayout(lui.l);
     if (listvalues.empty()) {
         delete(lui.val);
         update_present_lists();

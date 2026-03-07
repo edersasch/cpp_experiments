@@ -5,76 +5,77 @@
 
 #include <utility>
 
-FS_History::FS_History(Operation_Mode mode, QString fallback, std::int32_t history_size, QStringList initial_elements, QObject* parent)
-    : QObject(parent)
-    , opmode(mode)
-    , hist_size(history_size < 2 ? 2 : history_size)
-    , fb(std::move(fallback))
-    , elements(std::move(initial_elements))
+FsHistory::FsHistory(
+    Operation_Mode mode, QString fallback, std::int32_t history_size, QStringList initial_elements, QObject* parent)
+: QObject(parent)
+, mOpmode(mode)
+, mHistorySize(std::max(2, history_size))
+, mFallbackDir(std::move(fallback))
+, mElements(std::move(initial_elements))
 {
-    elements.removeDuplicates();
-    connect(&watcher, &QFileSystemWatcher::directoryChanged, this, &FS_History::check);
-    connect(&watcher, &QFileSystemWatcher::fileChanged, this, &FS_History::check);
-    QTimer::singleShot(0, this, [this] {
-        cleanup(true);
-    });
+    mElements.removeDuplicates();
+    connect(&mFsWatcher, &QFileSystemWatcher::directoryChanged, this, &FsHistory::check);
+    connect(&mFsWatcher, &QFileSystemWatcher::fileChanged, this, &FsHistory::check);
+    QTimer::singleShot(0, this, [this] { cleanup(true); });
 }
 
-void FS_History::set_current_element(const QString &element)
+FsHistory::~FsHistory() = default;
+
+void FsHistory::set_current_element(const QString& element)
 {
     if (is_valid(element)) {
-        auto idx = elements.indexOf(element);
+        const auto idx = mElements.indexOf(element);
         if (idx == -1) {
-            elements.prepend(element);
+            mElements.prepend(element);
+            cleanup(true);
         } else {
             if (idx > 0) {
-                move_to_front(elements, idx);
+                move_to_front(mElements, static_cast<std::int32_t>(idx));
+                cleanup(true);
             }
         }
-        cleanup(idx != 0);
     }
 }
 
 // private
 
-void FS_History::cleanup(bool changed)
+void FsHistory::cleanup(bool changed)
 {
-    auto prev_count = elements.count();
-    elements.erase(std::remove_if(elements.begin(), elements.end(), [this](const QString& element) {
-        return !is_valid(element);
-    }), elements.end());
-    if (elements.count() > hist_size) {
-        elements.erase(elements.begin() + hist_size, elements.end()); // no resize() in QStringList
+    const auto prev_count = mElements.count();
+    mElements.erase(std::remove_if(mElements.begin(), mElements.end(),
+                        [this](const QString& element) { return !is_valid(element); }),
+        mElements.end());
+    changed |= prev_count != mElements.count();
+    if (mElements.count() > mHistorySize) {
+        mElements.resize(mHistorySize);
     }
-    changed |= prev_count != elements.count();
-    if (elements.isEmpty() && opmode == Operation_Mode::OP_DIR && !fb.isEmpty() && is_valid(fb)) {
+    if (mElements.isEmpty() && mOpmode == Operation_Mode::OP_DIR && is_valid(mFallbackDir)) {
         changed = true;
-        elements << fb;
+        mElements << mFallbackDir;
     }
     if (changed) {
-        auto wdf = watcher.directories();
-        wdf.append(watcher.files());
+        auto wdf = mFsWatcher.directories();
+        wdf.append(mFsWatcher.files());
         if (!wdf.isEmpty()) {
-            watcher.removePaths(wdf);
+            mFsWatcher.removePaths(wdf);
         }
-        if (!elements.isEmpty()) {
-            watcher.addPaths(elements);
+        if (!mElements.isEmpty()) {
+            mFsWatcher.addPaths(mElements);
         }
-        emit elements_changed(elements);
+        emit elements_changed(mElements);
     }
 }
 
-bool FS_History::is_valid(const QString& element) const
+bool FsHistory::is_valid(const QString& element) const
 {
-    const QFileInfo fileInfo(element);
-    bool ret = false;
-    switch (opmode) {
-    case Operation_Mode::OP_FILE:
-        ret = fileInfo.isFile();
-        break;
-    case Operation_Mode::OP_DIR:
-        ret = fileInfo.isDir();
-        break;
+    if (!element.isEmpty()) {
+        const QFileInfo fileInfo(element);
+        switch (mOpmode) {
+        case Operation_Mode::OP_FILE:
+            return fileInfo.isFile();
+        case Operation_Mode::OP_DIR:
+            return fileInfo.isDir();
+        }
     }
-    return ret;
+    return false;
 }

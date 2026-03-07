@@ -26,7 +26,7 @@ TEST(recent_files_ui, verbose_ctor)
     QTemporaryFile f4;
     f2.open();
     f4.open();
-    FS_History_UI file_history_ui(FS_History::Operation_Mode::OP_FILE, "n/a", history_size, {"1", f2.fileName(), "3", f4.fileName(), "5"});
+    FS_History_UI file_history_ui(FsHistory::Operation_Mode::OP_FILE, "n/a", history_size, {"1", f2.fileName(), "3", f4.fileName(), "5"});
     processEvents();
     EXPECT_EQ(QStringList({f2.fileName(), f4.fileName()}), file_history_ui.get_elements());
 }

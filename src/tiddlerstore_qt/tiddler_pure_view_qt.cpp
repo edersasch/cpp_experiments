@@ -39,9 +39,9 @@ void Tiddler_Pure_View::set_tiddler_model(Tiddler_Model* model)
             disconnect(tm);
         }
         tm = model;
-        title_label->setText(tm ? tm->title().c_str() : QString());
-        text_browser->setText(tm ? tm->text().c_str() : QString());
-        if (tm) {
+        title_label->setText(tm != nullptr ? tm->title().c_str() : QString());
+        text_browser->setText(tm != nullptr ? tm->text().c_str() : QString());
+        if (tm != nullptr) {
             connect(tm, &Tiddler_Model::title_changed, this, [this] {
                 title_label->setText(tm->title().c_str());
             });

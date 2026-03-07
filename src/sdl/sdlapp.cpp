@@ -172,21 +172,21 @@ SDLApp::SDLApp()
         printf("SDL_Image cannot be initialized! IMG Error: %s\n", IMG_GetError());
         return;
     }*/
-    for (auto& svgpair : { std::pair{muehle_board_svg, &board_surface},
+    for (const auto& svgpair : { std::pair{muehle_board_svg, &board_surface},
          /*std::pair{back_svg, &back_surface},
          std::pair{cancel_svg, &cancel_surface},
          std::pair{delete_svg, &delete_surface},
          std::pair{depth_svg, &depth_surface},
          std::pair{engine_svg, &engine_surface}*/ }) {
         SDL_Surface* loaded_img = IMG_Load_RW(SDL_RWFromConstMem(svgpair.first.data(), svgpair.first.size()), 0);
-        if (!loaded_img) {
+        if (loaded_img == nullptr) {
             printf("Unable to load svg %s! IMG Error: %s\n", svgpair.first.data(), IMG_GetError());
             return;
         }
         //*(svgpair.second) = SDL_ConvertSurface(loaded_img, window_surface->format, 0);
         svgpair.second->reset(loaded_img);
         //SDL_FreeSurface(loaded_img);
-        if (!(svgpair.second->get())) {
+        if (svgpair.second->get() == nullptr) {
             printf("Unable to load svg %s! SDL Error: %s\n", svgpair.first.data(), SDL_GetError());
             return;
         }
@@ -206,7 +206,7 @@ int SDLApp::exec()
 {
     while (running) {
         SDL_Event event;
-        while(SDL_PollEvent(&event)) {
+        while(SDL_PollEvent(&event) > 0) {
             processEvents(&event);
         }
         render();
@@ -250,10 +250,10 @@ void SDLApp::render()
 {
     SDL_SetRenderDrawColor(renderer.get(), 0xff, 0xff, 0xff, 0xff);
     SDL_RenderClear(renderer.get());
-    SDL_Rect fillRect = { window_width / 4, window_height / 4, window_width / 2, window_height / 2 };
+    const SDL_Rect fillRect = { window_width / 4, window_height / 4, window_width / 2, window_height / 2 };
     SDL_SetRenderDrawColor(renderer.get(), 0xff, 0x00, 0x00, 0xff);
     SDL_RenderFillRect(renderer.get(), &fillRect);
-    SDL_Rect outlineRect = { window_width / 6, window_height / 6, window_width * 2 / 3, window_height * 2 / 3 };
+    const SDL_Rect outlineRect = { window_width / 6, window_height / 6, window_width * 2 / 3, window_height * 2 / 3 };
     SDL_SetRenderDrawColor(renderer.get(), 0x00, 0xff, 0x00, 0xff);
     SDL_RenderDrawRect(renderer.get(), &outlineRect);
     SDL_SetRenderDrawColor(renderer.get(), 0x00, 0x00, 0xff, 0xff);
@@ -263,7 +263,7 @@ void SDLApp::render()
         SDL_RenderDrawPoint(renderer.get(), window_width / 2, i);
     }
     SDL_RenderPresent(renderer.get());
-    if (current_surface) {
+    if (current_surface != nullptr) {
         /*SDL_Rect stretchRect;
         stretchRect.x = 0;
         stretchRect.y = 0;

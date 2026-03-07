@@ -25,7 +25,8 @@ void Vis_1000::change()
         set_color(i, "white");
     }
     if (oerationId == QQmlProperty(vis.get(), "plus_id").read().toInt()) {
-        auto color = set_limits("plus_color", lastIndex - 1, firstIndex >= lastIndex, lastIndex - firstIndex, step > lastIndex -firstIndex);
+        const int limit = lastIndex - firstIndex;
+        auto color = set_limits("plus_color", lastIndex - 1, limit >= 0, limit, step > limit);
         while (!color.isEmpty() && firstIndex <= lastIndex && step > 0) {
             set_color(firstIndex, color);
             firstIndex += step;
@@ -62,14 +63,15 @@ void Vis_1000::change()
 
 // private
 
-QString Vis_1000::set_limits(const QString &color_to_get, int first_max, bool first_limit_reached, int step_max, int step_limit_reaced)
+QString Vis_1000::set_limits(
+    const QString& color_to_get, int first_max, bool first_limit_reached, int step_max, bool step_limit_reached)
 {
     QQmlProperty(vis.get(), "first_max").write(first_max);
     if (first_limit_reached) {
         return {};
     }
     QQmlProperty(vis.get(), "step_max").write(step_max);
-    if (step_limit_reaced) {
+    if (step_limit_reached) {
         return {};
     }
     return QQmlProperty(vis.get(), color_to_get).read().toString();

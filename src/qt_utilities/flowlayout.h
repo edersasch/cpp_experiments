@@ -56,8 +56,10 @@
 #include <QStyle>
 
 class FlowLayout
-        : public QLayout
+: public QLayout
 {
+    Q_OBJECT
+
 public:
     FlowLayout(QWidget* parent, int margin = -1, int hSpacing = -1, int vSpacing = -1);
     FlowLayout(int margin = -1, int hSpacing = -1, int vSpacing = -1);
@@ -72,7 +74,7 @@ public:
     int count() const override;
     QLayoutItem* itemAt(int index) const override;
     QSize minimumSize() const override;
-    void setGeometry(const QRect &rect) override;
+    void setGeometry(const QRect& rect) override;
     QSize sizeHint() const override;
     QLayoutItem* takeAt(int index) override;
 

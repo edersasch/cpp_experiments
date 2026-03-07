@@ -19,7 +19,7 @@ class AR_History_Search
 public:
     static constexpr int main_stretch_factor {10};
 
-    AR_History_Search(const QStringList& start_archives = {}, int history_size = FS_History::default_history_size, QWidget* parent = nullptr);
+    AR_History_Search(const QStringList& start_archives = {}, int history_size = FsHistory::defaultHistorySize, QWidget* parent = nullptr);
     virtual ~AR_History_Search() override = default;
 
     QStringList get_archives() { return ar_ui.get_elements(); }
