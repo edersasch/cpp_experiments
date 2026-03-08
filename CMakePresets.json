@@ -1,0 +1,58 @@
+{
+    "version": 10,
+    "configurePresets": [
+        {
+            "$comment": [
+                "In CMakeUserPresets.json, set cache variable CMAKE_TOOLCHAIN_FILE to desired Qt version,",
+                "e.g. /opt/install/qt/6.9.3/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake",
+                "and set vendor.qt-cpp.VSCODE_QT_QTPATHS_EXE to the corresponding qtpaths executable,",
+                "e.g. /opt/install/qt/6.9.3/gcc_64/bin/qtpaths",
+                "Note that $env{HOME} does not work in qt vs extension 1.12, so use absolute paths."
+           ],
+            "name": "NinjaCPMBuildPath",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/${presetName}/install",
+                "CPM_SOURCE_CACHE": "${sourceDir}/build/cpm-source-cache"
+            }
+        },
+        {
+            "name": "vsc-gcc-debug",
+            "inherits": "NinjaCPMBuildPath",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "vsc-gcc-coverage",
+            "inherits": "vsc-gcc-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "EXPERIMENTS_COVERAGE_REPORT": "ON"
+            }
+        },
+        {
+            "name": "vsc-gcc-relwithdeb",
+            "inherits": "NinjaCPMBuildPath",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "vsc-gcc-release",
+            "inherits": "NinjaCPMBuildPath",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "qtc-gcc-debug",
+            "inherits": "NinjaCPMBuildPath",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        }
+    ]
+}

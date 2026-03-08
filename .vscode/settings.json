@@ -1,0 +1,17 @@
+{
+    "cmake.ctest.testSuiteDelimiter": "\\.",
+    "cmake.ctest.debugLaunchTarget": "ctest gdb",
+    "cmake.ctest.allowParallelJobs": true,
+    "cmake.coverageInfoFiles": [
+        "${workspaceFolder}/build/vsc-gcc-coverage/coverage_report.info"
+    ],
+    "markdownlint.config": {
+        "MD012": { "maximum": 2 },
+        "MD024": { "siblings_only": true },
+        "MD041": { "allow_preamble": true }
+    },
+    "files.associations": {
+        "variant": "cpp"
+    },
+    "files.trimTrailingWhitespace": true
+}

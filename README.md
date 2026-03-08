@@ -24,7 +24,7 @@ Concepts, solved problems and examples, available under [MIT license](LICENSE)
   * `treeview_hide_expand()`: hides rows in a tree view that don't match a given pattern
 
 
-# Build Requirements
+## Build Requirements
 
 * C++ 17 toolchain (e.g. [gcc](https://gcc.gnu.org/) >= 7.3.0)
 * [CMake](https://cmake.org) >= 3.16.0
@@ -32,27 +32,27 @@ Concepts, solved problems and examples, available under [MIT license](LICENSE)
 * [nlohmann/json](https://github.com/nlohmann/json/) >= 3.4.0 for [tiddlerstore](#tiddlerstore), downloaded automatically if option `EXPERIMENTS_USE_EXTERNAL_JSON` is `OFF` (license: [MIT](https://github.com/nlohmann/json/blob/v3.4.0/LICENSE.MIT))
 
 
-# Optional Tools
+## Optional Tools
 
 * [GTest](https://github.com/google/googletest) >= 1.10.0, downloaded automatically if option `EXPERIMENTS_BUILD_TESTS` is `ON`
 * [Doxygen](http://www.doxygen.nl) documentation tool, enables `apidoc` build target
 * GCov (part of [gcc](https://gcc.gnu.org/)) / [LCov](http://ltp.sourceforge.net/coverage/lcov.php) for coverage report if option `EXPERIMENTS_COVERAGE_REPORT` is `ON`
 
 
-# Directory Structure
+## Directory Structure
 
 The top level structure follows [the pitchfork layout](https://api.csswg.org/bikeshed/?force=1&url=https://raw.githubusercontent.com/vector-of-bool/pitchfork/develop/data/spec.bs).
 
 
-## `docs/`
+### `docs/`
 
 [Changelog.md](docs/Changelog.md)
 
 
-## `src/`
+### `src/`
 
 
-### arhelper_qt
+#### arhelper_qt
 
 Runtime dependencies:
 
@@ -64,7 +64,7 @@ tree to a given directory.
 Enable build with cmake option `EXPERIMENTS_ARHELPER_QT`.
 
 
-### ar_history_search_qt
+#### ar_history_search_qt
 
 Application that combines `arhelper_qt` and `fs_history_qt` to provide
 filtering to archive contents like
@@ -76,7 +76,7 @@ Enabled if `EXPERIMENTS_ARHELPER_QT`, `EXPERIMENTS_FS_HISTORY_QT` and
 `EXPERIMENTS_FS_FILTER_QT` is on.
 
 
-### elementary_math_qml
+#### elementary_math_qml
 
 The directory contains a QML file and its C++ bindings to highlight solutions
 to plus / minus / multiply questions in the number range up to 1000
@@ -84,7 +84,7 @@ to plus / minus / multiply questions in the number range up to 1000
 Enable build with cmake option `EXPERIMENTS_ELEMENTARY_MATH_QML`.
 
 
-### emvis1000_qml
+#### emvis1000_qml
 
 The application uses functions from `elementary_math_qml` to highlight
 solutions to plus / minus / multiply questions in the number range up to 1000.
@@ -92,7 +92,7 @@ solutions to plus / minus / multiply questions in the number range up to 1000.
 Enabled if `EXPERIMENTS_ELEMENTARY_MATH_QML` is on.
 
 
-### fs_filter_qt
+#### fs_filter_qt
 
 This widget shows a line edit above a tree view of an existing directory. The
 line edit filters all visible rows in the tree in a case insensitive way. You
@@ -109,7 +109,7 @@ elements can be selected, dragging is supported.
 Enable build with cmake option `EXPERIMENTS_FS_FILTER_QT`.
 
 
-### fs_history_qt
+#### fs_history_qt
 
 The string list can either be used with files or with directories.
 Every element is watched whether it goes out of existence, which triggers
@@ -119,6 +119,7 @@ If the list is used on directories, you can provide a fallback directory
 which will be chosen if all other entries become invalid.
 
 Some UI elements are provided that utilize the history list:
+
 * combobox
 * menu that adds a number as hotkey to each entry if the list size is `9` or less
 * toolbutton to start a select file or directory dialog
@@ -130,7 +131,7 @@ twice when the list gets sorted because of a widget's trigger.
 Enable build with cmake option `EXPERIMENTS_FS_HISTORY_QT`.
 
 
-### fs_history_search_qt
+#### fs_history_search_qt
 
 Application that combines `fs_filter_qt` and `fs_history_qt`. You have an
 initially empty combobox. To the right of it is a button to start a directory
@@ -144,7 +145,7 @@ string.
 Enabled if `EXPERIMENTS_FS_FILTER_QT` and `EXPERIMENTS_FS_HISTORY_QT` are on.
 
 
-### qtableview_demo
+#### qtableview_demo
 
 Application that demonstrates several features of a QTableView.
 
@@ -155,7 +156,7 @@ Application that demonstrates several features of a QTableView.
 Enable build with cmake option `EXPERIMENTS_QTABLEVIEW_DEMO`.
 
 
-### Qt_Utilities
+#### Qt_Utilities
 
 `Combobox_Label_Elide_Left_Proxy_Style`: If the text is too long for the label
 it will be elided left
@@ -176,7 +177,7 @@ Enable build with cmake option `EXPERIMENTS_ARHELPER_QT` or `EXPERIMENTS_FS_FILT
 or `EXPERIMENTS_QTABLEVIEW_DEMO` or `EXPERIMENTS_TIDDLER_INSPECTOR_QT`.
 
 
-### tiddlerstore
+#### tiddlerstore
 
 If you are looking for a great note taking application that also has the
 ability to store files and that runs everywhere please give [tiddlywiki](https://tiddlywiki.com)
@@ -194,21 +195,21 @@ together in one unit. Conversion to and from json is done using
 Enable build with cmake option `EXPERIMENTS_TIDDLER_INSPECTOR_QT`
 
 
-### tiddlerstore_qt
+#### tiddlerstore_qt
 
 `Tiddler_Model`: operates on a Tiddler and emits signals if a part of the Tiddler changes
 
 Enable build with cmake option `EXPERIMENTS_TIDDLER_INSPECTOR_QT`
 
 
-### tiddler_inspector_qt
+#### tiddler_inspector_qt
 
 Text based editor for tiddlers
 
 Enable build with cmake option `EXPERIMENTS_TIDDLER_INSPECTOR_QT`
 
 
-## `tests/`
+### `tests/`
 
 Unit tests are
 [placed separately](https://api.csswg.org/bikeshed/?force=1&url=https://raw.githubusercontent.com/vector-of-bool/pitchfork/develop/data/spec.bs#src.tests.separate)
@@ -222,7 +223,7 @@ The directories whose names match a directory name from `src/` contain unit
 tests.
 
 
-# Included Resources
+## Included Resources
 
 CMake file `AddGoogleTest.cmake` adapted from
 <https://github.com/CLIUtils/cmake/blob/4e52e4d0bc2e9fd27171926d0b5d9f396dd8637c/AddGoogleTest.cmake>
